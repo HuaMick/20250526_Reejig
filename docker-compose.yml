@@ -1,0 +1,22 @@
+services:
+  db:
+    image: mysql:8.0 # Using MySQL version 8.0
+    container_name: mysql_db
+    ports:
+      - "3306:3306" # Expose MySQL port to the host
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword} # Uses env var or defaults
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-onet_data} # Uses env var or defaults
+      MYSQL_USER: ${MYSQL_USER} # Must be set in environment
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD} # Must be set in environment
+    volumes:
+      - mysql_data:/var/lib/mysql # Persist data
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "$${MYSQL_USER}", "-p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mysql_data: # Define the named volume for persistence 

@@ -2,4 +2,4 @@
 name = "onet-skillsgap"
 version = "0.0.1"
 description = "ETL pipeline and API for analyzing skill gaps between occupations using O*NET data"
-authors = [Mick Hua]
+authors = ["Mick Hua"]

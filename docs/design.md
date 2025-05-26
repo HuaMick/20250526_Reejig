@@ -1,6 +1,16 @@
 ## Design Decisions
 - Removed nix from the project template. For this porject will opt for the more standard virtual env and requirements.txt with pip.
 
+- The two data files are not super large, so have saved them as txt files in the data folder for now. We can look at fetching this data dynamically at a later stage after we have poc up and running.
+
+- Had gemini scan the files and recommend a schema for me. looks okay for now. Will review latter after we get the data into a db.
+
+- For this project the MySQL instance can sit inside the docker container.
+
+- Successfully implemented the MYSQL instance with integration tests passing on the connection.
+
+- Will build the database schema using python SQL Alchemy, this will allow me to quickly revist the schema and rebuild it if needed.
+
 ## Project Plan
 
 ### 1. Project Setup

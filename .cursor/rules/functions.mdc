@@ -1,0 +1,6 @@
+---
+description: creating and updating functions in the src/functions folder
+globs: 
+alwaysApply: false
+---
+Functions are the interchanable parts of the application. The Application will chain multiple functions together for integration testing and to create nodes.

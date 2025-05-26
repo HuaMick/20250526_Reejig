@@ -1,0 +1,73 @@
+---
+description: creating and updating integration test or integration test shell scripts in the src/tests folder
+globs: 
+alwaysApply: false
+---
+# Integration Tests
+Integration tests check that multiple functions work together to produce the expected result.
+
+Rules:
+- Have fixtures in `./tests/fixtures/<fixture_name>.py`
+- Have a pytest implementation in `./tests/test_integration_<test_name>.py`
+- Have a shell script in `./tests/test_integration_<test_name>.sh` that sets up the environment and executes the test
+- Do not use mocking in integration tests, test real world assets
+- Decouple test implementation from test execution by using shell scripts for environment setup
+
+## Always
+- [ ] `grep_search` for related pytest files and fixtures.
+- [ ] Check if an existing pytest can be used or easily updated to meet the testing objective.
+- [ ] Run the integration test after creating it using its shell script to make sure it works.
+
+## When creating or updating integration tests
+- [ ] Make sure the shell script matches the pytest template
+
+pytest template:
+```python
+# Always structure imports in test files using full paths from the project root (e.g., `from src.functions.module import function`)
+from src.functions.module import function
+
+def test_service_operation():
+    # Initialize client
+    client_result = get_client()
+    assert client_result["success"], f"Failed to initialize client: {client_result['message']}"
+    
+    # Execute test operation
+    result = perform_operation(client_result["result"])
+    
+    # Print results for verification
+    print("\nIntegration Test Results:")
+    print(f"Results: {result}")
+    
+    # Assertions to verify the results
+    assert result["success"] == True, "Operation failed"
+    assert len(result["result"]) > 0, "Expected non-empty results"
+```
+
+- [ ] Make sure the integration tests outputs something that demonstrates real world confidence in test results for example; number of rows in a table
+- [ ] Run the integration test using its shell script, to test it is working.
+
+## When creating or updating integration shell scripts
+- [ ] Make sure the shell script matches the shell script template
+
+shell script template:
+```bash
+#!/bin/bash
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Apply environment variables
+source env/env.env
+
+# Always use `python -m pytest` when running tests to ensure proper module resolution
+# Run the test with -s flag to show print statements and -v for verbose output
+python -m pytest tests/test_integration_<test_name>.py::test_function -v -s
+
+# Deactivate virtual environment if it was activated
+if [ -n "$VIRTUAL_ENV" ]; then
+    deactivate
+fi
+```
+
+
+

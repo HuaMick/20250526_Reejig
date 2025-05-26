@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+Folders contain readme files that have rules that should be followed for related files (ussually contained inside that folder or subfolders).
+
+Readme files should be concise and minimalistic. Always check if a rule is more verbose than it needs to be and remove any redundancies. Every word should add value.

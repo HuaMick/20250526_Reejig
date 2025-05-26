@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Below is the current folder structure of the project:
+
+### Project Folder Structure
+
+Below is the current folder structure of the project:
+
+```
+.
+├── src/
+│   ├── functions/    # Cloud functions and business logic
+│   ├── config/       # Configuration files
+│   └── nodes/        # Node components
+│
+├── tests/            # Test files
+│   ├── fixtures/     # Test fixtures and shared test data
+│   ├── scripts/      # Test helper scripts
+│   └── test_integration_*.py     # Integration test implementation files
+    └── test_integration_*.sh     # Integration test shell script for setting env and .venv
+│
+├── agent_memory/     # Project documentation and reference materials
+│   ├── lessons.md    # Lessons learned
+│   └── notes.md      # Project notes
+│
+├── secrets/          # Credentials and secret files
+│
+├── env/              # Environment variables
+│
+├── .venv/            # Virtual environment
+│
+├── infastructure/    # Infrastructure configuration
+│
+├── legacy/           # Legacy code and resources
+│
+├── requirements.txt  # Project dependencies
+│
+├── pyproject.toml    # Project configuration
+│
+└── .gitignore        # Git ignore file
+```
+
+- Never create new folders, ask the human dev to do this instead
+- Always `grep_search` for existing files before creating new ones

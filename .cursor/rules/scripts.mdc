@@ -1,0 +1,7 @@
+---
+description: shell scripts .sh
+globs: 
+alwaysApply: false
+---
+- All scripts should be designed to be run from the project root directory.
+- Shell scripts should not need to modify the PYTHONPATH they simply runs the test using python -m pytest from the project root,

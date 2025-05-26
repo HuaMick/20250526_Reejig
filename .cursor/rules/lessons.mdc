@@ -1,0 +1,37 @@
+---
+description: lesson rules
+globs: 
+alwaysApply: false
+---
+
+Lessons learnings by the agent from the conversations with the human dev. 
+Lessons are then used to review the rules and design.md
+
+## When recommending changes for existing rules and design.md
+- [ ] Review existing rules and design
+- [ ] Only recommend changes if they are likely to make an impact
+- [ ] Dont introduce redundant changes or introduce redundant content
+- [ ] Review existing rules and design for any redundancies
+
+## Lesson Selection Criteria
+
+A lesson should ONLY be added if it meets ALL of the following criteria:
+
+1. It represents a broadly applicable principle that affects multiple parts of the codebase
+2. It significantly changes or contradicts an existing practice or pattern
+3. It can be applied to future development without being tied to specific implementation details
+4. It reflects a clear preference from the human developer that isn't already documented
+5. It would substantively improve code quality, development efficiency, or the developer experience
+
+## Examples of Valid Lessons
+
+- "Functions should use early returns instead of nested conditionals for validation"
+- "Standardize all function returns as {'success': bool, 'message': str, 'result': dict}"
+- "Test shell scripts must always activate the virtual environment"
+
+## Examples of Invalid Lessons
+
+- Specific insights about a particular implementation (e.g., "Prompts work better with X format")
+- Observations about the current state of the code (e.g., "Different media owners use different formats")
+- Task-specific findings (e.g., "First page is typically a cover page")
+- Performance metrics (e.g., "Processing costs X per image")

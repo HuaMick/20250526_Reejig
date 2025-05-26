@@ -1,0 +1,60 @@
+---
+description: creating and updating unit test or unit test shell scripts in the src/tests folder
+globs: 
+alwaysApply: false
+---
+# Unit Tests
+Unit tests check individual functions and components in isolation.
+
+Unit tests should:
+- Have a pytest file in `./tests/test_unit_<test_name>.py`
+- Have a shell script in `./tests/test_unit_<test_name>.sh` that sets up the environment and executes the test
+- Use mocks and stubs to isolate dependencies
+- Be fast to execute and focused on specific functionality
+- Use proper pytest assertions for validation
+- Structure imports using full paths from the project root (e.g., `from src.functions.module import function`)
+
+### Shell Script Template
+
+```bash
+#!/bin/bash
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Apply environment variables
+source env/env.env
+
+# Run the test with -v for verbose output
+python -m pytest tests/test_unit_<test_name>.py::test_function -v
+
+# Deactivate virtual environment if it was activated
+if [ -n "$VIRTUAL_ENV" ]; then
+    deactivate
+fi
+```
+
+### Example Test File Structure
+
+```python
+from unittest.mock import patch, MagicMock
+from src.functions.module import function
+
+def test_function_operation():
+    # Setup mock dependencies
+    mock_dependency = MagicMock()
+    mock_dependency.return_value = {"success": True, "result": {"data": "test"}}
+    
+    # Test with mocked dependencies
+    with patch('src.dependencies.some_service', mock_dependency):
+        result = function(test_param="value")
+    
+    # Assertions to verify the results
+    assert result["success"] == True, "Function operation failed"
+    assert result["result"]["data"] == "expected_value", "Unexpected result data"
+```
+
+### Package Management for Tests
+- Ensure all required dependencies are in requirements.txt with explicit version ranges
+- Consider using pytest-mock for simpler mocking syntax
+- For improved test isolation, consider using pytest fixtures

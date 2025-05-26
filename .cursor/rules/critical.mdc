@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## AWAYS
+This checklist should always be followed commencing any thinking.
+- [ ] Review working notes @ ./memory_bank/notes.md.
+- [ ] Unless explicily instructed to always use dev / staging (stg) assets and environments.
+- [ ] When creating or updating functions in ./src/functions please follow function rules
+- [ ] When creating or updating integration tests in ./tests/test_integration_* please follow integration_test rules

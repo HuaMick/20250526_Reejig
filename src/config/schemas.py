@@ -12,7 +12,7 @@ class Occupation(Base):
     description = Column(Text)
 
     # Relationship to Occupation_Skills (one-to-many)
-    occupation_skills = relationship("OccupationSkill", back_populates="occupation")
+    occupation_skills = relationship("OccupationSkill", back_populates="occupation", cascade="all, delete-orphan")
 
 class Skill(Base):
     __tablename__ = 'Skills'
@@ -21,7 +21,7 @@ class Skill(Base):
     element_name = Column(String(255), nullable=False)
 
     # Relationship to Occupation_Skills (one-to-many)
-    occupation_skills = relationship("OccupationSkill", back_populates="skill")
+    occupation_skills = relationship("OccupationSkill", back_populates="skill", cascade="all, delete-orphan")
 
 class OccupationSkill(Base):
     __tablename__ = 'Occupation_Skills'
@@ -29,15 +29,15 @@ class OccupationSkill(Base):
     onet_soc_code = Column(String(20), ForeignKey('Occupations.onet_soc_code', ondelete='CASCADE', onupdate='CASCADE'), index=True)
     element_id = Column(String(20), ForeignKey('Skills.element_id', ondelete='CASCADE', onupdate='CASCADE'), index=True)
     scale_id = Column(String(10), index=True)
-    data_value = Column(DECIMAL(5, 2))
-    n_value = Column(Integer)
-    standard_error = Column(DECIMAL(6, 4))
-    lower_ci_bound = Column(DECIMAL(6, 4))
-    upper_ci_bound = Column(DECIMAL(6, 4))
-    recommend_suppress = Column(CHAR(1))
-    not_relevant = Column(String(10))
-    date_recorded = Column(Date)
-    domain_source = Column(String(50))
+    data_value = Column(DECIMAL(5, 2), nullable=True)  # Made nullable since some values might be missing
+    n_value = Column(Integer, nullable=True)  # Made nullable since some values might be missing
+    standard_error = Column(DECIMAL(6, 4), nullable=True)
+    lower_ci_bound = Column(DECIMAL(6, 4), nullable=True)
+    upper_ci_bound = Column(DECIMAL(6, 4), nullable=True)
+    recommend_suppress = Column(CHAR(1), nullable=True)  # Made nullable since some values might be missing
+    not_relevant = Column(String(10), nullable=True)
+    date_recorded = Column(Date, nullable=True)
+    domain_source = Column(String(50), nullable=True)
 
     # Composite primary key definition
     __table_args__ = (
@@ -48,6 +48,14 @@ class OccupationSkill(Base):
     # Relationships to Occupation and Skill (many-to-one)
     occupation = relationship("Occupation", back_populates="occupation_skills")
     skill = relationship("Skill", back_populates="occupation_skills")
+
+class Scale(Base):
+    __tablename__ = 'Scales'
+
+    scale_id = Column(String(10), primary_key=True, index=True)
+    scale_name = Column(String(255), nullable=False)
+    minimum = Column(Integer)
+    maximum = Column(Integer)
 
 
 # Example function to create an engine (can be used by other scripts)

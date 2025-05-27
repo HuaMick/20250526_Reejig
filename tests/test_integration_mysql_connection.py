@@ -59,7 +59,11 @@ def test_actual_mysql_connection():
         print("Tables in the database:")
         if tables:
             for table in tables:
-                print(f"- {table[0]}")
+                table_name = table[0]
+                # Get row count for each table
+                cursor.execute(f"SELECT COUNT(*) FROM `{table_name}`;")
+                row_count = cursor.fetchone()[0]
+                print(f"- {table_name} ({row_count} rows)")
         else:
             print("- No tables found.")
             # This is not necessarily a failure, could be an empty DB, but good to note.

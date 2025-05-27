@@ -11,6 +11,12 @@
 
 - Will build the database schema using python SQL Alchemy, this will allow me to quickly revist the schema and rebuild it if needed.
 
+- Added a extract and load node after passing all integration tests. 
+
+- I've noticed the scales in testing. Roles such as chemist and software engineer seem to have the same skills, so will need to incorporate scales into the skills gap analysis.
+
+- Testing showed that the data has some edges, some of the occupations dont have any records in the skills table. Will update the skills gap functions to call this out.
+
 ## Project Plan
 
 ### 1. Project Setup

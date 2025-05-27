@@ -63,4 +63,4 @@ if __name__ == '__main__':
         result = initialize_database_tables()
         print(result["message"])
         if result["success"]:
-            print("To verify, connect to the database and check for tables: Occupations, Skills, Occupation_Skills.")
+            print("To verify, connect to the database and check for tables: Occupations, Skills, Occupation_Skills, Scales.")

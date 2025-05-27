@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e # Exit immediately if a command exits with a non-zero status.
 
 # Runs the integration test for mysql_connection.py
 

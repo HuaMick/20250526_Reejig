@@ -1,4 +1,9 @@
+
 #!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status.
+# This is required so that the script fails and the agent can commence debugging.
+set -e 
 
 # Set env variables
 source ./env/env.env

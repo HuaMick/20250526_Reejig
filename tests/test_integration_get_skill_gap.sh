@@ -1,6 +1,7 @@
-#!/bin/bash
-
 # This script runs the integration test for get_skill_gap.py
+
+#!/bin/bash
+set -e # Exit immediately if a command exits with a non-zero status.
 
 # Set env variables
 source ./env/env.env

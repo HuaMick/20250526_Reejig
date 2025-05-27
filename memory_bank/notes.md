@@ -65,3 +65,31 @@ Memory bank notes work as the working memory of agents.
 **Next Steps (Identified from requirements.md):**
    - Implement ETL pipeline to populate the database.
    - Implement REST API for skill gap analysis.
+
+### Data Loading Implementation (as of today's date - YYYY-MM-DD)
+
+**1. Data Loading Function (`mysql_load.py`):**
+   - Created `src/functions/mysql_load.py` with `load_data_from_csv` function.
+   - Handles loading data from `.txt` (tab-separated) files into specified MySQL tables (`Occupations`, `Skills`, `Occupation_Skills`) using SQLAlchemy and pandas.
+   - Renames columns from O*NET source file headers to match database schema column names.
+   - Extracts unique skills (`element_id`, `element_name`) from `skills.txt` for the `Skills` table.
+   - Loads full records from `skills.txt` into `Occupation_Skills` table.
+   - Converts `NaN`/`NaT` values from pandas DataFrames to `None` to ensure they are stored as `NULL` in MySQL, resolving initial `Unknown column 'nan'` errors.
+   - The script includes a `if __name__ == '__main__':` block to directly run the loading process using `database/occupations.txt` and `database/skills.txt`.
+   - Tables are cleared before new data is loaded.
+
+**2. Integration Test for Data Loading:**
+   - Created `tests/test_integration_mysql_load.py` and `tests/test_integration_mysql_load.sh`.
+   - Test suite (`TestMySQLLoad`) performs the following:
+     - Initializes database tables (using `mysql_init_tables.py`).
+     - Creates dummy `.csv` files with sample data for `Occupations`, `Skills`, and `Occupation_Skills` in `tests/fixtures/`.
+     - Calls `load_data_from_csv` to load data from these dummy files.
+     - Verifies correct row counts in each table.
+     - Prints the first 5 rows of each table to stdout for visual inspection during test run (including column headers).
+     - Asserts that data is loaded successfully and `NaN` values are correctly handled (appearing as `None` in Python, `NULL` in DB).
+     - Cleans up dummy CSV files after tests.
+   - The test script `test_integration_mysql_load.sh` handles environment setup (sourcing `env.env`, activating `.venv`) before running the Python test script.
+   - Integration tests are passing.
+
+**Next Steps (Identified from requirements.md):**
+   - Implement REST API for skill gap analysis.

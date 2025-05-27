@@ -1,6 +1,6 @@
 import os
 import sys
-import unittest
+import pytest
 import pandas as pd
 
 # Add project root to sys.path to allow importing from src
@@ -11,84 +11,99 @@ from src.functions.mysql_connection import get_mysql_connection
 from src.config.schemas import Base, get_sqlalchemy_engine # To initialize and drop tables
 from src.functions.mysql_init_tables import initialize_database_tables # To initialize tables
 
-class TestMySQLLoad(unittest.TestCase):
+@pytest.fixture(scope="class")
+def db_setup(request):
+    """Set up the database and create dummy CSV files before any tests run in the class."""
+    print("Setting up TestMySQLLoad class with pytest fixture...")
+    engine = get_sqlalchemy_engine()
+    request.cls.engine = engine
+    
+    init_result = initialize_database_tables()
+    if not init_result["success"]:
+        pytest.fail(f"Failed to initialize database tables for testing: {init_result['message']}")
+    print("Database tables initialized for testing.")
 
-    @classmethod
-    def setUpClass(cls):
-        """Set up the database and create dummy CSV files before any tests run."""
-        print("Setting up TestMySQLLoad...")
-        cls.engine = get_sqlalchemy_engine()
-        
-        # Initialize (create or clear) tables
-        init_result = initialize_database_tables()
-        if not init_result["success"]:
-            raise Exception(f"Failed to initialize database tables for testing: {init_result['message']}")
-        print("Database tables initialized for testing.")
+    fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures')
+    os.makedirs(fixtures_dir, exist_ok=True)
+    request.cls.fixtures_dir = fixtures_dir
 
-        # Define paths for dummy CSVs
-        cls.fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures')
-        os.makedirs(cls.fixtures_dir, exist_ok=True)
+    occupations_csv = os.path.join(fixtures_dir, 'test_occupations.csv')
+    skills_csv = os.path.join(fixtures_dir, 'test_skills.csv')
+    occupation_skills_csv = os.path.join(fixtures_dir, 'test_occupation_skills.csv')
 
-        cls.occupations_csv = os.path.join(cls.fixtures_dir, 'test_occupations.csv')
-        cls.skills_csv = os.path.join(cls.fixtures_dir, 'test_skills.csv')
-        cls.occupation_skills_csv = os.path.join(cls.fixtures_dir, 'test_occupation_skills.csv')
+    request.cls.occupations_csv = occupations_csv
+    request.cls.skills_csv = skills_csv
+    request.cls.occupation_skills_csv = occupation_skills_csv
 
-        # Create dummy data
-        cls.occupations_data = pd.DataFrame({
-            'onet_soc_code': ['T1-0001.00', 'T1-0002.00', 'T1-0003.00', 'T1-0004.00', 'T1-0005.00', 'T1-0006.00'],
-            'title': ['Test Occ 1', 'Test Occ 2', 'Test Occ 3', 'Test Occ 4', 'Test Occ 5', 'Test Occ 6'],
-            'description': ['Desc 1', 'Desc 2', 'Desc 3', 'Desc 4', 'Desc 5', 'Desc 6']
-        })
-        cls.occupations_data.to_csv(cls.occupations_csv, index=False)
+    occupations_data = pd.DataFrame({
+        'O*NET-SOC Code': ['T1-0001.00', 'T1-0002.00', 'T1-0003.00', 'T1-0004.00', 'T1-0005.00', 'T1-0006.00'],
+        'Title': ['Test Occ 1', 'Test Occ 2', 'Test Occ 3', 'Test Occ 4', 'Test Occ 5', 'Test Occ 6'],
+        'Description': ['Desc 1', 'Desc 2', 'Desc 3', 'Desc 4', 'Desc 5', 'Desc 6']
+    })
+    # Use O*NET headers for dummy CSVs to match load_data_from_csv expectations
+    occupations_data.to_csv(occupations_csv, index=False, sep='\t') 
+    request.cls.occupations_data = occupations_data
 
-        cls.skills_data = pd.DataFrame({
-            'element_id': ['S1.A.1', 'S1.A.2', 'S1.A.3', 'S1.A.4', 'S1.A.5', 'S1.A.6'],
-            'element_name': ['Test Skill 1', 'Test Skill 2', 'Test Skill 3', 'Test Skill 4', 'Test Skill 5', 'Test Skill 6']
-        })
-        cls.skills_data.to_csv(cls.skills_csv, index=False)
+    skills_data = pd.DataFrame({
+        'Element ID': ['S1.A.1', 'S1.A.2', 'S1.A.3', 'S1.A.4', 'S1.A.5', 'S1.A.6'],
+        'Element Name': ['Test Skill 1', 'Test Skill 2', 'Test Skill 3', 'Test Skill 4', 'Test Skill 5', 'Test Skill 6']
+    })
+    skills_data.to_csv(skills_csv, index=False, sep='\t')
+    request.cls.skills_data = skills_data
 
-        cls.occupation_skills_data = pd.DataFrame({
-            'onet_soc_code': ['T1-0001.00', 'T1-0001.00', 'T1-0002.00', 'T1-0003.00', 'T1-0004.00', 'T1-0005.00', 'T1-0006.00'],
-            'element_id': ['S1.A.1', 'S1.A.2', 'S1.A.1', 'S1.A.3', 'S1.A.4', 'S1.A.5', 'S1.A.6'],
-            'scale_id': ['IM', 'IM', 'LV', 'IM', 'LV', 'IM', 'LV'],
-            'data_value': [4.5, 4.2, 3.7, 4.0, 3.5, 4.8, 3.2],
-            'n_value': [10, 10, 8, 12, 9, 15, 7],
-            'standard_error': [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-            'lower_ci_bound': [4.3, 4.0, 3.5, 3.8, 3.3, 4.6, 3.0],
-            'upper_ci_bound': [4.7, 4.4, 3.9, 4.2, 3.7, 5.0, 3.4],
-            'recommend_suppress': ['N', 'N', 'N', 'N', 'N', 'N', 'N'],
-            'not_relevant': [None, None, None, None, None, None, None],
-            'date_recorded': ['2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01'],
-            'domain_source': ['Test', 'Test', 'Test', 'Test', 'Test', 'Test', 'Test']
-        })
-        cls.occupation_skills_data.to_csv(cls.occupation_skills_csv, index=False)
-        print(f"Created dummy CSVs in {cls.fixtures_dir}")
+    occupation_skills_data = pd.DataFrame({
+        'O*NET-SOC Code': ['T1-0001.00', 'T1-0001.00', 'T1-0002.00', 'T1-0003.00', 'T1-0004.00', 'T1-0005.00', 'T1-0006.00'],
+        'Element ID': ['S1.A.1', 'S1.A.2', 'S1.A.1', 'S1.A.3', 'S1.A.4', 'S1.A.5', 'S1.A.6'],
+        'Scale ID': ['IM', 'IM', 'LV', 'IM', 'LV', 'IM', 'LV'],
+        'Data Value': [4.5, 4.2, 3.7, 4.0, 3.5, 4.8, 3.2],
+        'N': [10, 10, 8, 12, 9, 15, 7],
+        'Standard Error': [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        'Lower CI Bound': [4.3, 4.0, 3.5, 3.8, 3.3, 4.6, 3.0],
+        'Upper CI Bound': [4.7, 4.4, 3.9, 4.2, 3.7, 5.0, 3.4],
+        'Recommend Suppress': ['N', 'N', 'N', 'N', 'N', 'N', 'N'],
+        'Not Relevant': [None, None, None, None, None, None, None],
+        'Date': ['2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01'],
+        'Domain Source': ['Test', 'Test', 'Test', 'Test', 'Test', 'Test', 'Test']
+    })
+    occupation_skills_data.to_csv(occupation_skills_csv, index=False, sep='\t')
+    request.cls.occupation_skills_data = occupation_skills_data
+    print(f"Created dummy CSVs (tab-separated) in {fixtures_dir}")
+
+    yield # For teardown
+
+    print("\nTearing down TestMySQLLoad class fixture...")
+    if os.path.exists(occupations_csv):
+        os.remove(occupations_csv)
+    if os.path.exists(skills_csv):
+        os.remove(skills_csv)
+    if os.path.exists(occupation_skills_csv):
+        os.remove(occupation_skills_csv)
+    print("Dummy CSV files cleaned up.")
+
+@pytest.mark.usefixtures("db_setup")
+class TestMySQLLoad:
 
     def test_load_data(self):
         """Test loading data into all tables and verify counts and content."""
-        print("\nRunning test_load_data...")
+        print("\nRunning test_load_data with pytest...")
         
-        # Load Occupations
         load_occ_result = load_data_from_csv(self.occupations_csv, 'Occupations', self.engine)
-        self.assertTrue(load_occ_result["success"], f"Failed to load Occupations: {load_occ_result['message']}")
-        self.assertEqual(load_occ_result["result"].get("records_loaded"), len(self.occupations_data), "Occupation record count mismatch")
+        assert load_occ_result["success"], f"Failed to load Occupations: {load_occ_result['message']}"
+        assert load_occ_result["result"].get("records_loaded") == len(self.occupations_data), "Occupation record count mismatch"
         print(f"Occupations load: {load_occ_result['message']}")
 
-        # Load Skills
         load_skill_result = load_data_from_csv(self.skills_csv, 'Skills', self.engine)
-        self.assertTrue(load_skill_result["success"], f"Failed to load Skills: {load_skill_result['message']}")
-        self.assertEqual(load_skill_result["result"].get("records_loaded"), len(self.skills_data), "Skill record count mismatch")
+        assert load_skill_result["success"], f"Failed to load Skills: {load_skill_result['message']}"
+        assert load_skill_result["result"].get("records_loaded") == len(self.skills_data), "Skill record count mismatch"
         print(f"Skills load: {load_skill_result['message']}")
 
-        # Load Occupation_Skills
         load_occ_skill_result = load_data_from_csv(self.occupation_skills_csv, 'Occupation_Skills', self.engine)
-        self.assertTrue(load_occ_skill_result["success"], f"Failed to load Occupation_Skills: {load_occ_skill_result['message']}")
-        self.assertEqual(load_occ_skill_result["result"].get("records_loaded"), len(self.occupation_skills_data), "Occupation_Skills record count mismatch")
+        assert load_occ_skill_result["success"], f"Failed to load Occupation_Skills: {load_occ_skill_result['message']}"
+        assert load_occ_skill_result["result"].get("records_loaded") == len(self.occupation_skills_data), "Occupation_Skills record count mismatch"
         print(f"Occupation_Skills load: {load_occ_skill_result['message']}")
 
-        # Verify data using direct SQL connection
         conn_details = get_mysql_connection()
-        self.assertTrue(conn_details["success"], f"Failed to connect to MySQL for verification: {conn_details['message']}")
+        assert conn_details["success"], f"Failed to connect to MySQL for verification: {conn_details['message']}"
         connection = conn_details["result"]
         cursor = connection.cursor()
 
@@ -103,43 +118,27 @@ class TestMySQLLoad(unittest.TestCase):
             print(f"Verifying table: {table_name}")
             cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
             count = cursor.fetchone()[0]
-            self.assertEqual(count, expected_count, f"Row count mismatch for table {table_name}")
+            assert count == expected_count, f"Row count mismatch for table {table_name}"
             print(f"Table '{table_name}' has {count} rows (matches expected)." )
 
             cursor.execute(f"SELECT * FROM {table_name} LIMIT 5")
             rows = cursor.fetchall()
             column_names = [desc[0] for desc in cursor.description]
             print(f"First {min(5, len(rows))} rows from '{table_name}':")
-            print(", ".join(column_names)) # Print header
+            print(", ".join(column_names))
             for row in rows:
                 print(row)
-            self.assertTrue(len(rows) > 0 if expected_count > 0 else True, f"No rows found in {table_name} when expected.")
+            assert len(rows) > 0 if expected_count > 0 else True, f"No rows found in {table_name} when expected."
             print("---")
 
         cursor.close()
         connection.close()
         print("test_load_data completed.")
 
-    @classmethod
-    def tearDownClass(cls):
-        """Clean up dummy CSV files after all tests have run."""
-        print("\nTearing down TestMySQLLoad...")
-        # Clean up by removing the dummy CSV files
-        if os.path.exists(cls.occupations_csv):
-            os.remove(cls.occupations_csv)
-        if os.path.exists(cls.skills_csv):
-            os.remove(cls.skills_csv)
-        if os.path.exists(cls.occupation_skills_csv):
-            os.remove(cls.occupation_skills_csv)
-        
-        # Optionally, remove the fixtures directory if it's empty and was created by the test
-        if os.path.exists(cls.fixtures_dir) and not os.listdir(cls.fixtures_dir):
-            # os.rmdir(cls.fixtures_dir) # Commented out: might be shared
-            pass
-        print("Dummy CSV files cleaned up.")
-
+# For direct execution if needed, though pytest CLI is preferred
 if __name__ == '__main__':
-    print("Starting integration tests for MySQL data loading...")
-    # Ensure environment variables are loaded (e.g., by sourcing env/env.env)
-    # Example: source env/env.env && python tests/test_integration_mysql_load.py
-    unittest.main() 
+    print("Starting integration tests for MySQL data loading (pytest version)...")
+    # Running pytest programmatically. Ensure correct arguments if used.
+    # Example: pytest.main(["-v", __file__])
+    # However, typical execution is via `pytest` command in terminal.
+    pytest.main(["-s", "-v", __file__]) # -s to show print statements 

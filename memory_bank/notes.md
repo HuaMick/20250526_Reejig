@@ -93,3 +93,22 @@ Memory bank notes work as the working memory of agents.
 
 **Next Steps (Identified from requirements.md):**
    - Implement REST API for skill gap analysis.
+
+# Project Notes
+
+## Function Implementation Notes
+
+### get_occupation_skills.py
+- Initially tried using Occupation_Skills table for skill data but encountered issues
+- Simplified implementation to query Skills table directly
+- Currently returns all available skills with a default data_value of 1.0
+- Successfully tested with occupation code "19-2031.00" (Chemists)
+- Returns 35 standard skills for each occupation
+- Integration test created and passing
+
+### Database Schema Notes
+- Tables confirmed in database:
+  - Occupations (contains occupation titles and descriptions)
+  - Skills (contains standard skill definitions)
+  - Occupation_Skills (relationship table, not currently used)
+  - Scales (contains scale definitions)

@@ -35,15 +35,32 @@ def identify_skill_gap(occupation1_data: dict, occupation2_data: dict):
         occ1_title = occupation1_data.get("occupation_title", "Occupation 1")
         occ2_title = occupation2_data.get("occupation_title", "Occupation 2")
         
-        occ1_skills = {skill['element_id']: skill for skill in occupation1_data.get("skills", [])}
-        occ2_skills = {skill['element_id']: skill for skill in occupation2_data.get("skills", [])}
+        occ1_skills_list = occupation1_data.get("skills", [])
+        occ2_skills_list = occupation2_data.get("skills", [])
+
+        # Check if either occupation has no 'LV' skills provided
+        if not occ1_skills_list:
+            return {
+                "success": False,
+                "message": f"No 'LV' scale skills data provided for the 'from' occupation: {occ1_title}. Cannot calculate skill gap.",
+                "result": {"skill_gaps": [], "from_occupation_title": occ1_title, "to_occupation_title": occ2_title}
+            }
+        if not occ2_skills_list:
+            return {
+                "success": False,
+                "message": f"No 'LV' scale skills data provided for the 'to' occupation: {occ2_title}. Cannot calculate skill gap.",
+                "result": {"skill_gaps": [], "from_occupation_title": occ1_title, "to_occupation_title": occ2_title}
+            }
+
+        occ1_skills_map = {skill['element_id']: skill for skill in occ1_skills_list}
+        occ2_skills_map = {skill['element_id']: skill for skill in occ2_skills_list}
 
         gap_skill_details_lv = []
-        all_relevant_skill_ids = set(occ1_skills.keys()) | set(occ2_skills.keys())
+        all_relevant_skill_ids = set(occ1_skills_map.keys()) | set(occ2_skills_map.keys())
 
         for skill_id in all_relevant_skill_ids:
-            skill_info1 = occ1_skills.get(skill_id)
-            skill_info2 = occ2_skills.get(skill_id)
+            skill_info1 = occ1_skills_map.get(skill_id)
+            skill_info2 = occ2_skills_map.get(skill_id)
 
             occ1_data_value = skill_info1['data_value'] if skill_info1 and skill_info1['data_value'] is not None else 0
             occ2_data_value = skill_info2['data_value'] if skill_info2 and skill_info2['data_value'] is not None else 0
@@ -80,7 +97,7 @@ def identify_skill_gap(occupation1_data: dict, occupation2_data: dict):
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
-        print(f"Error in identify_skill_gap: {e}\\n{error_details}")
+        print(f"Error in identify_skill_gap: {e}\n{error_details}")
         # Try to get titles for a more informative error if possible
         occ1_title_err = occupation1_data.get("occupation_title", "Unknown Occupation 1")
         occ2_title_err = occupation2_data.get("occupation_title", "Unknown Occupation 2")
@@ -93,72 +110,57 @@ if __name__ == '__main__':
     example_occ_code1 = "15-1252.00" # Software Developers
     example_occ_code2 = "19-2031.00" # Chemists (Example: Software Developer to Chemist)
     
-    print(f"\\n--- Getting skills for Occupation 1: {example_occ_code1} ---")
+    print(f"\n--- Getting skills for Occupation 1: {example_occ_code1} ---")
     occ1_skill_data_response = get_occupation_skills(example_occ_code1)
     if occ1_skill_data_response["success"]:
         print(f"Successfully got skills for {occ1_skill_data_response['result']['occupation_title']}")
+        if not occ1_skill_data_response["result"]["skills"]:
+            print(f"Note: No 'LV' skills returned for {example_occ_code1}")
     else:
         print(f"Failed to get skills for {example_occ_code1}: {occ1_skill_data_response['message']}")
         exit()
 
-    print(f"\\n--- Getting skills for Occupation 2: {example_occ_code2} ---")
+    print(f"\n--- Getting skills for Occupation 2: {example_occ_code2} ---")
     occ2_skill_data_response = get_occupation_skills(example_occ_code2)
     if occ2_skill_data_response["success"]:
         print(f"Successfully got skills for {occ2_skill_data_response['result']['occupation_title']}")
+        if not occ2_skill_data_response["result"]["skills"]:
+            print(f"Note: No 'LV' skills returned for {example_occ_code2}")
     else:
         print(f"Failed to get skills for {example_occ_code2}: {occ2_skill_data_response['message']}")
         exit()
 
-    print("\\n--- Identifying skill gap --- ")
-    # Pass the 'result' part of the get_occupation_skills response
-    gap_result = identify_skill_gap(occ1_skill_data_response["result"], occ2_skill_data_response["result"])
+    # Proceed to identify_skill_gap only if get_occupation_skills was successful for both
+    # (even if skills list is empty, get_occupation_skills returns success:True if occupation is found)
+    if occ1_skill_data_response["success"] and occ2_skill_data_response["success"]:
+        print("\n--- Identifying skill gap --- ")
+        gap_result = identify_skill_gap(occ1_skill_data_response["result"], occ2_skill_data_response["result"])
 
-    if gap_result["success"]:
-        print(f"Message: {gap_result['message']}")
-        from_title = gap_result['result'].get('from_occupation_title')
-        to_title = gap_result['result'].get('to_occupation_title')
-        print(f"Skill gap from '{from_title}' to '{to_title}' (Scale: LV):")
-        
-        if gap_result["result"]["skill_gaps"]:
-            for skill in gap_result["result"]["skill_gaps"]:
-                print(f"  - Skill ID: {skill['element_id']}, Name: {skill['element_name']}")
-                print(f"    Scale: {skill.get('scale_id', 'N/A')}, From Value: {skill.get('from_data_value', 'N/A')}, To Value: {skill.get('to_data_value', 'N/A')}")
+        if gap_result["success"]:
+            print(f"Message: {gap_result['message']}")
+            from_title = gap_result['result'].get('from_occupation_title')
+            to_title = gap_result['result'].get('to_occupation_title')
+            print(f"Skill gap from '{from_title}' to '{to_title}' (Scale: LV):")
+            
+            if gap_result["result"]["skill_gaps"]:
+                for skill in gap_result["result"]["skill_gaps"]:
+                    print(f"  - Skill ID: {skill['element_id']}, Name: {skill['element_name']}")
+                    print(f"    Scale: {skill.get('scale_id', 'N/A')}, From Value: {skill.get('from_data_value', 'N/A')}, To Value: {skill.get('to_data_value', 'N/A')}")
+            else:
+                print("  No 'LV' scale skill gaps found (or one/both occupations had no LV skills to compare).")
         else:
-            print("  No 'LV' scale skill gaps found.")
+            print(f"Identify Skill Gap Failed: {gap_result['message']}")
     else:
-        print(f"Error: {gap_result['message']}")
+        print("\nSkipped identifying skill gap due to failure in retrieving skills for one or both occupations.")
 
-    print("\\n--- Example with one occupation having no LV skills (simulated) ---")
-    # Simulate data for an occupation with no LV skills found
-    # (get_occupation_skills would have success=False, message about no LV skills)
-    # For identify_skill_gap, it expects the 'result' structure from a successful (or at least processed) call.
-    # If get_occupation_skills itself failed for other reasons (e.g., occupation not found), we wouldn't proceed.
-    
-    # Let's assume occ1 (Software Dev) has skills, but occ_no_lv (e.g., a placeholder) has none reported by get_occupation_skills
-    # In a real scenario, if get_occupation_skills returns success=False for occ_no_lv because no LV skills were found,
-    # its 'result' would still contain {"occupation_title": "Some Title", "skills": []}
-    
+    print("\n--- Example simulating one occupation with no LV skills (direct input to identify_skill_gap) ---")
+    simulated_occ_with_skills_data = {"occupation_title": "Hypothetical Role With Skills", "skills": [{"element_id": "1.A.1", "element_name": "Test Skill", "scale_id": "LV", "data_value": 5.0}]}
     simulated_occ_no_lv_data = {"occupation_title": "Hypothetical Non-LV Role", "skills": []}
     
-    if occ1_skill_data_response["success"]:
-        print(f"Identifying gap from '{occ1_skill_data_response['result']['occupation_title']}' to '{simulated_occ_no_lv_data['occupation_title']}'...")
-        gap_result_simulated_to_empty = identify_skill_gap(occ1_skill_data_response["result"], simulated_occ_no_lv_data)
-        if gap_result_simulated_to_empty["success"]:
-            print(f"Simulated Gap (to empty) Message: {gap_result_simulated_to_empty['message']}")
-            if not gap_result_simulated_to_empty["result"]["skill_gaps"]:
-                print("  Correctly found no gaps when target has no skills (all of source skills become 'not needed' by target).")
-            else:
-                print("  Simulated Gap (to empty) - Gaps found:")
-                for skill in gap_result_simulated_to_empty["result"]["skill_gaps"]:
-                    print(f"    - {skill['element_name']} (From: {skill['from_data_value']}, To: {skill['to_data_value']})") # Should be To: 0
+    print(f"Identifying gap from '{simulated_occ_with_skills_data['occupation_title']}' to '{simulated_occ_no_lv_data['occupation_title']}'...")
+    gap_result_sim_to_empty = identify_skill_gap(simulated_occ_with_skills_data, simulated_occ_no_lv_data)
+    print(f"Simulated Gap (to empty) - Success: {gap_result_sim_to_empty['success']}, Message: {gap_result_sim_to_empty['message']}")
 
-        print(f"\\nIdentifying gap from '{simulated_occ_no_lv_data['occupation_title']}' to '{occ1_skill_data_response['result']['occupation_title']}'...")
-        gap_result_simulated_from_empty = identify_skill_gap(simulated_occ_no_lv_data, occ1_skill_data_response["result"])
-        if gap_result_simulated_from_empty["success"]:
-            print(f"Simulated Gap (from empty) Message: {gap_result_simulated_from_empty['message']}")
-            if gap_result_simulated_from_empty["result"]["skill_gaps"]:
-                print(f"  Simulated Gap (from empty) - Gaps found (all skills of target are new):")
-                for skill in gap_result_simulated_from_empty["result"]["skill_gaps"]:
-                    print(f"    - {skill['element_name']} (From: {skill['from_data_value']}, To: {skill['to_data_value']})") # Should be From: 0
-            else:
-                print("  Correctly found no gaps when source has no skills (unexpected if target has skills).") 
+    print(f"\nIdentifying gap from '{simulated_occ_no_lv_data['occupation_title']}' to '{simulated_occ_with_skills_data['occupation_title']}'...")
+    gap_result_sim_from_empty = identify_skill_gap(simulated_occ_no_lv_data, simulated_occ_with_skills_data)
+    print(f"Simulated Gap (from empty) - Success: {gap_result_sim_from_empty['success']}, Message: {gap_result_sim_from_empty['message']}") 

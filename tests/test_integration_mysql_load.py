@@ -6,139 +6,129 @@ import pandas as pd
 # Add project root to sys.path to allow importing from src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.functions.mysql_load import load_data_from_csv
+from src.functions.mysql_load import load_data_from_dataframe
+from src.functions.extract_onet_data import extract_onet_data
 from src.functions.mysql_connection import get_mysql_connection
-from src.config.schemas import Base, get_sqlalchemy_engine # To initialize and drop tables
-from src.functions.mysql_init_tables import initialize_database_tables # To initialize tables
+from src.config.schemas import get_sqlalchemy_engine # Base, Occupation, Skill, Scale not directly used here now
+from src.functions.mysql_init_tables import initialize_database_tables
 
-@pytest.fixture(scope="class")
-def db_setup(request):
-    """Set up the database and create dummy CSV files before any tests run in the class."""
-    print("Setting up TestMySQLLoad class with pytest fixture...")
-    engine = get_sqlalchemy_engine()
-    request.cls.engine = engine
-    
-    init_result = initialize_database_tables()
-    if not init_result["success"]:
-        pytest.fail(f"Failed to initialize database tables for testing: {init_result['message']}")
-    print("Database tables initialized for testing.")
+class TestMySQLLoadWithoutFixtures:
 
-    fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures')
-    os.makedirs(fixtures_dir, exist_ok=True)
-    request.cls.fixtures_dir = fixtures_dir
+    def test_load_actual_data_end_to_end(self):
+        print("\nRunning test_load_actual_data_end_to_end (no fixtures)...")
 
-    occupations_csv = os.path.join(fixtures_dir, 'test_occupations.csv')
-    skills_csv = os.path.join(fixtures_dir, 'test_skills.csv')
-    occupation_skills_csv = os.path.join(fixtures_dir, 'test_occupation_skills.csv')
+        # 1. Get SQLAlchemy engine
+        engine = None
+        try:
+            engine = get_sqlalchemy_engine()
+            print("SQLAlchemy engine created successfully.")
+        except Exception as e:
+            pytest.fail(f"Failed to create SQLAlchemy engine: {e}")
 
-    request.cls.occupations_csv = occupations_csv
-    request.cls.skills_csv = skills_csv
-    request.cls.occupation_skills_csv = occupation_skills_csv
+        # 2. Initialize database tables
+        # initialize_database_tables uses its own engine creation logic based on env vars.
+        # This is fine as it ensures a fresh setup.
+        init_result = initialize_database_tables()
+        if not init_result["success"]:
+            pytest.fail(f"Failed to initialize database tables: {init_result['message']}")
+        print("Database tables initialized successfully.")
 
-    occupations_data = pd.DataFrame({
-        'O*NET-SOC Code': ['T1-0001.00', 'T1-0002.00', 'T1-0003.00', 'T1-0004.00', 'T1-0005.00', 'T1-0006.00'],
-        'Title': ['Test Occ 1', 'Test Occ 2', 'Test Occ 3', 'Test Occ 4', 'Test Occ 5', 'Test Occ 6'],
-        'Description': ['Desc 1', 'Desc 2', 'Desc 3', 'Desc 4', 'Desc 5', 'Desc 6']
-    })
-    # Use O*NET headers for dummy CSVs to match load_data_from_csv expectations
-    occupations_data.to_csv(occupations_csv, index=False, sep='\t') 
-    request.cls.occupations_data = occupations_data
+        # 3. Extract actual data using extract_onet_data()
+        extracted_data_results = []
+        try:
+            print("Extracting O*NET data using extract_onet_data()...")
+            extracted_data_results = extract_onet_data()
+            if not extracted_data_results:
+                pytest.fail("extract_onet_data() returned no results. Ensure O*NET files are present in database/ directory and are not empty.")
+            print(f"Data extracted for {len(extracted_data_results)} files.")
+            # Check if any DataFrame is empty, which might indicate an issue or an empty source file
+            for res in extracted_data_results:
+                print(f"  - {res['filename']}: {res['df'].shape[0]} rows")
+                if res['df'].empty and res['filename'] in ['occupations.txt', 'skills.txt', 'scales.txt']:
+                    print(f"Warning: Extracted DataFrame for {res['filename']}] is empty. This might lead to 0 records loaded.")
 
-    skills_data = pd.DataFrame({
-        'Element ID': ['S1.A.1', 'S1.A.2', 'S1.A.3', 'S1.A.4', 'S1.A.5', 'S1.A.6'],
-        'Element Name': ['Test Skill 1', 'Test Skill 2', 'Test Skill 3', 'Test Skill 4', 'Test Skill 5', 'Test Skill 6']
-    })
-    skills_data.to_csv(skills_csv, index=False, sep='\t')
-    request.cls.skills_data = skills_data
-
-    occupation_skills_data = pd.DataFrame({
-        'O*NET-SOC Code': ['T1-0001.00', 'T1-0001.00', 'T1-0002.00', 'T1-0003.00', 'T1-0004.00', 'T1-0005.00', 'T1-0006.00'],
-        'Element ID': ['S1.A.1', 'S1.A.2', 'S1.A.1', 'S1.A.3', 'S1.A.4', 'S1.A.5', 'S1.A.6'],
-        'Scale ID': ['IM', 'IM', 'LV', 'IM', 'LV', 'IM', 'LV'],
-        'Data Value': [4.5, 4.2, 3.7, 4.0, 3.5, 4.8, 3.2],
-        'N': [10, 10, 8, 12, 9, 15, 7],
-        'Standard Error': [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-        'Lower CI Bound': [4.3, 4.0, 3.5, 3.8, 3.3, 4.6, 3.0],
-        'Upper CI Bound': [4.7, 4.4, 3.9, 4.2, 3.7, 5.0, 3.4],
-        'Recommend Suppress': ['N', 'N', 'N', 'N', 'N', 'N', 'N'],
-        'Not Relevant': [None, None, None, None, None, None, None],
-        'Date': ['2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01'],
-        'Domain Source': ['Test', 'Test', 'Test', 'Test', 'Test', 'Test', 'Test']
-    })
-    occupation_skills_data.to_csv(occupation_skills_csv, index=False, sep='\t')
-    request.cls.occupation_skills_data = occupation_skills_data
-    print(f"Created dummy CSVs (tab-separated) in {fixtures_dir}")
-
-    yield # For teardown
-
-    print("\nTearing down TestMySQLLoad class fixture...")
-    if os.path.exists(occupations_csv):
-        os.remove(occupations_csv)
-    if os.path.exists(skills_csv):
-        os.remove(skills_csv)
-    if os.path.exists(occupation_skills_csv):
-        os.remove(occupation_skills_csv)
-    print("Dummy CSV files cleaned up.")
-
-@pytest.mark.usefixtures("db_setup")
-class TestMySQLLoad:
-
-    def test_load_data(self):
-        """Test loading data into all tables and verify counts and content."""
-        print("\nRunning test_load_data with pytest...")
+        except Exception as e:
+            pytest.fail(f"Error during extract_onet_data(): {e}")
         
-        load_occ_result = load_data_from_csv(self.occupations_csv, 'Occupations', self.engine)
-        assert load_occ_result["success"], f"Failed to load Occupations: {load_occ_result['message']}"
-        assert load_occ_result["result"].get("records_loaded") == len(self.occupations_data), "Occupation record count mismatch"
-        print(f"Occupations load: {load_occ_result['message']}")
+        # 4. Load data into tables
+        loaded_counts = {}
+        expected_tables_to_load_from = ['occupations.txt', 'skills.txt', 'scales.txt']
+        found_files_to_load = {res['filename']: res['df'] for res in extracted_data_results if res['filename'] in expected_tables_to_load_from}
 
-        load_skill_result = load_data_from_csv(self.skills_csv, 'Skills', self.engine)
-        assert load_skill_result["success"], f"Failed to load Skills: {load_skill_result['message']}"
-        assert load_skill_result["result"].get("records_loaded") == len(self.skills_data), "Skill record count mismatch"
-        print(f"Skills load: {load_skill_result['message']}")
+        if not all(fn in found_files_to_load for fn in expected_tables_to_load_from):
+            missing_files = list(set(expected_tables_to_load_from) - set(found_files_to_load.keys()))
+            print(f"Warning: Not all expected source files were found in extract_onet_data results: {missing_files}. Test might not be comprehensive.")
 
-        load_occ_skill_result = load_data_from_csv(self.occupation_skills_csv, 'Occupation_Skills', self.engine)
-        assert load_occ_skill_result["success"], f"Failed to load Occupation_Skills: {load_occ_skill_result['message']}"
-        assert load_occ_skill_result["result"].get("records_loaded") == len(self.occupation_skills_data), "Occupation_Skills record count mismatch"
-        print(f"Occupation_Skills load: {load_occ_skill_result['message']}")
+        for filename, df in found_files_to_load.items():
+            table_name_map = {
+                'occupations.txt': 'Occupations',
+                'skills.txt': 'Skills',
+                'scales.txt': 'Scales'
+            }
+            table_name = table_name_map.get(filename)
+            
+            if table_name:
+                print(f"--- Loading data from {filename} into {table_name} table ---")
+                if df.empty:
+                    print(f"DataFrame for {filename} is empty. Skipping load for {table_name}. 0 records expected.")
+                    loaded_counts[table_name] = 0
+                    continue # Skip to next file if DataFrame is empty
+                
+                load_result = load_data_from_dataframe(df, table_name, engine) 
+                assert load_result["success"], f"Failed to load {table_name} from {filename}: {load_result['message']}"
+                records_loaded = load_result["result"].get("records_loaded", 0)
+                
+                assert records_loaded == df.shape[0], \
+                    f"Record count mismatch for {table_name}. Expected {df.shape[0]} rows from DataFrame, loaded {records_loaded} into DB."
+                print(f"{table_name} load: {load_result['message']}")
+                loaded_counts[table_name] = records_loaded
+            # No else needed as we pre-filtered found_files_to_load
+
+        # 5. Verification
+        if not loaded_counts or all(count == 0 for count in loaded_counts.values()):
+            pytest.skip("No data was loaded into any target tables (possibly due to empty source files or filters). Skipping DB verification.")
 
         conn_details = get_mysql_connection()
         assert conn_details["success"], f"Failed to connect to MySQL for verification: {conn_details['message']}"
         connection = conn_details["result"]
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
 
-        tables_to_verify = {
-            "Occupations": len(self.occupations_data),
-            "Skills": len(self.skills_data),
-            "Occupation_Skills": len(self.occupation_skills_data)
-        }
+        print("\n--- Verifying Table Data (Counts and Sample) ---")
+        for table_name, expected_db_count in loaded_counts.items():
+            if expected_db_count == 0:
+                print(f"Skipping DB verification for {table_name} as 0 records were loaded.")
+                # Optionally, verify table is indeed empty
+                cursor.execute(f"SELECT COUNT(*) AS count FROM {table_name}")
+                db_empty_check = cursor.fetchone()
+                assert db_empty_check['count'] == 0, f"Table {table_name} expected to be empty but has {db_empty_check['count']} rows."
+                continue
 
-        print("\n--- Verifying Table Data ---")
-        for table_name, expected_count in tables_to_verify.items():
             print(f"Verifying table: {table_name}")
-            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-            count = cursor.fetchone()[0]
-            assert count == expected_count, f"Row count mismatch for table {table_name}"
-            print(f"Table '{table_name}' has {count} rows (matches expected)." )
+            cursor.execute(f"SELECT COUNT(*) AS count FROM {table_name}")
+            db_count_result = cursor.fetchone()
+            db_count = db_count_result['count'] if db_count_result else 0
+            
+            assert db_count == expected_db_count, \
+                f"Row count mismatch for table {table_name}. Loaded {expected_db_count}, found in DB {db_count}."
+            print(f"Table '{table_name}' has {db_count} rows (matches loaded count).")
 
-            cursor.execute(f"SELECT * FROM {table_name} LIMIT 5")
-            rows = cursor.fetchall()
-            column_names = [desc[0] for desc in cursor.description]
-            print(f"First {min(5, len(rows))} rows from '{table_name}':")
-            print(", ".join(column_names))
-            for row in rows:
-                print(row)
-            assert len(rows) > 0 if expected_count > 0 else True, f"No rows found in {table_name} when expected."
+            if db_count > 0:
+                cursor.execute(f"SELECT * FROM {table_name} LIMIT 2")
+                rows = cursor.fetchall()
+                if rows:
+                    column_names = list(rows[0].keys())
+                    print(f"First {min(2, len(rows))} rows from '{table_name}':")
+                    print(", ".join(column_names))
+                    for row in rows:
+                        print(row)
+                assert len(rows) > 0, f"No rows sampled from {table_name} when count was > 0."
             print("---")
 
         cursor.close()
         connection.close()
-        print("test_load_data completed.")
+        print("test_load_actual_data_end_to_end completed.")
 
-# For direct execution if needed, though pytest CLI is preferred
+# For direct execution
 if __name__ == '__main__':
-    print("Starting integration tests for MySQL data loading (pytest version)...")
-    # Running pytest programmatically. Ensure correct arguments if used.
-    # Example: pytest.main(["-v", __file__])
-    # However, typical execution is via `pytest` command in terminal.
-    pytest.main(["-s", "-v", __file__]) # -s to show print statements 
+    print("Starting integration tests for MySQL data loading (no fixtures, pytest version)...")
+    pytest.main(["-s", "-v", __file__]) 

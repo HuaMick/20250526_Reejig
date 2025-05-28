@@ -21,7 +21,7 @@ class TestSkillGapProcess:
         """Test full process: Chemist to Software Developer, expecting a delta in identify_skill_gap if both have LV skills."""
         print("\nRunning test_process_chemist_to_software_developer (Scale: LV)...")
         from_code = "19-2031.00"  # Chemists
-        to_code = "15-1252.00"    # Software Developers
+        to_code = "15-1251.00"    # Computer Programmers (Changed from 15-1252.00)
 
         print(f"--- Getting skills for FROM occupation: {from_code} (Chemists) ---")
         from_skills_response = get_occupation_skills(from_code)
@@ -29,27 +29,28 @@ class TestSkillGapProcess:
         assert from_skills_response["result"]["skills"], f"FROM occupation {from_code} (Chemists) should have LV skills for this test."
         print(f"Got {len(from_skills_response['result']['skills'])} LV skills for {from_skills_response['result']['occupation_title']}")
 
-        print(f"--- Getting skills for TO occupation: {to_code} (Software Developers) ---")
+        print(f"--- Getting skills for TO occupation: {to_code} (Computer Programmers) ---")
         to_skills_response = get_occupation_skills(to_code)
         
         # Per user, 15-1252.00 (Software Developers) might not have LV skills in the current test DB
         if not to_skills_response["success"] and "No 'LV' scale skills found" in to_skills_response["message"]:
-            print(f"TO occupation {to_code} ({to_skills_response['result'].get('occupation_title', 'Software Developers')}) has no LV skills as per DB. Test adapts.")
+            print(f"TO occupation {to_code} ({to_skills_response['result'].get('occupation_title', 'Computer Programmers')}) has no LV skills as per DB. Test adapts.")
             # In this case, identify_skill_gap should still run. If Chemist has skills, all those skills will be 'gaps'
             # because Software Dev has nothing at LV to compare against (effectively 0 for all its skills).
             # However, our definition of a gap is "skills for occ2 not in occ1" or "higher in occ2".
             # If occ2 has no skills, there can be no such gaps.
             gap_result = identify_skill_gap(from_skills_response["result"], to_skills_response["result"])
-            assert gap_result["success"], "identify_skill_gap should succeed even if one occupation has no LV skills."
-            assert not gap_result["result"]["skill_gaps"], f"Expected no skill gaps when TO occupation ({to_code}) has no LV skills, but got {len(gap_result['result']['skill_gaps'])}."
-            print(f"Correctly found no gaps when TO occupation ({to_code}) has no LV skills.")
+            assert not gap_result["success"], "identify_skill_gap should now fail if TO occupation has no LV skills, as per new logic."
+            assert "No 'LV' scale skills data provided for the 'to' occupation" in gap_result["message"], "Message should indicate TO occupation has no skills for gap calc."
+            # assert not gap_result["result"]["skill_gaps"], f"Expected no skill gaps when TO occupation ({to_code}) has no LV skills, but got {len(gap_result['result']['skill_gaps'])}."
+            print(f"Correctly handled identify_skill_gap failure when TO occupation ({to_code}) has no LV skills.")
             return # Test is complete for this scenario
         
         assert to_skills_response["success"], f"Failed to get skills for TO occupation {to_code}: {to_skills_response['message']}"
-        assert to_skills_response["result"]["skills"], f"TO occupation {to_code} (Software Developers) must have LV skills for a meaningful gap test here."
+        assert to_skills_response["result"]["skills"], f"TO occupation {to_code} (Computer Programmers) must have LV skills for a meaningful gap test here."
         print(f"Got {len(to_skills_response['result']['skills'])} LV skills for {to_skills_response['result']['occupation_title']}")
 
-        print("--- Identifying skill gap between Chemist and Software Developer ---")
+        print("--- Identifying skill gap between Chemist and Computer Programmers ---")
         gap_result = identify_skill_gap(from_skills_response["result"], to_skills_response["result"])
         assert gap_result["success"], f"identify_skill_gap failed: {gap_result['message']}"
 
@@ -117,8 +118,8 @@ class TestSkillGapProcess:
             pytest.skip(f"Skipping test_get_occupation_skills_no_lv_skills: Occupation {occ_code_no_lv} not found in DB.")
 
         skills_response = get_occupation_skills(occ_code_no_lv)
-        assert not skills_response["success"], f"Expected get_occupation_skills to return success=False for {occ_code_no_lv} if no LV skills."
-        assert "No 'LV' scale skills found" in skills_response["message"], \
+        assert skills_response["success"], f"Expected get_occupation_skills to return success=True for {occ_code_no_lv} even if no LV skills, as long as occupation is valid."
+        assert "no 'LV' scale skills data available" in skills_response["message"].lower(), \
             f"Expected message about no LV skills for {occ_code_no_lv}, got: {skills_response['message']}"
         assert skills_response["result"]["skills"] == [], "Skills list should be empty if no LV skills found."
         assert skills_response["result"].get("occupation_title") == occupation_exists.title, "Occupation title should still be in result."

@@ -46,38 +46,18 @@ def main():
             print("\n--- Loading Occupations ---")
             load_result = load_data_from_dataframe(df, 'Occupations', engine)
         elif filename == 'skills.txt':
-            print("\n--- Loading Skills ---")
-            # We only load distinct skills into the Skills table
-            # The full skills_df is used for Occupation_Skills
-            distinct_skills_df = df[['element_id', 'element_name']].drop_duplicates().copy()
-            if not distinct_skills_df.empty and 'element_id' in distinct_skills_df.columns and 'element_name' in distinct_skills_df.columns:
-                 load_result_skills = load_data_from_dataframe(distinct_skills_df, 'Skills', engine)
-                 print(f"Skills table: {load_result_skills['message']}")
-                 if not load_result_skills['success']:
+            print("\n--- Loading Skills (New Schema) ---")
+            # The entire df from skills.txt (after extract_onet_data processing)
+            # now maps to the new expanded Skills table.
+            if not df.empty:
+                 load_result = load_data_from_dataframe(df, 'Skills', engine) # Load full df into Skills
+                 print(f"Skills table: {load_result['message']}")
+                 if not load_result['success']:
                     print(f"Stopping due to error in loading data into Skills table.")
                     sys.exit(1)
             else:
-                print("No distinct skills to load or columns missing.")
-
-            print("\n--- Loading Occupation_Skills ---")
-            # Select only columns relevant to Occupation_Skills
-            occupation_skills_columns = [
-                'onet_soc_code', 'element_id', 'scale_id', 'data_value', 
-                'n_value', 'standard_error', 'lower_ci_bound', 'upper_ci_bound',
-                'recommend_suppress', 'not_relevant', 'date_recorded', 'domain_source'
-            ]
-            # Filter df to only include relevant columns that actually exist in it
-            relevant_occupation_skills_df = df[[col for col in occupation_skills_columns if col in df.columns]].copy()
-            
-            if not relevant_occupation_skills_df.empty:
-                load_result_occupation_skills = load_data_from_dataframe(relevant_occupation_skills_df, 'Occupation_Skills', engine)
-                print(f"Occupation_Skills table: {load_result_occupation_skills['message']}")
-                if not load_result_occupation_skills['success']:
-                    print(f"Stopping due to error in loading data into Occupation_Skills table.")
-                    sys.exit(1)
-            else:
-                print("No data to load into Occupation_Skills table or relevant columns missing.")
-            load_result = {'success': True, 'message': "Skills and Occupation_Skills processed."} # Overall success for this branch
+                print("Skills DataFrame is empty. Nothing to load.")
+                load_result = {'success': True, 'message': "Skills DataFrame was empty, nothing loaded."}
 
         elif filename == 'scales.txt':
             print("\n--- Loading Scales ---")

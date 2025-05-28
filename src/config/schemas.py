@@ -12,29 +12,21 @@ class Occupation(Base):
     description = Column(Text)
 
     # Relationship to Occupation_Skills (one-to-many)
-    occupation_skills = relationship("OccupationSkill", back_populates="occupation", cascade="all, delete-orphan")
+    # occupation_skills = relationship("OccupationSkill", back_populates="occupation", cascade="all, delete-orphan") # Removed
 
 class Skill(Base):
     __tablename__ = 'Skills'
 
-    element_id = Column(String(20), primary_key=True, index=True)
-    element_name = Column(String(255), nullable=False)
-
-    # Relationship to Occupation_Skills (one-to-many)
-    occupation_skills = relationship("OccupationSkill", back_populates="skill", cascade="all, delete-orphan")
-
-class OccupationSkill(Base):
-    __tablename__ = 'Occupation_Skills'
-
     onet_soc_code = Column(String(20), ForeignKey('Occupations.onet_soc_code', ondelete='CASCADE', onupdate='CASCADE'), index=True)
-    element_id = Column(String(20), ForeignKey('Skills.element_id', ondelete='CASCADE', onupdate='CASCADE'), index=True)
-    scale_id = Column(String(10), index=True)
-    data_value = Column(DECIMAL(5, 2), nullable=True)  # Made nullable since some values might be missing
-    n_value = Column(Integer, nullable=True)  # Made nullable since some values might be missing
+    element_id = Column(String(20), index=True) # No longer primary key alone
+    element_name = Column(String(255), nullable=False)
+    scale_id = Column(String(10), ForeignKey('Scales.scale_id', ondelete='RESTRICT', onupdate='CASCADE'), index=True)
+    data_value = Column(DECIMAL(5, 2), nullable=True)
+    n_value = Column(Integer, nullable=True)
     standard_error = Column(DECIMAL(6, 4), nullable=True)
     lower_ci_bound = Column(DECIMAL(6, 4), nullable=True)
     upper_ci_bound = Column(DECIMAL(6, 4), nullable=True)
-    recommend_suppress = Column(CHAR(1), nullable=True)  # Made nullable since some values might be missing
+    recommend_suppress = Column(CHAR(1), nullable=True)
     not_relevant = Column(String(10), nullable=True)
     date_recorded = Column(Date, nullable=True)
     domain_source = Column(String(50), nullable=True)
@@ -44,10 +36,6 @@ class OccupationSkill(Base):
         PrimaryKeyConstraint('onet_soc_code', 'element_id', 'scale_id'),
         {}
     )
-
-    # Relationships to Occupation and Skill (many-to-one)
-    occupation = relationship("Occupation", back_populates="occupation_skills")
-    skill = relationship("Skill", back_populates="occupation_skills")
 
 class Scale(Base):
     __tablename__ = 'Scales'

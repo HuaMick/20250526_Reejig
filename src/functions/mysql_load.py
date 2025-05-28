@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
-from src.config.schemas import Occupation, Skill, OccupationSkill, get_sqlalchemy_engine
+from src.config.schemas import Occupation, Skill, get_sqlalchemy_engine
 from src.functions.mysql_connection import get_mysql_connection
 
 def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_existing: bool = True) -> dict:
@@ -11,7 +11,7 @@ def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_ex
     Args:
         df (pd.DataFrame): The DataFrame containing the data to load.
         table_name (str): The name of the table to load data into.
-                          Valid names are 'Occupations', 'Skills', 'Occupation_Skills'.
+                          Valid names are 'Occupations', 'Skills', 'Scales'.
         engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
         clear_existing (bool): Whether to clear existing data before loading. Defaults to True.
 
@@ -39,39 +39,29 @@ def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_ex
             records = df.to_dict(orient='records')
         elif table_name == 'Skills':
             model = Skill
-            # For Skills table, we need unique element_id and element_name
-            if 'element_id' in df.columns and 'element_name' in df.columns:
-                df = df[['element_id', 'element_name']].drop_duplicates().reset_index(drop=True)
-                records = df.to_dict(orient='records')
-            else:
-                session.close()
-                return {"success": False, "message": "DataFrame missing 'element_id' or 'element_name' columns.", "result": {}}
-        elif table_name == 'Occupation_Skills':
-            model = OccupationSkill
-            # Ensure all required columns for OccupationSkill are present
-            required_cols = ['onet_soc_code', 'element_id', 'scale_id', 'data_value', 
-                           'n_value', 'standard_error', 'lower_ci_bound', 'upper_ci_bound',
-                           'recommend_suppress', 'not_relevant', 'date_recorded', 'domain_source']
-            if not all(col in df.columns for col in required_cols):
-                missing_cols = [col for col in required_cols if col not in df.columns]
-                session.close()
-                return {"success": False, "message": f"DataFrame missing required columns: {missing_cols}", "result": {}}
-            df = df[required_cols]
-            
-            # Handle date conversion
-            if 'date_recorded' in df.columns and df['date_recorded'].dtype == 'object':
-                try:
-                    df['date_recorded'] = pd.to_datetime(df['date_recorded'], errors='coerce')
-                    df['date_recorded'] = df['date_recorded'].where(pd.notnull(df['date_recorded']), None)
-                except Exception as e:
-                    print(f"Warning: Could not parse all 'date_recorded' values: {e}")
-            
+            # The input DataFrame (df) is now expected to have all necessary columns for the expanded Skills table.
+            # No need to select specific columns or drop duplicates here, as extract_load.py prepares the df.
+            # The composite primary key (onet_soc_code, element_id, scale_id) handles uniqueness.
+            required_skill_cols = [
+                'onet_soc_code', 'element_id', 'element_name', 'scale_id', 'data_value',
+                'n_value', 'standard_error', 'lower_ci_bound', 'upper_ci_bound',
+                'recommend_suppress', 'not_relevant', 'date_recorded', 'domain_source'
+            ]
+            # Ensure all required columns for Skill are present
+            # It's okay if df has extra columns, they will be ignored by SQLAlchemy during mapping if not in the model.
+            # However, we should check for the core ones needed for a valid skill entry based on skills.txt structure.
+            minimal_cols_present = [col for col in ['onet_soc_code', 'element_id', 'element_name', 'scale_id', 'data_value'] if col in df.columns]
+            if len(minimal_cols_present) < 5: # Check if essential columns are present
+                 session.close()
+                 missing_essential = list(set(['onet_soc_code', 'element_id', 'element_name', 'scale_id', 'data_value']) - set(df.columns))
+                 return {"success": False, "message": f"DataFrame for Skills table missing essential columns: {missing_essential}", "result": {}}
+
             records = df.to_dict(orient='records')
-            # Handle NaN/NaT values
-            for record in records:
-                for key, value in record.items():
-                    if pd.isna(value):
-                        record[key] = None
+        elif table_name == 'Scales': # Added handling for Scales table
+            model = Scale
+            from src.config.schemas import Scale # Import Scale model here or at the top
+            df = df[['scale_id', 'scale_name', 'minimum', 'maximum']]
+            records = df.to_dict(orient='records')
         else:
             session.close()
             return {"success": False, "message": f"Invalid table name: {table_name}", "result": {}}
@@ -125,20 +115,33 @@ if __name__ == '__main__':
     print("\n--- Extracting O*NET Data ---")
     data_results = extract_onet_data()
     
-    # Process each extracted dataset
-    for result in data_results:
+    # Define the desired loading order
+    load_order = ['occupations.txt', 'scales.txt', 'skills.txt']
+    
+    # Sort data_results based on load_order
+    # This assumes all filenames in load_order are present in data_results
+    # and handles cases where data_results might have other files not in load_order (they'll be appended)
+    sorted_data_results = sorted(
+        data_results,
+        key=lambda x: load_order.index(x['filename']) if x['filename'] in load_order else float('inf')
+    )
+
+    # Process each extracted dataset in the defined order
+    for result in sorted_data_results:
         filename = result['filename']
         df = result['df']
+        load_result = {"success": False, "message": f"No specific loading logic for {filename}"} # Default
         
         if filename == 'occupations.txt':
             print("\n--- Loading Occupations ---")
             load_result = load_data_from_dataframe(df, 'Occupations', engine)
+        elif filename == 'scales.txt': # Scales are now loaded before Skills
+            print("\n--- Loading Scales ---")
+            load_result = load_data_from_dataframe(df, 'Scales', engine)
         elif filename == 'skills.txt':
-            print("\n--- Loading Skills ---")
+            print("\n--- Loading Skills (New Schema) ---")
             load_result = load_data_from_dataframe(df, 'Skills', engine)
-            
-            print("\n--- Loading Occupation_Skills ---")
-            load_result = load_data_from_dataframe(df, 'Occupation_Skills', engine)
+        # Add other elif blocks here if there are other files to process
         
         print(load_result['message'])
         if not load_result['success']:
@@ -152,7 +155,7 @@ if __name__ == '__main__':
         connection = connection_details["result"]
         cursor = connection.cursor(dictionary=True)
         
-        tables_to_verify = ['Occupations', 'Skills', 'Occupation_Skills']
+        tables_to_verify = ['Occupations', 'Skills', 'Scales']
         for table in tables_to_verify:
             try:
                 cursor.execute(f"SELECT COUNT(*) AS count FROM {table};")

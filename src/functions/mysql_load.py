@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
-from src.config.schemas import Occupation, Skill, get_sqlalchemy_engine
+from src.config.schemas import Occupation, Skill, Scale, get_sqlalchemy_engine
 from src.functions.mysql_connection import get_mysql_connection
 
 def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_existing: bool = True) -> dict:
@@ -29,53 +29,43 @@ def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_ex
     session = Session()
 
     try:
-        # Convert NaN to None for SQLAlchemy compatibility
         df = df.where(pd.notnull(df), None)
 
         if table_name == 'Occupations':
             model = Occupation
-            # Ensure only relevant columns are selected if df has more
             df = df[['onet_soc_code', 'title', 'description']]
             records = df.to_dict(orient='records')
         elif table_name == 'Skills':
             model = Skill
-            # The input DataFrame (df) is now expected to have all necessary columns for the expanded Skills table.
-            # No need to select specific columns or drop duplicates here, as extract_load.py prepares the df.
-            # The composite primary key (onet_soc_code, element_id, scale_id) handles uniqueness.
             required_skill_cols = [
                 'onet_soc_code', 'element_id', 'element_name', 'scale_id', 'data_value',
                 'n_value', 'standard_error', 'lower_ci_bound', 'upper_ci_bound',
                 'recommend_suppress', 'not_relevant', 'date_recorded', 'domain_source'
             ]
-            # Ensure all required columns for Skill are present
-            # It's okay if df has extra columns, they will be ignored by SQLAlchemy during mapping if not in the model.
-            # However, we should check for the core ones needed for a valid skill entry based on skills.txt structure.
             minimal_cols_present = [col for col in ['onet_soc_code', 'element_id', 'element_name', 'scale_id', 'data_value'] if col in df.columns]
-            if len(minimal_cols_present) < 5: # Check if essential columns are present
+            if len(minimal_cols_present) < 5: 
                  session.close()
                  missing_essential = list(set(['onet_soc_code', 'element_id', 'element_name', 'scale_id', 'data_value']) - set(df.columns))
                  return {"success": False, "message": f"DataFrame for Skills table missing essential columns: {missing_essential}", "result": {}}
-
             records = df.to_dict(orient='records')
-        elif table_name == 'Scales': # Added handling for Scales table
+        elif table_name == 'Scales':
             model = Scale
-            from src.config.schemas import Scale # Import Scale model here or at the top
             df = df[['scale_id', 'scale_name', 'minimum', 'maximum']]
             records = df.to_dict(orient='records')
         else:
             session.close()
             return {"success": False, "message": f"Invalid table name: {table_name}", "result": {}}
 
-        # Always clear the table before loading new data
-        try:
-            print(f"Clearing existing data from table {table_name}...")
-            session.query(model).delete()
-            session.commit()
-            print(f"Table {table_name} cleared.")
-        except Exception as e:
-            session.rollback()
-            session.close()
-            return {"success": False, "message": f"Error clearing table {table_name}: {e}", "result": {}}
+        if clear_existing:
+            try:
+                print(f"Clearing existing data from table {table_name}...")
+                session.query(model).delete()
+                session.commit()
+                print(f"Table {table_name} cleared.")
+            except Exception as e:
+                session.rollback()
+                session.close()
+                return {"success": False, "message": f"Error clearing table {table_name}: {e}", "result": {}}
 
         session.bulk_insert_mappings(model, records)
         session.commit()
@@ -98,7 +88,6 @@ if __name__ == '__main__':
     
     print("Starting data loading process from O*NET data...")
 
-    # Get SQLAlchemy engine
     try:
         engine = get_sqlalchemy_engine()
         print("SQLAlchemy engine created successfully.")
@@ -111,44 +100,35 @@ if __name__ == '__main__':
         print(f"Failed to create SQLAlchemy engine: {e}")
         exit(1)
 
-    # Extract data from O*NET files
     print("\n--- Extracting O*NET Data ---")
     data_results = extract_onet_data()
     
-    # Define the desired loading order
-    load_order = ['occupations.txt', 'scales.txt', 'skills.txt']
-    
-    # Sort data_results based on load_order
-    # This assumes all filenames in load_order are present in data_results
-    # and handles cases where data_results might have other files not in load_order (they'll be appended)
-    sorted_data_results = sorted(
-        data_results,
-        key=lambda x: load_order.index(x['filename']) if x['filename'] in load_order else float('inf')
-    )
-
-    # Process each extracted dataset in the defined order
-    for result in sorted_data_results:
+    for result in data_results:
         filename = result['filename']
         df = result['df']
-        load_result = {"success": False, "message": f"No specific loading logic for {filename}"} # Default
         
+        table_name_to_load = None
         if filename == 'occupations.txt':
-            print("\n--- Loading Occupations ---")
-            load_result = load_data_from_dataframe(df, 'Occupations', engine)
-        elif filename == 'scales.txt': # Scales are now loaded before Skills
-            print("\n--- Loading Scales ---")
-            load_result = load_data_from_dataframe(df, 'Scales', engine)
+            table_name_to_load = 'Occupations'
+            print(f"\n--- Loading {table_name_to_load} from {filename} ---")
         elif filename == 'skills.txt':
-            print("\n--- Loading Skills (New Schema) ---")
-            load_result = load_data_from_dataframe(df, 'Skills', engine)
-        # Add other elif blocks here if there are other files to process
+            table_name_to_load = 'Skills'
+            print(f"\n--- Loading {table_name_to_load} from {filename} ---")
+        elif filename == 'scales.txt':
+            table_name_to_load = 'Scales'
+            print(f"\n--- Loading {table_name_to_load} from {filename} ---")
         
-        print(load_result['message'])
-        if not load_result['success']:
-            print(f"Stopping due to error in loading data from {filename}.")
-            exit(1)
+        if table_name_to_load and not df.empty:
+            load_result = load_data_from_dataframe(df, table_name_to_load, engine)
+            print(load_result['message'])
+            if not load_result['success']:
+                print(f"Stopping due to error in loading data from {filename}.")
+                exit(1)
+        elif df.empty:
+            print(f"Skipping {filename} as it resulted in an empty DataFrame.")
+        else:
+            print(f"Skipping {filename} as it is not configured for loading.")
 
-    # Verification
     print("\n--- Verifying Data ---")
     connection_details = get_mysql_connection()
     if connection_details["success"]:
@@ -164,12 +144,16 @@ if __name__ == '__main__':
                 print(f"Table '{table}' has {count} rows.")
 
                 if count > 0:
-                    cursor.execute(f"SELECT * FROM {table} LIMIT 5;")
+                    cursor.execute(f"SELECT * FROM {table} LIMIT 3;")
                     rows = cursor.fetchall()
                     if rows:
                         print(f"First {len(rows)} rows from '{table}':")
                         for row in rows:
-                            print(row)
+                            if table == 'Skills' and len(row) > 5:
+                                displayed_row = {k: v for i, (k, v) in enumerate(row.items()) if i < 5}
+                                print(f"{displayed_row} ... (and more columns)")
+                            else:
+                                print(row)
                     else:
                         print(f"Could not fetch sample rows from '{table}', though count is > 0.")
                 else:

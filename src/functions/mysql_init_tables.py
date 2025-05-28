@@ -1,5 +1,6 @@
 import os
 from sqlalchemy import create_engine
+from sqlalchemy.sql import text
 from src.config.schemas import Base # Import your Base and models
 # from src.functions.mysql_connection import get_mysql_connection # No longer needed directly for table creation logic
 
@@ -37,17 +38,27 @@ def initialize_database_tables():
         engine_url = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
         engine = create_engine(engine_url)
 
-        # Drop all tables defined in Base.metadata (SQLAlchemy handles order for FKs)
-        # This is generally safe for development; for production, migrations (Alembic) are better.
-        print("Dropping existing tables defined in SQLAlchemy metadata...")
-        Base.metadata.drop_all(engine)
-        print("Tables dropped.")
+        with engine.connect() as connection:
+            # Temporarily disable foreign key checks to allow dropping tables in any order
+            connection.execute(text("SET FOREIGN_KEY_CHECKS=0;"))
+            print("Temporarily disabled foreign key checks.")
 
-        # Create all tables defined in Base.metadata
-        print("Creating new tables based on SQLAlchemy metadata...")
-        Base.metadata.create_all(engine)
-        print("Tables created.")
-        
+            # Drop all tables defined in Base.metadata
+            print("Dropping existing tables defined in SQLAlchemy metadata...")
+            Base.metadata.drop_all(connection) # Pass connection here
+            print("Tables dropped.")
+
+            # Create all tables defined in Base.metadata
+            print("Creating new tables based on SQLAlchemy metadata...")
+            Base.metadata.create_all(connection) # Pass connection here
+            print("Tables created.")
+
+            # Re-enable foreign key checks
+            connection.execute(text("SET FOREIGN_KEY_CHECKS=1;"))
+            print("Re-enabled foreign key checks.")
+            
+            connection.commit() # Commit the transaction that includes DDL and SET commands
+
         return {"success": True, "message": "Database tables initialized successfully using SQLAlchemy models."}
 
     except Exception as e:

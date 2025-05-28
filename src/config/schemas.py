@@ -17,10 +17,10 @@ class Occupation(Base):
 class Skill(Base):
     __tablename__ = 'Skills'
 
-    onet_soc_code = Column(String(20), ForeignKey('Occupations.onet_soc_code', ondelete='CASCADE', onupdate='CASCADE'), index=True)
+    onet_soc_code = Column(String(20), index=True)
     element_id = Column(String(20), index=True) # No longer primary key alone
     element_name = Column(String(255), nullable=False)
-    scale_id = Column(String(10), ForeignKey('Scales.scale_id', ondelete='RESTRICT', onupdate='CASCADE'), index=True)
+    scale_id = Column(String(10), index=True)
     data_value = Column(DECIMAL(5, 2), nullable=True)
     n_value = Column(Integer, nullable=True)
     standard_error = Column(DECIMAL(6, 4), nullable=True)

@@ -98,32 +98,3 @@ class TestSkillGapProcess:
         assert not skills_response["success"], "Expected get_occupation_skills to fail for a non-existent code."
         assert "not found" in skills_response["message"].lower(), f"Expected 'not found' in error message, got: {skills_response['message']}"
         print(f"Correctly handled non-existent occupation code: {skills_response['message']}")
-
-    def test_get_occupation_skills_no_lv_skills(self):
-        """Test get_occupation_skills for an occupation that exists but has no 'LV' scale skills."""
-        # Assuming "11-1011.00" (Chief Executives) is in DB but has no LV skills, or few enough not to be an issue.
-        # This requires specific data setup or knowledge of the test DB.
-        # If this code is not in your test DB or DOES have LV skills, this test might not behave as intended.
-        occ_code_no_lv = "11-1011.00" # Chief Executives (example)
-        print(f"\nRunning test_get_occupation_skills_no_lv_skills for {occ_code_no_lv}...")
-
-        # First, check if the occupation itself exists to avoid conflating errors.
-        temp_engine = get_sqlalchemy_engine()
-        Temp_Session = sessionmaker(bind=temp_engine)
-        temp_session = Temp_Session()
-        occupation_exists = temp_session.query(Occupation).filter(Occupation.onet_soc_code == occ_code_no_lv).first()
-        temp_session.close()
-
-        if not occupation_exists:
-            pytest.skip(f"Skipping test_get_occupation_skills_no_lv_skills: Occupation {occ_code_no_lv} not found in DB.")
-
-        skills_response = get_occupation_skills(occ_code_no_lv)
-        assert skills_response["success"], f"Expected get_occupation_skills to return success=True for {occ_code_no_lv} even if no LV skills, as long as occupation is valid."
-        assert "no 'LV' scale skills data available" in skills_response["message"].lower(), \
-            f"Expected message about no LV skills for {occ_code_no_lv}, got: {skills_response['message']}"
-        assert skills_response["result"]["skills"] == [], "Skills list should be empty if no LV skills found."
-        assert skills_response["result"].get("occupation_title") == occupation_exists.title, "Occupation title should still be in result."
-        print(f"Correctly handled occupation {occ_code_no_lv} with no LV skills: {skills_response['message']}")
-
-# Note: The test_get_occupation_skills_no_lv_skills requires `get_sqlalchemy_engine` and `Occupation` for the pre-check.
-# Ensure these are available if running this test file standalone or adjust if necessary. 

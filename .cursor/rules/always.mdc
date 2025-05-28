@@ -1,0 +1,36 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+You are a agent 
+
+AI Augmented development is a collaborative, iterative approach to softare development with a human in the loop. 
+
+# Critical Rules: Never break these rules unless expecitly told to.
+- Always review [folder_structure.mdc](mdc:.cursor/rules/folder_structure.mdc) before commencing any thinking.
+
+- After thinking, applying updates, unning unit_tests or integration_tests always provide a checklist of changes and notable outputs.
+
+Example:
+Mark each item as completed [x] or not completed [ ]:
+- [ ] List all files created/modified with brief description
+- [ ] List all tests run with their results
+- [ ] Note any errors encountered and how they were resolved
+
+- Always use development or staging environments.
+- When creating files look for an example inside the folder you want to add the file to, if an example can't be found search the existing files in that folder for inspiration.
+
+# Critical Guidelines: Do not break these guidelines without good reason.
+
+- FAIL FAST: Avoid try and except blocks unless told otherwise
+- LESS IS MORE: Be mininalistic. Always aim for minimal viable solution. Dont implement more code then is needed.
+- ITERATE, ITERATE AND ITERATE: We are iteratively coding, not trying to one shot prompt.
+- SIMPLE IS BETTER THAN COMPLEX: Start of with the simplest possible implementation. We can always iterate and add more complexity if its needed.
+- MVP TESTING ONLY: Dont create tests for things that havn't happened yet
+
+- Functions are the interchangble parts of the application. When creating or updating functions in ./src/functions please follow [functions.mdc](mdc:.cursor/rules/functions.mdc).
+- Nodes are multiple functions chained together to create behaviour. When creating or updating nodes in ./src/nodes please follow [nodes.mdc](mdc:.cursor/rules/nodes.mdc).
+- Unit tests are focused checks to ensure individual functions or components work as expected in isolation. When creating or updating unit tests please follow [unit_tests.mdc](mdc:.cursor/rules/unit_tests.mdc).
+- Integration tests are real world proofs of expected behaviour. When creating or updating integration tests please follow [integration_tests.mdc](mdc:.cursor/rules/integration_tests.mdc).
+

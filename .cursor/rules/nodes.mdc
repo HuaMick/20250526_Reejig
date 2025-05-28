@@ -3,3 +3,35 @@ description: creating and updating functions in the src/nodes folder
 globs: 
 alwaysApply: false
 ---
+## Definition
+Nodes chain multiple functions together to create desired behaviour.
+
+## Guidelines
+- Please follow the patterns in [example_node.py](mdc:src/nodes/example_node.py)
+- Nodes orchestrate multiple functions to accomplish complex workflows
+- Focus on clear process flow with status reporting at each step
+
+## Node Design
+- **Main function structure**: Always include a `main()` function with clear documentation
+- **Process tracking**: Use print statements to show progress through each step
+- **Error handling**: Use `sys.exit(1)` for critical failures, try-except for external services
+- **Early return pattern**: Validate inputs and fail fast with clear error messages
+- **Function chaining**: Import and call functions from `src/functions/` directory
+- **Result handling**: Check function success/failure and handle appropriately
+- **Final summary**: Provide completion status and summary of results
+
+## Best Practices
+- **One node per file**: Node filename should match the main workflow it performs
+- **Import functions**: Always import from `src/functions/` - never inline business logic
+- **Status reporting**: Print clear messages for each major step
+- **Error propagation**: Let function errors bubble up with context
+- **Minimalistic**: Focus on orchestration, not implementation
+- **Documentation**: Include docstring explaining the overall workflow
+
+When creating a node:
+- [ ] `grep_search` for existing functions before creating new ones
+- [ ] `grep_search` for existing functions that could potentially be leveraged  
+- [ ] Review existing nodes for similar patterns or workflows
+- [ ] Create an integration test [integration_tests.mdc](mdc:.cursor/rules/integration_tests.mdc) for each node that is created
+- [ ] Create an integration test [scripts.mdc](mdc:.cursor/rules/scripts.mdc) shell script for the node's integration test
+- [ ] Create a node execution script [scripts.mdc](mdc:.cursor/rules/scripts.mdc) 

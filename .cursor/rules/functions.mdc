@@ -3,4 +3,23 @@ description: creating and updating functions in the src/functions folder
 globs: 
 alwaysApply: false
 ---
+## Definition
 Functions are the interchanable parts of the application. The Application will chain multiple functions together for integration testing and to create nodes.
+
+## Guidelines
+- standard return format: `{"success": bool, "message": str, "result": dict}`.
+- please follow example function [example_function.py](mdc:src/functions/example_function.py)
+
+## Function Design
+- Early return pattern used for validation with clear error messages.
+- Exception handling with try-except only when dealing with external services.
+- Detailed documentation with docstrings including parameter and return descriptions.
+- Minimalistic example in main section for example usage in each function file.
+- Functions should be stored in ./src/functions.
+- One function per a file. The name of the function should match the file name.
+
+When creating a function:
+- [ ] `grep_search` for existing functions before a creating new one.
+- [ ] `grep_search` for existing functions that could potentially be leveaged.  
+- [ ] Create an integration test [integration_tests.mdc](mdc:.cursor/rules/integration_tests.mdc) for each function that is created.
+- [ ] Create an integration test [scripts.mdc](mdc:.cursor/rules/scripts.mdc) shell script for the function's integration test.

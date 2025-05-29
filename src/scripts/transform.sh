@@ -13,10 +13,13 @@ source ./.venv/bin/activate
 # Add project root to PYTHONPATH
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-# Run the example node script
-python src/nodes/example_node.py
+# Optional: Set data source (defaults to text_file if not set)
+export DATA_SOURCE="${DATA_SOURCE:-text_file}"
+
+# Run the transform node
+python src/nodes/transform.py
 
 # Deactivate the virtual environment
 deactivate
 
-echo "Example node process finished successfully."
+echo "O*NET data transformation process finished successfully." 

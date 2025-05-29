@@ -6,11 +6,11 @@ from typing import Dict, Any, List
 # Add project root to sys.path - This line is removed
 # sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from src.config.schemas import get_sqlalchemy_engine, Occupation, Skill
+from src.config.schemas import get_sqlalchemy_engine, Occupation, OccupationSkill, SkillReference
 
 def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
     """
-    Retrieves 'LV' (Level) scale skills data for a specific occupation code using SQLAlchemy ORM.
+    Retrieves skills data for a specific occupation code using the downstream tables.
     
     Args:
         occupation_code (str): The O*NET occupation code (e.g. "15-1252.00")
@@ -42,15 +42,16 @@ def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
                 "result": {"occupation_title": "Unknown", "skills": []}
             }
             
-        # Get 'LV' scale skills data from the Skill table directly
+        # Get skills data from the OccupationSkills and SkillsReference tables
         skills_query_result = session.query(
-            Skill.element_id,
-            Skill.element_name,
-            Skill.scale_id,
-            Skill.data_value
+            OccupationSkill.element_id,
+            SkillReference.element_name,
+            OccupationSkill.proficiency_level
+        ).join(
+            SkillReference,
+            OccupationSkill.element_id == SkillReference.element_id
         ).filter(
-            Skill.onet_soc_code == occupation_code,
-            Skill.scale_id == 'LV' # Filter for 'LV' scale skills
+            OccupationSkill.onet_soc_code == occupation_code
         ).all()
         
         skills_list: List[Dict[str, Any]] = []
@@ -59,18 +60,13 @@ def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
                 skills_list.append({
                     "element_id": skill_data.element_id,
                     "element_name": skill_data.element_name,
-                    "scale_id": skill_data.scale_id, # Should be 'LV'
-                    "data_value": skill_data.data_value # Actual data value from Skill table
+                    "scale_id": "LV",  # This is now implicit as we only store LV scale in OccupationSkills
+                    "data_value": skill_data.proficiency_level
                 })
-        
-        # It's possible an occupation exists but has no 'LV' skills listed in the Skills table.
-        # In this case, we return success True, with an empty skills list for this occupation.
-        # The original PRD requirement was: "Compares two occupations and returns the skills required by the second occupation that are not present in the first"
-        # identify_skill_gap handles missing skills by treating their data_value as 0.
         
         return {
             "success": True,
-            "message": f"Successfully retrieved 'LV' scale skills for {occupation.title}" if skills_list else f"Occupation {occupation.title} found, but no 'LV' scale skills data available in the Skills table.",
+            "message": f"Successfully retrieved skills for {occupation.title}" if skills_list else f"Occupation {occupation.title} found, but no skills data available.",
             "result": {
                 "occupation_title": occupation.title,
                 "skills": skills_list
@@ -99,7 +95,7 @@ if __name__ == "__main__":
     occupation_code = "15-1252.00"
 
     # 2. Call the function
-    print(f"\n--- Attempting to get 'LV' skills for occupation: {occupation_code} ---")
+    print(f"\n--- Attempting to get skills for occupation: {occupation_code} ---")
     result = get_occupation_skills(occupation_code)
     
     # 3. Print the raw result from the function
@@ -108,9 +104,9 @@ if __name__ == "__main__":
 
     # Optionally, print a summary if successful and skills are found
     if result['success'] and result['result'] and result['result']['skills']:
-        print(f"  Successfully found {len(result['result']['skills'])} 'LV' skills for {result['result']['occupation_title']}.")
+        print(f"  Successfully found {len(result['result']['skills'])} skills for {result['result']['occupation_title']}.")
         print(f"  Sample skill: {result['result']['skills'][0]}")
     elif result['success']:
-        print(f"  Call was successful, but no 'LV' skills found for {result.get('result', {}).get('occupation_title', occupation_code)} or occupation not found as per message.")
+        print(f"  Call was successful, but no skills found for {result.get('result', {}).get('occupation_title', occupation_code)} or occupation not found as per message.")
 
     print("\nExample finished.")

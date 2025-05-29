@@ -13,10 +13,18 @@ source ./.venv/bin/activate
 # Add project root to PYTHONPATH
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-# Run the example node script
-python src/nodes/example_node.py
+echo "Initializing database tables..."
+python -m src.nodes.init_db
+
+# Check the exit code
+if [ $? -eq 0 ]; then
+    echo "Database initialization completed successfully!"
+else
+    echo "Database initialization failed!"
+    exit 1
+fi
 
 # Deactivate the virtual environment
 deactivate
 
-echo "Example node process finished successfully."
+echo "Database initialization process finished." 

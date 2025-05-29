@@ -13,10 +13,13 @@ alwaysApply: true
 │   ├── config/       # Configuration files
 │   └── scripts/      # Shell scripts to execute nodes or setup infrastructure
 │   
-├── tests/            # Test files
+├── tests/
 │   ├── fixtures/     # Test fixtures and shared test data
-│   ├── test_integration_*.py     # Integration test implementation files
-│   └── test_integration_*.sh     # Integration test shell script for setting env and .venv
+│
+├── database/         # Database related files
+│   └── onet_api/     # ONET API database files
+│
+├── docs/             # Documentation files
 │
 ├── memory_bank/      # Project documentation and reference materials
 │   ├── lessons.md    # Lessons learned
@@ -32,6 +35,8 @@ alwaysApply: true
 │
 ├── pyproject.toml    # Project configuration
 │
+├── docker-compose.yml # Docker configuration
+
 └── .gitignore        # Git ignore file
 ```
 

@@ -2,99 +2,96 @@ import os
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from src.config.schemas import OnetMappings, Onet_Occupations_Landing, Onet_Skills_Landing, Onet_Scales_Landing
+from src.functions.textfile_to_dataframe import textfile_to_dataframe
 
-# Define standard column rename maps
-OCCUPATIONS_COLUMN_RENAME_MAP = {
-    "O*NET-SOC Code": "onet_soc_code",
-    "Title": "title",
-    "Description": "description",
-}
-
-SKILLS_COLUMN_RENAME_MAP = {
-    "Element ID": "element_id",
-    "Element Name": "element_name",
-    "O*NET-SOC Code": "onet_soc_code",
-    "Scale ID": "scale_id",
-    "Data Value": "data_value",
-    "N": "n_value",
-    "Standard Error": "standard_error",
-    "Lower CI Bound": "lower_ci_bound",
-    "Upper CI Bound": "upper_ci_bound",
-    "Recommend Suppress": "recommend_suppress",
-    "Not Relevant": "not_relevant",
-    "Date": "date_recorded",
-    "Domain Source": "domain_source"
-}
-
-SCALES_COLUMN_RENAME_MAP = {
-    "Scale ID": "scale_id",
-    "Scale Name": "scale_name",
-    "Minimum": "minimum",
-    "Maximum": "maximum"
-}
-
-def _read_onet_file(file_path: str, column_rename_map: Optional[Dict[str, str]] = None) -> pd.DataFrame:
+def extract_occupations(file_path: Optional[str] = None) -> Dict[str, Any]:
     """
-    Internal helper to read an O*NET data file and return a pandas DataFrame.
-    Performs column renaming and data type conversions specific to O*NET files.
-    Args:
-        file_path (str): Path to the O*NET data file
-        column_rename_map (Optional[Dict[str, str]]): Dictionary to rename columns
-    Returns:
-        pd.DataFrame: DataFrame containing the O*NET data
-    Raises:
-        FileNotFoundError: If the file_path does not exist.
-        Exception: If pandas fails to read or process the file for other reasons.
-    """
-    if not os.path.exists(file_path):
-        # This will be caught by the caller and reported
-        raise FileNotFoundError(f"File not found: {file_path}")
+    Extract occupations data from O*NET text file.
     
-    try:
-        df = pd.read_csv(file_path, sep='\t', low_memory=False) # Added low_memory=False for potentially mixed types
+    Args:
+        file_path (Optional[str]): Path to the occupations file. If None, uses default path.
         
-        if column_rename_map:
-            existing_renames = {k: v for k, v in column_rename_map.items() if k in df.columns}
-            df.rename(columns=existing_renames, inplace=True)
-        
-        if 'date_recorded' in df.columns:
-            try:
-                df['date_recorded'] = pd.to_datetime(df['date_recorded'], format='%Y%m', errors='coerce').dt.strftime('%Y-%m-%d')
-                # Attempt to convert to date objects, coercing errors for flexibility
-                df['date_recorded'] = pd.to_datetime(df['date_recorded'], errors='coerce').dt.date
-            except Exception as e:
-                # If specific parsing fails, log warning and attempt general conversion
-                print(f"Warning: Could not parse 'date_recorded' with specific format in {os.path.basename(file_path)}. Attempting general conversion. Error: {e}")
-                df['date_recorded'] = pd.to_datetime(df['date_recorded'], errors='coerce').dt.date
+    Returns:
+        Dict[str, Any]: Dictionary with 'success', 'df', and 'error' keys
+    """
+    if file_path is None:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        file_path = os.path.join(project_root, 'database/occupations.txt')
+    
+    dtype = {col: str for col in Onet_Occupations_Landing.string_columns}
+    
+    return textfile_to_dataframe(
+        file_path=file_path,
+        column_rename_map=OnetMappings.OCCUPATIONS_COLUMN_RENAME_MAP,
+        dtype=dtype
+    )
 
-        if 'recommend_suppress' in df.columns:
-            df['recommend_suppress'] = df['recommend_suppress'].astype(str).str[0]
+def extract_skills(file_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Extract skills data from O*NET text file.
+    
+    Args:
+        file_path (Optional[str]): Path to the skills file. If None, uses default path.
         
-        decimal_columns = ['data_value', 'standard_error', 'lower_ci_bound', 'upper_ci_bound']
-        for col in decimal_columns:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-                if col == 'data_value':
-                    df[col] = df[col].round(2)
-                else:
-                    df[col] = df[col].round(4)
+    Returns:
+        Dict[str, Any]: Dictionary with 'success', 'df', and 'error' keys
+    """
+    if file_path is None:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        file_path = os.path.join(project_root, 'database/skills.txt')
+    
+    dtype = {
+        'element_id': str,
+        'element_name': str,
+        'onet_soc_code': str,
+        'scale_id': str,
+        'data_value': float,
+        'n_value': 'Int64',
+        'standard_error': float,
+        'lower_ci_bound': float, 
+        'upper_ci_bound': float,
+        'not_relevant': str,
+        'domain_source': str
+    }
+    
+    return textfile_to_dataframe(
+        file_path=file_path,
+        column_rename_map=OnetMappings.SKILLS_COLUMN_RENAME_MAP,
+        dtype=dtype,
+        date_columns=['date_recorded']
+    )
+
+def extract_scales(file_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Extract scales data from O*NET text file.
+    
+    Args:
+        file_path (Optional[str]): Path to the scales file. If None, uses default path.
         
-        if 'n_value' in df.columns:
-            df['n_value'] = pd.to_numeric(df['n_value'], errors='coerce').astype('Int64')
-        
-        integer_columns_scales = ['minimum', 'maximum']
-        for col in integer_columns_scales:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
-                
-        return df
-    except Exception as e:
-        # Re-raise to be caught by the main extract_onet_data function for reporting
-        raise Exception(f"Error processing file {os.path.basename(file_path)} with pandas: {e}")
+    Returns:
+        Dict[str, Any]: Dictionary with 'success', 'df', and 'error' keys
+    """
+    if file_path is None:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        file_path = os.path.join(project_root, 'database/scales.txt')
+    
+    dtype = {
+        'scale_id': str,
+        'scale_name': str,
+        'minimum': 'Int64',
+        'maximum': 'Int64'
+    }
+    
+    return textfile_to_dataframe(
+        file_path=file_path,
+        column_rename_map=OnetMappings.SCALES_COLUMN_RENAME_MAP,
+        dtype=dtype
+    )
 
 def extract_onet_data() -> Dict[str, Any]:
     """
-    Extracts data from O*NET files specified by their relative paths from the project root.
+    Extracts data from all O*NET files and combines the results.
     
     Returns:
         Dict[str, Any]: A dictionary with keys 'success' (bool), 'message' (str), 
@@ -103,44 +100,33 @@ def extract_onet_data() -> Dict[str, Any]:
                         'extracted_data' contains successfully processed files and their DataFrames.
                         'errors' contains messages for files that failed to process.
     """
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    
-    file_configs = [
-        {'filename': 'occupations.txt', 'path_suffix': 'database/occupations.txt', 'map': OCCUPATIONS_COLUMN_RENAME_MAP,
-         'string_cols': ['onet_soc_code', 'title', 'description']},
-        {'filename': 'skills.txt', 'path_suffix': 'database/skills.txt', 'map': SKILLS_COLUMN_RENAME_MAP,
-         'string_cols': ['element_id', 'element_name']},
-        {'filename': 'scales.txt', 'path_suffix': 'database/scales.txt', 'map': SCALES_COLUMN_RENAME_MAP,
-         'string_cols': ['scale_id', 'scale_name']}
+    extraction_functions = [
+        {'name': 'occupations.txt', 'function': extract_occupations},
+        {'name': 'skills.txt', 'function': extract_skills},
+        {'name': 'scales.txt', 'function': extract_scales}
     ]
     
     processed_data = []
     error_messages = []
-    files_processed_count = 0
+    files_processed_count = len(extraction_functions)
     files_succeeded_count = 0
 
-    for config in file_configs:
-        file_path = os.path.join(project_root, config['path_suffix'])
-        files_processed_count += 1
+    for config in extraction_functions:
         try:
-            df = _read_onet_file(file_path, config['map'])
-            for col in config.get('string_cols', []):
-                if col in df.columns:
-                    df[col] = df[col].astype(str)
-            
-            processed_data.append({
-                'filename': config['filename'],
-                'df': df
-            })
-            files_succeeded_count += 1
-        except FileNotFoundError as fnf_e:
-            msg = str(fnf_e)
-            error_messages.append(msg)
-            print(f"Error for {config['filename']}: {msg}")
+            result = config['function']()
+            if result['success']:
+                processed_data.append({
+                    'filename': config['name'],
+                    'df': result['df']
+                })
+                files_succeeded_count += 1
+            else:
+                error_messages.append(f"Error for {config['name']}: {result['error']}")
+                print(f"Error for {config['name']}: {result['error']}")
         except Exception as e:
-            msg = f"Error processing {config['filename']}: {e}"
+            msg = f"Error processing {config['name']}: {e}"
             error_messages.append(msg)
-            print(msg) # Also print to console for immediate feedback
+            print(msg)
 
     overall_success = files_succeeded_count > 0 and files_succeeded_count == files_processed_count
     message = f"Data extraction complete. {files_succeeded_count}/{files_processed_count} files processed successfully."

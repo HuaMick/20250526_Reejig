@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from src.config.schemas import Occupation, Skill, Scale, get_sqlalchemy_engine, Base
+from src.config.schemas import Onet_Occupations_Landing, Onet_Skills_Landing, Onet_Scales_Landing, get_sqlalchemy_engine, Base
 
 def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_existing: bool = True) -> dict:
     """
@@ -32,23 +32,23 @@ def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_ex
         df = df.where(pd.notnull(df), None)
 
         if table_name == 'Occupations':
-            model = Occupation
+            model = Onet_Occupations_Landing
             df_cols = [col for col in ['onet_soc_code', 'title', 'description'] if col in df.columns]
             if not all(c in df_cols for c in ['onet_soc_code', 'title']):
                  session.close()
                  return {"success": False, "message": f"DataFrame for Occupations table missing onet_soc_code or title", "result": {}}
             records = df[df_cols].to_dict(orient='records')
         elif table_name == 'Skills':
-            model = Skill
+            model = Onet_Skills_Landing
             minimal_skill_cols = ['onet_soc_code', 'element_id', 'element_name', 'scale_id']
             if not all(col in df.columns for col in minimal_skill_cols):
                  session.close()
                  return {"success": False, "message": f"DataFrame for Skills table missing one or more essential columns: {minimal_skill_cols}", "result": {}}
-            skill_model_cols = [c.name for c in Skill.__table__.columns]
+            skill_model_cols = [c.name for c in Onet_Skills_Landing.__table__.columns]
             df_skill_load_cols = [col for col in df.columns if col in skill_model_cols]
             records = df[df_skill_load_cols].to_dict(orient='records')
         elif table_name == 'Scales':
-            model = Scale
+            model = Onet_Scales_Landing
             df_cols = [col for col in ['scale_id', 'scale_name', 'minimum', 'maximum'] if col in df.columns]
             if not all(c in df_cols for c in ['scale_id', 'scale_name']):
                 session.close()
@@ -89,11 +89,11 @@ if __name__ == '__main__':
 
     from sqlalchemy import create_engine
     import pandas as pd
-    from src.config.schemas import Base, Occupation # For table creation
+    from src.config.schemas import Base, Onet_Occupations_Landing # For table creation
 
     # 1. Setup: In-memory SQLite engine and create a table
     example_engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(example_engine) # Create tables defined in Base (e.g., Occupation)
+    Base.metadata.create_all(example_engine) # Create tables defined in Base (e.g., Onet_Occupations_Landing)
 
     # 2. Prepare sample data and DataFrame
     sample_df = pd.DataFrame({

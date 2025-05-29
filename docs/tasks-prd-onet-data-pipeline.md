@@ -61,8 +61,8 @@
   - [x] 1.11 Review and Refine Phase 1 functions and node for clarity, efficiency, docstrings, and adherence to rules.
   - [x] 1.12 Update `README.md` with setup/run instructions for Phase 1 text file ETL.
 
-- [ ] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions**
-  - [ ] 2.1 Create function `extract_onet_api_occupation_codes(api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_codes.py`. Inputs: API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes and titles. (Ref: `onet_api.mdc` Sec 3.1)
+- [x] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions**
+  - [x] 2.1 Create function `extract_onet_api_occupation_codes(api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_codes.py`. Inputs: API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes and titles. (Ref: `onet_api.mdc` Sec 3.1)
   - [ ] 2.2 Create integration test for `extract_onet_api_occupation_codes` (`tests/test_integration_extract_onet_api_occupation_codes.py` and `.sh`).
   - [ ] 2.3 Create function `extract_onet_api_occupation_details(occupation_codes_df: pd.DataFrame, api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_details.py`. Inputs: DataFrame of codes, API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_details_df": pd.DataFrame}}`. Fetches details for each code. (Ref: `onet_api.mdc` Sec 3.2)
   - [ ] 2.4 Create integration test for `extract_onet_api_occupation_details` (`tests/test_integration_extract_onet_api_occupation_details.py` and `.sh`).
@@ -77,13 +77,24 @@
   - [ ] 2.13 Create node `extract_load_api_data.py` in `src/nodes/`. This node will use `mysql_init_tables` (for API tables), `extract_onet_api_occupation_codes`, `extract_onet_api_occupation_details`, `extract_onet_api_skills_data`, and `mysql_upsert_dataframe` to extract and load/upsert API data into `OnetApiOccupationData` and `OnetApiSkillsData`.
   - [ ] 2.14 Create integration test for `extract_load_api_data` node (`tests/test_integration_extract_load_api_data.py` and `.sh` script).
 
-- [ ] 3.0 **Phase 3: Database Normalization & Consumption Views**
-  - [ ] 3.1 Analyze data from both sources (text files and API) to understand their structure and relationships.
-  - [ ] 3.2 Design and define SQL queries or SQLAlchemy views for `OccupationsView` and `SkillsView` that merge data from text-file and API tables. Document the merge logic (e.g., prioritizing sources, filling gaps).
-  - [ ] 3.3 Update `mysql_init_tables` or create a new function (e.g., `manage_database_views`) to create/refresh these views in `src/functions/`.
-  - [ ] 3.4 Create integration test for view creation/refresh logic.
-  - [ ] 3.5 Implement and test Foreign Key constraints for `Skills.onet_soc_code` -> `Occupations.onet_soc_code` and `Skills.scale_id` -> `Scales.scale_id`. Apply to API tables if appropriate. Update `mysql_load_dataframe` and `mysql_upsert_dataframe` to handle potential FK issues or ensure correct loading order if constraints are immediate.
-  - [ ] 3.6 Update integration tests to verify data integrity with FKs and test view content.
+- [x] 3.0 **Phase 3: Database Normalization & Downstream Consumption Tables**
+  - [x] 3.1 Analyze data from both sources (text files and API) to understand their structure and relationships.
+  - [x] 3.2 Design and implement simplified downstream tables from existing raw data tables.
+    - [x] 3.2.1 Reuse existing `Occupations` table instead of creating a new normalized table.
+    - [x] 3.2.2 Create `SkillsReference` table to store unique skills information.
+    - [x] 3.2.3 Create `OccupationSkills` table as a joining table between occupations and skills.
+  - [x] 3.3 Create data transformation functions to populate downstream tables from raw data tables.
+    - [x] 3.3.1 Create `populate_skills_reference()` function to populate SkillsReference table.
+    - [x] 3.3.2 Create `populate_occupation_skills()` function to populate OccupationSkills table.
+    - [x] 3.3.3 Refactor `populate_downstream_tables()` to use the new functions.
+  - [x] 3.4 Update `mysql_init_tables` to include downstream table creation.
+  - [x] 3.5 Create `get_occupation` function to retrieve occupation data from downstream tables.
+  - [x] 3.6 Refactor `get_occupation_skills` function to pull data from downstream tables.
+  - [x] 3.7 Create integration tests for downstream tables and updated functions.
+    - [x] 3.7.1 Create integration test for `populate_skills_reference()`.
+    - [x] 3.7.2 Create integration test for `populate_occupation_skills()`.
+    - [x] 3.7.3 Update integration test for `get_occupation()` and `get_occupation_skills()`.
+  - [x] 3.8 Document simplified data model showing flow from raw to downstream tables.
 
 - [ ] 4.0 **Phase 4: LLM Integration for Skill Proficiency**
   - [ ] 4.1 Research and select/configure LLM for skill proficiency analysis.

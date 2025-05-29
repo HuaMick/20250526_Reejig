@@ -84,63 +84,34 @@ def load_data_from_dataframe(df: pd.DataFrame, table_name: str, engine, clear_ex
         return {"success": False, "message": f"Error loading data into {table_name}: {e}", "result": {}}
 
 if __name__ == '__main__':
-    print("Minimalistic example for load_data_from_dataframe function.")
+    print("Minimalistic happy path example for load_data_from_dataframe:")
+    print("Loads a tiny sample DataFrame into an in-memory SQLite 'Occupations' table.")
 
-    # This example requires a running MySQL database and tables to be initialized (e.g., via mysql_init_tables.py)
-    # For simplicity, it uses an in-memory SQLite database for this example if env vars for MySQL are not fully set.
+    from sqlalchemy import create_engine
+    import pandas as pd
+    from src.config.schemas import Base, Occupation # For table creation
 
-    db_user = os.getenv('MYSQL_USER')
-    db_password = os.getenv('MYSQL_PASSWORD')
-    db_name = os.getenv('MYSQL_DATABASE')
-    db_host = os.getenv('MYSQL_HOST', 'localhost')
-    db_port = os.getenv('MYSQL_PORT', '3306')
+    # 1. Setup: In-memory SQLite engine and create a table
+    example_engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(example_engine) # Create tables defined in Base (e.g., Occupation)
 
-    engine_to_use = None
-    is_sqlite_example = False
+    # 2. Prepare sample data and DataFrame
+    sample_df = pd.DataFrame({
+        'onet_soc_code': ['HP001.00'], 
+        'title': ['Happy Path Tester'], 
+        'description': ['Tests happy paths.']
+    })
 
-    if all([db_user, db_password, db_name]):
-        try:
-            print("Attempting to use MySQL from environment variables for example...")
-            engine_to_use = get_sqlalchemy_engine()
-            print("Using configured MySQL engine for example.")
-        except ValueError as ve:
-            print(f"MySQL environment variables not fully set or invalid ({ve}), falling back to SQLite for example.")
-            engine_to_use = create_engine("sqlite:///:memory:")
-            is_sqlite_example = True
-        except Exception as e:
-            print(f"Could not create MySQL engine for example ({e}), falling back to SQLite.")
-            engine_to_use = create_engine("sqlite:///:memory:")
-            is_sqlite_example = True
-    else:
-        print("MySQL environment variables not set, using in-memory SQLite for example.")
-        engine_to_use = create_engine("sqlite:///:memory:")
-        is_sqlite_example = True
-
-    if is_sqlite_example:
-        print("Using SQLite: Creating tables for example...")
-        Base.metadata.create_all(engine_to_use)
-        print("SQLite tables created for example.")
-
-    sample_occupations_data = {
-        'onet_soc_code': ['11-0000.00', '13-0000.00'],
-        'title': ['Management Example', 'Business Example'],
-        'description': ['Example description 1', 'Example description 2']
-    }
-    sample_occ_df = pd.DataFrame(sample_occupations_data)
-
-    print(f"\n--- Loading sample data into Occupations table ({'SQLite' if is_sqlite_example else 'MySQL'}) ---")
-    load_occ_result = load_data_from_dataframe(sample_occ_df, 'Occupations', engine_to_use, clear_existing=True)
-    print(f"Load result: {load_occ_result}")
-
-    sample_scales_data = {
-        'scale_id': ['EX', 'TE'],
-        'scale_name': ['Example Scale', 'Test Scale'],
-        'minimum': [1, 0],
-        'maximum': [5, 7]
-    }
-    sample_scales_df = pd.DataFrame(sample_scales_data)
-    print(f"\n--- Loading sample data into Scales table ({'SQLite' if is_sqlite_example else 'MySQL'}) ---")
-    load_scales_result = load_data_from_dataframe(sample_scales_df, 'Scales', engine_to_use, clear_existing=True)
-    print(f"Load result: {load_scales_result}")
-
+    # 3. Call the function
+    print("\nCalling load_data_from_dataframe...")
+    load_result = load_data_from_dataframe(
+        df=sample_df, 
+        table_name='Occupations', 
+        engine=example_engine, 
+        clear_existing=True
+    )
+    
+    # 4. Print the raw result from the function
+    print("\nFunction Call Result:")
+    print(load_result)
     print("\nExample finished.")

@@ -66,13 +66,17 @@ def initialize_database_tables():
         return {"success": False, "message": f"Error initializing database tables with SQLAlchemy: {e}", "result": {}}
 
 if __name__ == '__main__':
-    print("Attempting to initialize database tables using SQLAlchemy models...")
+    print("Minimalistic happy path example for initialize_database_tables:")
+    print("This example assumes MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_HOST, and MYSQL_PORT environment variables are correctly set.")
+    print("It will attempt to drop and recreate tables based on src/config/schemas.py.")
+
+    # 1. Call the function
+    result = initialize_database_tables()
     
-    if not (os.getenv("MYSQL_USER") and os.getenv("MYSQL_PASSWORD") and os.getenv("MYSQL_DATABASE")):
-        print("Error: MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables must be set.")
-        print("Please source your env/env.env file or ensure they are set in your environment.")
-    else:
-        result = initialize_database_tables()
-        print(result["message"])
-        if result["success"]:
-            print("To verify, connect to the database and check for tables: Occupations, Skills, Occupation_Skills, Scales.")
+    # 2. Print the raw result from the function
+    print(f"\nFunction Call Result:")
+    print(result)
+
+    if result["success"]:
+        print("  To verify, connect to the database and check tables.")
+    print("\nExample finished.")

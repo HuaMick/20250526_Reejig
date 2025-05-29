@@ -90,21 +90,27 @@ def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
         session.close()
 
 if __name__ == "__main__":
-    # Example usage - Ensure your database is populated, especially Occupation_Skills with 'LV' scale data.
-    print("--- Testing with Software Developers (15-1252.00) ---")
-    result_dev = get_occupation_skills("15-1252.00") 
-    print(result_dev)
-    if result_dev['success'] and result_dev['result']['skills']:
-        print(f"First skill for Software Developers: {result_dev['result']['skills'][0]}")
+    print("Minimalistic happy path example for get_occupation_skills:")
+    print("This example assumes a populated database with O*NET data and configured environment variables.")
+    print("It attempts to retrieve skills for a known occupation code.")
 
-    print("\n--- Testing with Chemists (19-2031.00) ---")
-    result_chem = get_occupation_skills("19-2031.00")
-    print(result_chem)
+    # 1. Define a known occupation code for the happy path
+    # For this example to work, "15-1252.00" (Software Developers) should exist and have LV skills.
+    occupation_code = "15-1252.00"
 
-    print("\n--- Testing with a known occupation that might have few/no LV skills in source (e.g., Chief Executives 11-1011.00) ---")
-    result_ceo = get_occupation_skills("11-1011.00") # Chief Executives
-    print(result_ceo)
+    # 2. Call the function
+    print(f"\n--- Attempting to get 'LV' skills for occupation: {occupation_code} ---")
+    result = get_occupation_skills(occupation_code)
+    
+    # 3. Print the raw result from the function
+    print(f"\nFunction Call Result:")
+    print(result) # Prints the full success/message/result dictionary
 
-    print("\n--- Testing with a non-existent occupation code (99-9999.99) ---")
-    result_fake = get_occupation_skills("99-9999.99")
-    print(result_fake)
+    # Optionally, print a summary if successful and skills are found
+    if result['success'] and result['result'] and result['result']['skills']:
+        print(f"  Successfully found {len(result['result']['skills'])} 'LV' skills for {result['result']['occupation_title']}.")
+        print(f"  Sample skill: {result['result']['skills'][0]}")
+    elif result['success']:
+        print(f"  Call was successful, but no 'LV' skills found for {result.get('result', {}).get('occupation_title', occupation_code)} or occupation not found as per message.")
+
+    print("\nExample finished.")

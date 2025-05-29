@@ -1,5 +1,4 @@
 import os
-# import sys # Removed sys.path modification
 
 # No direct DB imports needed here anymore (Occupation, Skill, OccupationSkill, get_sqlalchemy_engine)
 # We will import the new get_occupation_skills function for the __main__ example
@@ -92,87 +91,41 @@ def identify_skill_gap(occupation1_data: dict, occupation2_data: dict):
         return {"success": False, "message": f"Error identifying skill gap from '{occ1_title_err}' to '{occ2_title_err}': {str(e)}", "result": {"skill_gaps": [], "from_occupation_title": occ1_title_err, "to_occupation_title": occ2_title_err}}
 
 if __name__ == '__main__':
-    print("Running identify_skill_gap minimalistic example...")
+    print("Minimalistic happy path example for identify_skill_gap:")
+    print("Compares two sample occupation skill sets to find gaps.")
 
-    # Example 1: Clear gap
-    occ1_data_ex1 = {
-        "occupation_title": "Junior Developer",
+    # 1. Define sample input data for two occupations
+    # Assumes skills data is pre-fetched and structured as expected by the function.
+    occupation1_skill_data = {
+        "occupation_title": "Junior Role",
         "skills": [
-            {"element_id": "S1", "element_name": "Programming", "scale_id": "LV", "data_value": 3},
-            {"element_id": "S2", "element_name": "Communication", "scale_id": "LV", "data_value": 4}
+            {"element_id": "S001", "element_name": "Basic Task", "scale_id": "LV", "data_value": 2},
+            {"element_id": "S002", "element_name": "Common Skill", "scale_id": "LV", "data_value": 3}
         ]
     }
-    occ2_data_ex1 = {
-        "occupation_title": "Senior Developer",
+    occupation2_skill_data = {
+        "occupation_title": "Senior Role",
         "skills": [
-            {"element_id": "S1", "element_name": "Programming", "scale_id": "LV", "data_value": 5}, # Higher proficiency
-            {"element_id": "S2", "element_name": "Communication", "scale_id": "LV", "data_value": 4}, # Same proficiency
-            {"element_id": "S3", "element_name": "Architecture", "scale_id": "LV", "data_value": 4}  # New skill
+            {"element_id": "S001", "element_name": "Basic Task", "scale_id": "LV", "data_value": 4},      # Gap: Higher proficiency
+            {"element_id": "S002", "element_name": "Common Skill", "scale_id": "LV", "data_value": 3},      # No gap: Same proficiency
+            {"element_id": "S003", "element_name": "Advanced Skill", "scale_id": "LV", "data_value": 3} # Gap: New skill
         ]
     }
-    print("\n--- Example 1: Junior to Senior Developer ---")
-    gap_result_ex1 = identify_skill_gap(occ1_data_ex1, occ2_data_ex1)
-    print(f"Success: {gap_result_ex1['success']}")
-    print(f"Message: {gap_result_ex1['message']}")
-    if gap_result_ex1['success']:
-        print("Skill Gaps:")
-        for gap in gap_result_ex1['result']['skill_gaps']:
-            print(f"  - {gap}")
 
-    # Example 2: No gap (target has lower or equal skills)
-    occ1_data_ex2 = {
-        "occupation_title": "Expert Coder",
-        "skills": [
-            {"element_id": "S1", "element_name": "Coding Fast", "scale_id": "LV", "data_value": 7}
-        ]
-    }
-    occ2_data_ex2 = {
-        "occupation_title": "Regular Coder",
-        "skills": [
-            {"element_id": "S1", "element_name": "Coding Fast", "scale_id": "LV", "data_value": 5}
-        ]
-    }
-    print("\n--- Example 2: Expert to Regular Coder (expect no gap towards regular) ---")
-    gap_result_ex2 = identify_skill_gap(occ1_data_ex2, occ2_data_ex2)
-    print(f"Success: {gap_result_ex2['success']}")
-    print(f"Message: {gap_result_ex2['message']}")
-    if gap_result_ex2['success']:
-        print("Skill Gaps:")
-        for gap in gap_result_ex2['result']['skill_gaps']:
-            print(f"  - {gap}")
-        if not gap_result_ex2['result']['skill_gaps']:
-            print("  (No gaps found as expected)")
+    # 2. Call the function
+    print(f"\n--- Identifying skill gap from '{occupation1_skill_data["occupation_title"]}' to '{occupation2_skill_data["occupation_title"]}' ---")
+    gap_analysis_result = identify_skill_gap(occupation1_skill_data, occupation2_skill_data)
+    
+    # 3. Print the raw result from the function
+    print("\nFunction Call Result:")
+    print(gap_analysis_result) # Prints the full success/message/result dictionary
 
-    # Example 3: Target occupation has no LV skills
-    occ1_data_ex3 = occ1_data_ex1 # Use Junior Developer data
-    occ2_data_ex3 = {"occupation_title": "Role With No LV Skills", "skills": []}
-    print("\n--- Example 3: To Role With No LV Skills ---")
-    gap_result_ex3 = identify_skill_gap(occ1_data_ex3, occ2_data_ex3)
-    print(f"Success: {gap_result_ex3['success']}") # Should be True
-    print(f"Message: {gap_result_ex3['message']}") # Message indicates no target skills
-    if gap_result_ex3['success']:
-        print("Skill Gaps:")
-        for gap in gap_result_ex3['result']['skill_gaps']:
-            print(f"  - {gap}")
-        if not gap_result_ex3['result']['skill_gaps']:
-            print("  (No gaps found as expected)")
-
-    # Example 4: Source occupation has no LV skills
-    occ1_data_ex4 = {"occupation_title": "Newbie (No LV Skills)", "skills": []}
-    occ2_data_ex4 = occ2_data_ex1 # Use Senior Developer data
-    print("\n--- Example 4: From Newbie (No LV Skills) to Senior Developer ---")
-    gap_result_ex4 = identify_skill_gap(occ1_data_ex4, occ2_data_ex4)
-    print(f"Success: {gap_result_ex4['success']}") # Should be True
-    print(f"Message: {gap_result_ex4['message']}")
-    if gap_result_ex4['success']:
-        print("Skill Gaps (all of Senior Developer's skills should be gaps):")
-        for gap in gap_result_ex4['result']['skill_gaps']:
-            print(f"  - {gap}")
-
-    # Example 5: Invalid input type for skills
-    occ1_data_ex5 = {"occupation_title": "Valid Input", "skills": [{"element_id": "S1", "element_name": "Test", "scale_id": "LV", "data_value": 1}]}
-    occ2_data_ex5 = {"occupation_title": "Invalid Input", "skills": "not a list"}
-    print("\n--- Example 5: Invalid skills input type ---")
-    gap_result_ex5 = identify_skill_gap(occ1_data_ex5, occ2_data_ex5)
-    print(f"Success: {gap_result_ex5['success']}") # Should be False
-    print(f"Message: {gap_result_ex5['message']}") 
+    # Optionally, print a summary of gaps if successful
+    if gap_analysis_result['success'] and gap_analysis_result['result']['skill_gaps']:
+        print("  Identified Skill Gaps Summary:")
+        for gap in gap_analysis_result['result']['skill_gaps']:
+            print(f"    - Skill: {gap['element_name']} (ID: {gap['element_id']}), From Level: {gap['from_data_value']}, To Level: {gap['to_data_value']}")
+    elif gap_analysis_result['success']:
+        print("  No skill gaps were identified in this example.")
+        
+    print("\nExample finished.") 

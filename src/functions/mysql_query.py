@@ -72,7 +72,27 @@ def mysql_query(query: str) -> Dict[str, Any]:
             conn.close()
 
 if __name__ == "__main__":
-    # Example usage
-    test_query = "SELECT * FROM Occupations LIMIT 1;"
-    result = mysql_query(test_query)
-    print(result)
+    print("Minimalistic happy path example for mysql_query:")
+    print("This example assumes MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_HOST, and MYSQL_PORT environment variables are correctly set.")
+    print("It also assumes the 'Occupations' table exists and has data.")
+
+    # 1. Define a simple query for the happy path
+    # This query should successfully execute if the database and table exist.
+    test_query = "SELECT onet_soc_code, title FROM Occupations LIMIT 2;"
+
+    # 2. Call the function
+    print(f"\nExecuting query: \"{test_query}\"...")
+    query_result = mysql_query(test_query)
+    
+    # 3. Print the raw result from the function
+    print("\nFunction Call Result:")
+    print(query_result) # Prints the full success/message/result dictionary
+
+    # Optionally, print a formatted summary if successful
+    if query_result["success"] and query_result["result"]:
+        print("  Query executed. Columns:", query_result["result"].get("columns"))
+        print(f"  Number of rows returned: {len(query_result['result'].get('rows', []))}")
+        # for row in query_result["result"].get("rows", [])[:2]: # Print first 2 sample rows
+        #     print(f"    - {row}")
+            
+    print("\nExample finished.")

@@ -157,23 +157,26 @@ def extract_onet_data() -> Dict[str, Any]:
     }
 
 if __name__ == '__main__':
-    print("Attempting to extract O*NET data...")
+    print("Minimalistic happy path example for extract_onet_data:")
+    print("This example assumes O*NET files (e.g., occupations.txt) exist in the ./database/ directory.")
+
+    # 1. Call the function
     extraction_result = extract_onet_data()
-    
-    print(f"\nOverall Success: {extraction_result['success']}")
-    print(f"Message: {extraction_result['message']}")
-    
-    if extraction_result["success"] or extraction_result["result"]["extracted_data"]:
-        print("\nSuccessfully Extracted Data:")
+
+    # 2. Print the raw result from the function
+    print("\nFunction Call Result:")
+    print(f"  Success: {extraction_result['success']}")
+    print(f"  Message: {extraction_result['message']}")
+    # For brevity, we won't print the full DataFrames here, just a summary.
+    if extraction_result["result"] and extraction_result["result"]["extracted_data"]:
+        print("  Summary of Extracted DataFrames:")
         for item in extraction_result["result"]["extracted_data"]:
-            print(f"\n--- {item['filename']} ---")
-            print(f"DataFrame shape: {item['df'].shape}")
-            # print("First few rows:")
-            # print(item['df'].head())
-            # print("DataFrame info:")
-            # item['df'].info()
+            print(f"    - {item['filename']}: Shape {item['df'].shape}")
+    else:
+        print("  No DataFrames were successfully extracted (as reported by the function).")
     
-    if extraction_result["result"]["errors"]:
-        print("\nErrors Encountered During Extraction:")
+    if extraction_result["result"] and extraction_result["result"]["errors"]:
+        print("  Extraction Errors Reported by Function:")
         for error_msg in extraction_result["result"]["errors"]:
-            print(error_msg)
+            print(f"    - {error_msg}")
+    print("\nExample finished.")

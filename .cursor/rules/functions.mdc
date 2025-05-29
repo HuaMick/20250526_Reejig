@@ -14,7 +14,7 @@ Functions are the interchanable parts of the application. The Application will c
 - Early return pattern used for validation with clear error messages.
 - Exception handling with try-except only when dealing with external services.
 - Detailed documentation with docstrings including parameter and return descriptions.
-- Minimalistic example in main section for example usage in each function file.
+- In each function file provide a single minimalistic example in main section for example usage, this can assume all assets and infastructure already exist and only show the happy path and not have any exception or error handling.
 - Functions should be stored in ./src/functions.
 - One function per a file. The name of the function should match the file name.
 

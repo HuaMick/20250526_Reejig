@@ -58,38 +58,21 @@ def get_mysql_connection():
         }
 
 if __name__ == '__main__':
-    print("Attempting to get MySQL connection...")
+    print("Minimalistic happy path example for get_mysql_connection:")
+    print("This example assumes MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_HOST, and MYSQL_PORT environment variables are correctly set.")
 
-    # Check for essential environment variables for the example to run
-    required_vars = ['MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE']
-    if not all(os.getenv(var) for var in required_vars):
-        print(f"Error: Please ensure environment variables are set for: {required_vars}")
-        print("You might need to source your env/env.env file before running this example.")
-    else:
-        connection_details = get_mysql_connection()
-        print(f"Success: {connection_details['success']}")
-        print(f"Message: {connection_details['message']}")
+    # 1. Call the function
+    connection_details = get_mysql_connection()
 
-        if connection_details["success"] and connection_details["result"]:
-            connection = connection_details["result"]
-            try:
-                if connection.is_connected():
-                    print("Connection object is valid and connected.")
-                    # Example: Print server info and current database
-                    print(f"Server Info: {connection.get_server_info()}")
-                    cursor = connection.cursor()
-                    cursor.execute("SELECT DATABASE();")
-                    database_name = cursor.fetchone()
-                    print(f"Connected to database: {database_name[0] if database_name else 'N/A'}")
-                    cursor.close()
-                else:
-                    print("Connection object reported as not connected.")
-            except Error as e:
-                print(f"Error while interacting with the connection: {e}")
-            finally:
-                if connection.is_connected():
-                    connection.close()
-                    print("MySQL connection closed.")
-        elif connection_details["result"] is None and not connection_details["success"]:
-            # Already handled by printing the message, this is just for clarity
-            pass 
+    # 2. Print the raw result from the function
+    print("\nFunction Call Result:")
+    print(connection_details)
+
+    # 3. If a connection was made, perform a minimal action and ensure it's closed (as per function's responsibility if not auto-closed)
+    if connection_details["success"] and connection_details["result"]:
+        connection = connection_details["result"]
+        # The function get_mysql_connection returns an active connection that the caller is responsible for closing.
+        if hasattr(connection, 'is_connected') and connection.is_connected():
+            print("Connection was successful, closing it now as part of the example cleanup.")
+            connection.close()
+    print("\nExample finished.") 

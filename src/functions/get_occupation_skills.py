@@ -1,10 +1,10 @@
 import os
-import sys
+# import sys # Removed sys.path modification
 from sqlalchemy.orm import sessionmaker
 from typing import Dict, Any, List
 
-# Add project root to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# Add project root to sys.path - This line is removed
+# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from src.config.schemas import get_sqlalchemy_engine, Occupation, Skill
 
@@ -78,7 +78,7 @@ def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
         }
         
     except Exception as e:
-        # Log the error for debugging
+        # Log the error for debugging - Removed commented out traceback
         # import traceback
         # print(f"Error in get_occupation_skills for {occupation_code}: {e}\n{traceback.format_exc()}")
         return {

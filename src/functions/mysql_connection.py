@@ -58,49 +58,38 @@ def get_mysql_connection():
         }
 
 if __name__ == '__main__':
-    print("Attempting to connect to MySQL database from local WSL environment...")
-    
-    # For local testing, ensure env/env.env is sourced or variables are set
-    # For example, you can run: source env/env.env python src/functions/mysql_connection.py
-    
-    # Load environment variables from env/env.env if this script is run directly
-    # This is a simple way for local testing; for Docker, env vars are passed differently.
-    import sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), '../..')) # Add project root to path
+    print("Attempting to get MySQL connection...")
 
-    try:
-        from dotenv import load_dotenv
-        # Construct the path to env.env relative to this script
-        # Script is in src/functions, env.env is in root/env/
-        dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', 'env', 'env.env')
-        
-        # dotenv expects a .env file, not a shell script with `export`.
-        # For direct testing, it's better to ensure `env/env.env` is sourced prior to running,
-        # or manually set the required env vars if not using a .env file with dotenv.
-        # The current `env/env.env` has `export` which `python-dotenv` won't process directly.
-        
-        # For this test, we'll rely on the user sourcing env/env.env or having them set globally.
-        print(f"MYSQL_USER from env: {os.getenv('MYSQL_USER')}")
-        print(f"MYSQL_DATABASE from env (defaulting if not set): {os.getenv('MYSQL_DATABASE', 'onet_data')}")
-
-    except ImportError:
-        print("python-dotenv is not installed. Please ensure environment variables are set or install it.")
-        print("You might need to run 'source env/env.env' before running this script.")
-
-
-    connection_status = get_mysql_connection()
-
-    if connection_status["success"]:
-        print(f"Successfully connected to MySQL database: {connection_status['message']}")
-        if connection_status["result"]:
-            db_info = connection_status["result"].get_server_info()
-            print(f"Server Info: {db_info}")
-            cursor = connection_status["result"].cursor()
-            cursor.execute("SELECT DATABASE();")
-            record = cursor.fetchone()
-            print(f"You're connected to database: {record[0]}")
-            cursor.close()
-            connection_status["result"].close()
-            print("MySQL connection closed.")
+    # Check for essential environment variables for the example to run
+    required_vars = ['MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE']
+    if not all(os.getenv(var) for var in required_vars):
+        print(f"Error: Please ensure environment variables are set for: {required_vars}")
+        print("You might need to source your env/env.env file before running this example.")
     else:
-        print(f"Failed to connect to MySQL: {connection_status['message']}") 
+        connection_details = get_mysql_connection()
+        print(f"Success: {connection_details['success']}")
+        print(f"Message: {connection_details['message']}")
+
+        if connection_details["success"] and connection_details["result"]:
+            connection = connection_details["result"]
+            try:
+                if connection.is_connected():
+                    print("Connection object is valid and connected.")
+                    # Example: Print server info and current database
+                    print(f"Server Info: {connection.get_server_info()}")
+                    cursor = connection.cursor()
+                    cursor.execute("SELECT DATABASE();")
+                    database_name = cursor.fetchone()
+                    print(f"Connected to database: {database_name[0] if database_name else 'N/A'}")
+                    cursor.close()
+                else:
+                    print("Connection object reported as not connected.")
+            except Error as e:
+                print(f"Error while interacting with the connection: {e}")
+            finally:
+                if connection.is_connected():
+                    connection.close()
+                    print("MySQL connection closed.")
+        elif connection_details["result"] is None and not connection_details["success"]:
+            # Already handled by printing the message, this is just for clarity
+            pass 

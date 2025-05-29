@@ -13,7 +13,6 @@ OCCUPATIONS_COLUMN_RENAME_MAP = {
 SKILLS_COLUMN_RENAME_MAP = {
     "Element ID": "element_id",
     "Element Name": "element_name",
-    # Common fields for Occupation_Skills mapping
     "O*NET-SOC Code": "onet_soc_code",
     "Scale ID": "scale_id",
     "Data Value": "data_value",
@@ -34,141 +33,147 @@ SCALES_COLUMN_RENAME_MAP = {
     "Maximum": "maximum"
 }
 
-def read_onet_file(file_path: str, column_rename_map: Optional[Dict[str, str]] = None) -> pd.DataFrame:
+def _read_onet_file(file_path: str, column_rename_map: Optional[Dict[str, str]] = None) -> pd.DataFrame:
     """
-    Reads an O*NET data file and returns a pandas DataFrame.
-    
+    Internal helper to read an O*NET data file and return a pandas DataFrame.
+    Performs column renaming and data type conversions specific to O*NET files.
     Args:
         file_path (str): Path to the O*NET data file
         column_rename_map (Optional[Dict[str, str]]): Dictionary to rename columns
-        
     Returns:
         pd.DataFrame: DataFrame containing the O*NET data
+    Raises:
+        FileNotFoundError: If the file_path does not exist.
+        Exception: If pandas fails to read or process the file for other reasons.
     """
     if not os.path.exists(file_path):
+        # This will be caught by the caller and reported
         raise FileNotFoundError(f"File not found: {file_path}")
     
-    # O*NET files are tab-separated
-    df = pd.read_csv(file_path, sep='\t')
-    
-    if column_rename_map:
-        # Only rename columns that exist in the DataFrame
-        existing_renames = {k: v for k, v in column_rename_map.items() if k in df.columns}
-        df.rename(columns=existing_renames, inplace=True)
-    
-    # Handle data type conversions
-    if 'date_recorded' in df.columns:
-        # O*NET dates are typically in YYYY-MM-DD format
-        try:
-            df['date_recorded'] = pd.to_datetime(df['date_recorded'], format='%Y-%m-%d', errors='coerce').dt.date
-        except Exception as e:
-            print(f"Warning: Error parsing dates: {e}")
-            # Fallback to more flexible parsing if strict format fails
-            df['date_recorded'] = pd.to_datetime(df['date_recorded'], errors='coerce').dt.date
-    
-    if 'recommend_suppress' in df.columns:
-        # Ensure single character
-        df['recommend_suppress'] = df['recommend_suppress'].astype(str).str[0]
-    
-    # Handle decimal columns
-    decimal_columns = ['data_value', 'standard_error', 'lower_ci_bound', 'upper_ci_bound']
-    for col in decimal_columns:
-        if col in df.columns:
-            # Convert to float first to handle any string values
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-            # Round to match schema precision
-            if col == 'data_value':
-                df[col] = df[col].round(2)  # DECIMAL(5,2)
-            else:
-                df[col] = df[col].round(4)  # DECIMAL(6,4)
-    
-    # Handle integer columns
-    if 'n_value' in df.columns:
-        df['n_value'] = pd.to_numeric(df['n_value'], errors='coerce').astype('Int64')  # nullable integer
-    
-    # Handle integer columns for Scales table
-    integer_columns_scales = ['minimum', 'maximum']
-    for col in integer_columns_scales:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
-            
-    return df
+    try:
+        df = pd.read_csv(file_path, sep='\t', low_memory=False) # Added low_memory=False for potentially mixed types
+        
+        if column_rename_map:
+            existing_renames = {k: v for k, v in column_rename_map.items() if k in df.columns}
+            df.rename(columns=existing_renames, inplace=True)
+        
+        if 'date_recorded' in df.columns:
+            try:
+                df['date_recorded'] = pd.to_datetime(df['date_recorded'], format='%Y%m', errors='coerce').dt.strftime('%Y-%m-%d')
+                # Attempt to convert to date objects, coercing errors for flexibility
+                df['date_recorded'] = pd.to_datetime(df['date_recorded'], errors='coerce').dt.date
+            except Exception as e:
+                # If specific parsing fails, log warning and attempt general conversion
+                print(f"Warning: Could not parse 'date_recorded' with specific format in {os.path.basename(file_path)}. Attempting general conversion. Error: {e}")
+                df['date_recorded'] = pd.to_datetime(df['date_recorded'], errors='coerce').dt.date
 
-def extract_onet_data() -> List[Dict[str, Any]]:
+        if 'recommend_suppress' in df.columns:
+            df['recommend_suppress'] = df['recommend_suppress'].astype(str).str[0]
+        
+        decimal_columns = ['data_value', 'standard_error', 'lower_ci_bound', 'upper_ci_bound']
+        for col in decimal_columns:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+                if col == 'data_value':
+                    df[col] = df[col].round(2)
+                else:
+                    df[col] = df[col].round(4)
+        
+        if 'n_value' in df.columns:
+            df['n_value'] = pd.to_numeric(df['n_value'], errors='coerce').astype('Int64')
+        
+        integer_columns_scales = ['minimum', 'maximum']
+        for col in integer_columns_scales:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
+                
+        return df
+    except Exception as e:
+        # Re-raise to be caught by the main extract_onet_data function for reporting
+        raise Exception(f"Error processing file {os.path.basename(file_path)} with pandas: {e}")
+
+def extract_onet_data() -> Dict[str, Any]:
     """
-    Extracts data from O*NET files and returns a list of dictionaries containing
-    the filename and corresponding DataFrame.
+    Extracts data from O*NET files specified by their relative paths from the project root.
     
     Returns:
-        List[Dict[str, Any]]: List of dictionaries with 'filename' and 'df' keys
+        Dict[str, Any]: A dictionary with keys 'success' (bool), 'message' (str), 
+                        and 'result' (dict with 'extracted_data' as List[Dict[str, Any]] 
+                        and 'errors' as List[str]).
+                        'extracted_data' contains successfully processed files and their DataFrames.
+                        'errors' contains messages for files that failed to process.
     """
-    # Get the project root directory
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
     
-    # Define paths to O*NET data files
-    occupations_path = os.path.join(project_root, 'database', 'occupations.txt')
-    skills_path = os.path.join(project_root, 'database', 'skills.txt')
-    scales_path = os.path.join(project_root, 'database', 'scales.txt')
+    file_configs = [
+        {'filename': 'occupations.txt', 'path_suffix': 'database/occupations.txt', 'map': OCCUPATIONS_COLUMN_RENAME_MAP,
+         'string_cols': ['onet_soc_code', 'title', 'description']},
+        {'filename': 'skills.txt', 'path_suffix': 'database/skills.txt', 'map': SKILLS_COLUMN_RENAME_MAP,
+         'string_cols': ['element_id', 'element_name']},
+        {'filename': 'scales.txt', 'path_suffix': 'database/scales.txt', 'map': SCALES_COLUMN_RENAME_MAP,
+         'string_cols': ['scale_id', 'scale_name']}
+    ]
     
-    # List to store results
-    results = []
-    
-    # Process occupations file
-    try:
-        occupations_df = read_onet_file(occupations_path, OCCUPATIONS_COLUMN_RENAME_MAP)
-        # Ensure string columns are properly formatted
-        occupations_df['onet_soc_code'] = occupations_df['onet_soc_code'].astype(str)
-        occupations_df['title'] = occupations_df['title'].astype(str)
-        occupations_df['description'] = occupations_df['description'].astype(str)
-        
-        results.append({
-            'filename': 'occupations.txt',
-            'df': occupations_df
-        })
-    except Exception as e:
-        print(f"Error processing occupations file: {e}")
-    
-    # Process skills file
-    try:
-        skills_df = read_onet_file(skills_path, SKILLS_COLUMN_RENAME_MAP)
-        # Ensure string columns are properly formatted
-        if 'element_id' in skills_df.columns: # Check if column exists after rename
-            skills_df['element_id'] = skills_df['element_id'].astype(str)
-        if 'element_name' in skills_df.columns: # Check if column exists after rename
-            skills_df['element_name'] = skills_df['element_name'].astype(str)
-        
-        results.append({
-            'filename': 'skills.txt',
-            'df': skills_df
-        })
-    except Exception as e:
-        print(f"Error processing skills file: {e}")
-    
-    # Process scales file
-    try:
-        scales_df = read_onet_file(scales_path, SCALES_COLUMN_RENAME_MAP)
-        # Ensure string columns are properly formatted
-        if 'scale_id' in scales_df.columns:
-            scales_df['scale_id'] = scales_df['scale_id'].astype(str)
-        if 'scale_name' in scales_df.columns:
-            scales_df['scale_name'] = scales_df['scale_name'].astype(str)
-        
-        results.append({
-            'filename': 'scales.txt',
-            'df': scales_df
-        })
-    except Exception as e:
-        print(f"Error processing scales file: {e}")
-    
-    return results
+    processed_data = []
+    error_messages = []
+    files_processed_count = 0
+    files_succeeded_count = 0
+
+    for config in file_configs:
+        file_path = os.path.join(project_root, config['path_suffix'])
+        files_processed_count += 1
+        try:
+            df = _read_onet_file(file_path, config['map'])
+            for col in config.get('string_cols', []):
+                if col in df.columns:
+                    df[col] = df[col].astype(str)
+            
+            processed_data.append({
+                'filename': config['filename'],
+                'df': df
+            })
+            files_succeeded_count += 1
+        except FileNotFoundError as fnf_e:
+            msg = str(fnf_e)
+            error_messages.append(msg)
+            print(f"Error for {config['filename']}: {msg}")
+        except Exception as e:
+            msg = f"Error processing {config['filename']}: {e}"
+            error_messages.append(msg)
+            print(msg) # Also print to console for immediate feedback
+
+    overall_success = files_succeeded_count > 0 and files_succeeded_count == files_processed_count
+    message = f"Data extraction complete. {files_succeeded_count}/{files_processed_count} files processed successfully."
+    if error_messages:
+        message += " Errors encountered: " + "; ".join(error_messages)
+
+    return {
+        "success": overall_success,
+        "message": message,
+        "result": {
+            "extracted_data": processed_data,
+            "errors": error_messages
+        }
+    }
 
 if __name__ == '__main__':
-    # Test the extraction
-    results = extract_onet_data()
-    for result in results:
-        print(f"\nProcessing {result['filename']}:")
-        print(f"DataFrame shape: {result['df'].shape}")
-        print("\nFirst few rows:")
-        print(result['df'].head())
-        print("\nDataFrame info:")
-        print(result['df'].info())
+    print("Attempting to extract O*NET data...")
+    extraction_result = extract_onet_data()
+    
+    print(f"\nOverall Success: {extraction_result['success']}")
+    print(f"Message: {extraction_result['message']}")
+    
+    if extraction_result["success"] or extraction_result["result"]["extracted_data"]:
+        print("\nSuccessfully Extracted Data:")
+        for item in extraction_result["result"]["extracted_data"]:
+            print(f"\n--- {item['filename']} ---")
+            print(f"DataFrame shape: {item['df'].shape}")
+            # print("First few rows:")
+            # print(item['df'].head())
+            # print("DataFrame info:")
+            # item['df'].info()
+    
+    if extraction_result["result"]["errors"]:
+        print("\nErrors Encountered During Extraction:")
+        for error_msg in extraction_result["result"]["errors"]:
+            print(error_msg)

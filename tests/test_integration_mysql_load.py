@@ -34,26 +34,41 @@ class TestMySQLLoadWithoutFixtures:
         print("Database tables initialized successfully.")
 
         # 3. Extract actual data using extract_onet_data()
-        extracted_data_results = []
+        extracted_data_list = [] # Initialize to empty list
         try:
             print("Extracting O*NET data using extract_onet_data()...")
-            extracted_data_results = extract_onet_data()
-            if not extracted_data_results:
-                pytest.fail("extract_onet_data() returned no results. Ensure O*NET files are present in database/ directory and are not empty.")
-            print(f"Data extracted for {len(extracted_data_results)} files.")
-            # Check if any DataFrame is empty, which might indicate an issue or an empty source file
-            for res in extracted_data_results:
+            extraction_op_result = extract_onet_data() # Call the refactored function
+
+            if not extraction_op_result["success"] and not extraction_op_result["result"]["extracted_data"]:
+                # If the operation itself failed critically and returned no data at all
+                pytest.fail(f"extract_onet_data() operation failed critically or returned no data. Message: {extraction_op_result['message']}")
+            
+            # Even if success is False due to partial errors, result might contain some data
+            extracted_data_list = extraction_op_result["result"]["extracted_data"]
+            
+            if extraction_op_result["result"]["errors"]:
+                print(f"Warning: Errors encountered during extract_onet_data(): {'; '.join(extraction_op_result['result']['errors'])}")
+
+            if not extracted_data_list:
+                # This means no dataframes were successfully extracted
+                pytest.fail("extract_onet_data() returned no successfully extracted dataframes. Check source files or extraction logic.")
+            
+            print(f"Data successfully extracted for {len(extracted_data_list)} files (out of potentially more attempted).")
+            for res in extracted_data_list: # Iterate through the list of successfully extracted data
                 print(f"  - {res['filename']}: {res['df'].shape[0]} rows")
                 if res['df'].empty and res['filename'] in ['occupations.txt', 'skills.txt', 'scales.txt']:
-                    print(f"Warning: Extracted DataFrame for {res['filename']}] is empty. This might lead to 0 records loaded.")
+                    print(f"Warning: Extracted DataFrame for {res['filename']} is empty. This might lead to 0 records loaded.")
 
         except Exception as e:
-            pytest.fail(f"Error during extract_onet_data(): {e}")
+            # This catch is for unexpected errors in calling extract_onet_data itself or if it raises something unforeseen
+            import traceback
+            pytest.fail(f"Critical error during or after extract_onet_data() call: {e}\n{traceback.format_exc()}")
         
         # 4. Load data into tables
         loaded_counts = {}
         expected_tables_to_load_from = ['occupations.txt', 'skills.txt', 'scales.txt']
-        found_files_to_load = {res['filename']: res['df'] for res in extracted_data_results if res['filename'] in expected_tables_to_load_from}
+        # Use the successfully extracted_data_list for loading
+        found_files_to_load = {res['filename']: res['df'] for res in extracted_data_list if res['filename'] in expected_tables_to_load_from}
 
         if not all(fn in found_files_to_load for fn in expected_tables_to_load_from):
             missing_files = list(set(expected_tables_to_load_from) - set(found_files_to_load.keys()))

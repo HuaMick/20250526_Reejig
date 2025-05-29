@@ -30,7 +30,8 @@ def initialize_database_tables():
         if not all([db_user, db_password, db_name]):
             return {
                 "success": False,
-                "message": "MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables are required."
+                "message": "MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables are required.",
+                "result": {}
             }
 
         # Construct the database URL for SQLAlchemy
@@ -59,10 +60,10 @@ def initialize_database_tables():
             
             connection.commit() # Commit the transaction that includes DDL and SET commands
 
-        return {"success": True, "message": "Database tables initialized successfully using SQLAlchemy models."}
+        return {"success": True, "message": "Database tables initialized successfully using SQLAlchemy models.", "result": {}}
 
     except Exception as e:
-        return {"success": False, "message": f"Error initializing database tables with SQLAlchemy: {e}"}
+        return {"success": False, "message": f"Error initializing database tables with SQLAlchemy: {e}", "result": {}}
 
 if __name__ == '__main__':
     print("Attempting to initialize database tables using SQLAlchemy models...")

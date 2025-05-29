@@ -7,6 +7,7 @@
 - `tests/test_integration_extract_onet_data.py` - Integration tests for `extract_onet_data.py`.
 - `src/functions/mysql_load_dataframe.py` - Loads a single pandas DataFrame into a specified MySQL table.
 - `tests/test_integration_mysql_load_dataframe.py` - Integration tests for `mysql_load_dataframe.py`.
+- `src/functions/textfile_to_dataframe.py` - **NEW:** Utility function to convert text files to DataFrames with proper typing.
 - `src/functions/extract_onet_api_occupation_codes.py` - **NEW:** Fetches all O*NET-SOC occupation codes and titles from the API.
 - `tests/test_integration_extract_onet_api_occupation_codes.py` - **NEW:** Integration tests for `extract_onet_api_occupation_codes.py`.
 - `src/functions/extract_onet_api_occupation_details.py` - **NEW:** Fetches detailed occupation data (description) for a list of occupation codes from the API.
@@ -17,9 +18,13 @@
 - `tests/test_integration_get_onet_scales_reference.py` - **NEW:** Integration tests for `get_onet_scales_reference.py`.
 - `src/functions/mysql_upsert_dataframe.py` - **NEW:** Upserts a pandas DataFrame into a specified MySQL table.
 - `tests/test_integration_mysql_upsert_dataframe.py` - **NEW:** Integration tests for `mysql_upsert_dataframe.py`.
+- `src/functions/populate_skills_reference.py` - **NEW:** Populates the Skills table from raw data tables.
+- `src/functions/populate_occupation_skills.py` - **NEW:** Populates the Occupation_Skills table from raw data tables.
 - `src/functions/llm_skill_profiler.py` - To house the LLM interaction logic for skill proficiency scoring.
 - `tests/test_integration_llm_skill_profiler.py` - Integration tests for `llm_skill_profiler.py`.
-- `src/nodes/extract_load_text_files.py` - Orchestrates text file data extraction and loading.
+- `src/nodes/extract_load.py` - Orchestrates text file data extraction and loading.
+- `src/nodes/transform.py` - **NEW:** Orchestrates data transformation between raw and downstream tables.
+- `src/scripts/transform.sh` - **NEW:** Shell script to run the transform node.
 - `tests/test_integration_extract_load_text_files.py` - Integration tests for `extract_load_text_files.py`.
 - `src/nodes/extract_load_api_data.py` - **NEW:** Orchestrates O*NET API data extraction and loading.
 - `tests/test_integration_extract_load_api_data.py` - **NEW:** Integration tests for `extract_load_api_data.py`.
@@ -60,6 +65,8 @@
   - [x] 1.10 Create integration test for `extract_load_text_files` node (`tests/test_integration_extract_load_text_files.py` and `.sh` script).
   - [x] 1.11 Review and Refine Phase 1 functions and node for clarity, efficiency, docstrings, and adherence to rules.
   - [x] 1.12 Update `README.md` with setup/run instructions for Phase 1 text file ETL.
+  - [x] 1.13 **NEW:** Create utility function `textfile_to_dataframe()` to simplify file processing.
+  - [x] 1.14 **NEW:** Refactor `extract_onet_data.py` to use specialized extraction functions and the new utility.
 
 - [x] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions**
   - [x] 2.1 Create function `extract_onet_api_occupation_codes(api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_codes.py`. Inputs: API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes and titles. (Ref: `onet_api.mdc` Sec 3.1)
@@ -81,13 +88,14 @@
   - [x] 3.1 Analyze data from both sources (text files and API) to understand their structure and relationships.
   - [x] 3.2 Design and implement simplified downstream tables from existing raw data tables.
     - [x] 3.2.1 Reuse existing `Occupations` table instead of creating a new normalized table.
-    - [x] 3.2.2 Create `SkillsReference` table to store unique skills information.
-    - [x] 3.2.3 Create `OccupationSkills` table as a joining table between occupations and skills.
+    - [x] 3.2.2 Create `Skills` table to store unique skills information.
+    - [x] 3.2.3 Create `Occupation_Skills` table as a joining table between occupations and skills.
   - [x] 3.3 Create data transformation functions to populate downstream tables from raw data tables.
-    - [x] 3.3.1 Create `populate_skills_reference()` function to populate SkillsReference table.
-    - [x] 3.3.2 Create `populate_occupation_skills()` function to populate OccupationSkills table.
-    - [x] 3.3.3 Refactor `populate_downstream_tables()` to use the new functions.
-  - [x] 3.4 Update `mysql_init_tables` to include downstream table creation.
+    - [x] 3.3.1 Create `populate_skills_reference()` function to populate Skills table from raw data.
+    - [x] 3.3.2 Create `populate_occupation_skills()` function to populate Occupation_Skills table from raw data.
+    - [x] 3.3.3 Create `transform.py` node to chain these functions together.
+    - [x] 3.3.4 Create shell script `transform.sh` to run the transform node.
+  - [x] 3.4 Update `schemas.py` to ensure all table definitions match the actual database structure.
   - [x] 3.5 Create `get_occupation` function to retrieve occupation data from downstream tables.
   - [x] 3.6 Refactor `get_occupation_skills` function to pull data from downstream tables.
   - [x] 3.7 Create integration tests for downstream tables and updated functions.

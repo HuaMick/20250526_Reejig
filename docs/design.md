@@ -17,6 +17,14 @@
 
 - Testing showed that the data has some edges, some of the occupations dont have any records in the skills table. Will update the skills gap functions to call this out.
 
+- I was able to get the skills gap working after some debugging. Now that I have this stage of the POC working its time to look back and rework the pipeline to meet more of the requirements.
+
+- I've implemented a downstream normalization for skills table, this will allow me to land my data, and then have the normalized tables downstream.
+
+- I've refactored the landing tables and loading to be more modular this should help when I start to pull data from the API, I've yet to recieve my API credentials yet so will wait for that.
+
+- I've successfully extracted the occupations data using the API. I'll need to update schema and refactor the load pipeline. Once I've established I can successfully load I'll create the other functions to extract the other datasets via the API. 
+
 ## Project Plan
 
 ### 1. Project Setup

@@ -5,13 +5,19 @@ from typing import Dict
 
 Base = declarative_base()
 
-# O*NET Data Column Mappings (moved from extract_onet_data.py)
+# O*NET Data Column Mappings
 class OnetMappings:
-    # Mapping dictionaries for O*NET data files
+    # Mapping dictionaries for O*NET data files (original text files)
     OCCUPATIONS_COLUMN_RENAME_MAP: Dict[str, str] = {
         "O*NET-SOC Code": "onet_soc_code",
         "Title": "title",
         "Description": "description",
+    }
+
+    # Mapping for O*NET API Occupation data (after pd.read_xml)
+    API_OCCUPATIONS_COLUMN_RENAME_MAP: Dict[str, str] = {
+        "onetsoc_code": "onet_soc_code", # API XML tag <onetsoc_code> becomes column 'onetsoc_code'
+        # 'title' and 'description' usually match, but can be added if they differ from schema expectations
     }
 
     SKILLS_COLUMN_RENAME_MAP: Dict[str, str] = {

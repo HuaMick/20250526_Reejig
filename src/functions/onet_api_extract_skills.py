@@ -8,25 +8,25 @@ from src.config.schemas import OnetMappings
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def onet_api_extract_occupation(
+def onet_api_extract_skills(
     username: str,
     password: str,
     version: str = "1.9",
-    url: str = "/ws/database/rows/occupation_data",
+    url: str = "/ws/database/rows/skills",
     base_url: str = "https://services.onetcenter.org/",
 ) -> Dict[str, Any]:
     """
-    Extracts occupation data from the O*NET API.
+    Extracts skills data from the O*NET API.
 
-    This function sends a GET request to the O*NET API to retrieve occupation data,
+    This function sends a GET request to the O*NET API to retrieve skills data,
     then parses the XML response into a pandas DataFrame.
 
     Args:
         username (str): The username for O*NET API authentication.
         password (str): The password for O*NET API authentication.
         version (str, optional): The API version to use. Defaults to "1.9".
-        url (str, optional): The specific API endpoint for occupation data.
-                             Defaults to "/ws/database/rows/occupation_data".
+        url (str, optional): The specific API endpoint for skills data.
+                             Defaults to "/ws/database/rows/skills".
         base_url (str, optional): The base URL for the O*NET API.
                                   Defaults to "https://services.onetcenter.org/".
 
@@ -34,8 +34,8 @@ def onet_api_extract_occupation(
         Dict[str, Any]: A dictionary with the following keys:
             - "success" (bool): True if the API call was successful and data was parsed, False otherwise.
             - "message" (str): A message indicating the outcome of the operation.
-            - "result" (pd.DataFrame or None): A pandas DataFrame containing the occupation data
-                                               if successful, otherwise None.
+            - "result" (Dict[str, pd.DataFrame] or None): A dictionary containing a pandas DataFrame
+                                               with the key "skills_df" if successful, otherwise None.
     """
     request_url = f"{base_url.rstrip('/')}/v{version}{url}"
     logging.info(f"Requesting data from: {request_url}")
@@ -56,16 +56,16 @@ def onet_api_extract_occupation(
         df = pd.read_xml(io.StringIO(response.text), xpath="//row")
         
         if not df.empty:
-            # Rename columns to match schema conventions using mapping from schemas.py
-            df.rename(columns=OnetMappings.API_OCCUPATIONS_COLUMN_RENAME_MAP, inplace=True)
+            # Standardize column names generically
+            df.columns = [col.lower().replace(' ', '_') for col in df.columns]
             
             # Add last_updated column
             df["last_updated"] = date.today()
 
         return {
             "success": True,
-            "message": "Occupation data extracted successfully.",
-            "result": {"occupation_df": df},
+            "message": "Skills data extracted successfully.",
+            "result": {"skills_df": df},
         }
     except requests.exceptions.HTTPError as http_err:
         logging.error(f"HTTP error occurred: {http_err} - Response: {response.text[:500]}")
@@ -121,17 +121,17 @@ if __name__ == '__main__':
     if ONET_USERNAME == "YOUR_ONET_USERNAME" or ONET_PASSWORD == "YOUR_ONET_PASSWORD":
         print("Please replace 'YOUR_ONET_USERNAME' and 'YOUR_ONET_PASSWORD' with your actual O*NET credentials to run the example.")
     else:
-        print("Attempting to extract O*NET occupation data...")
-        extraction_result = onet_api_extract_occupation(username=ONET_USERNAME, password=ONET_PASSWORD)
+        print("Attempting to extract O*NET skills data...")
+        extraction_result = onet_api_extract_skills(username=ONET_USERNAME, password=ONET_PASSWORD)
 
         if extraction_result["success"]:
-            print("Successfully extracted occupation data.")
-            df_occupations = extraction_result["result"]["occupation_df"]
-            if df_occupations is not None and not df_occupations.empty:
-                print(f"Number of occupations found: {len(df_occupations)}")
-                print("First 5 occupations:")
-                print(df_occupations.head())
+            print("Successfully extracted skills data.")
+            df_skills = extraction_result["result"]["skills_df"]
+            if df_skills is not None and not df_skills.empty:
+                print(f"Number of skill records found: {len(df_skills)}")
+                print("First 5 skill records:")
+                print(df_skills.head())
             else:
                 print("Extraction successful, but no data was returned or the DataFrame is empty.")
         else:
-            print(f"Failed to extract occupation data: {extraction_result['message']}")
+            print(f"Failed to extract skills data: {extraction_result['message']}")

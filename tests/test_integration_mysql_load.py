@@ -6,7 +6,7 @@ import pandas as pd
 # Add project root to sys.path to allow importing from src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.functions.mysql_load import load_data_from_dataframe
+from functions.mysql_load_table import load_data_from_dataframe
 from src.functions.extract_onet_data import extract_onet_data
 from src.functions.mysql_connection import get_mysql_connection
 from src.config.schemas import get_sqlalchemy_engine # Base, Occupation, Skill, Scale not directly used here now

@@ -1,7 +1,7 @@
 import os
 import sys
 from src.functions.extract_onet_data import extract_onet_data, extract_occupations, extract_skills, extract_scales
-from src.functions.mysql_load import load_data_from_dataframe
+from functions.mysql_load_table import load_data_from_dataframe
 from src.functions.mysql_connection import get_mysql_connection # For verification step
 from src.config.schemas import get_sqlalchemy_engine
 

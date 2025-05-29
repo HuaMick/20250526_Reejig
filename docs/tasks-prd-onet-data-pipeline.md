@@ -8,8 +8,8 @@
 - `src/functions/mysql_load_dataframe.py` - Loads a single pandas DataFrame into a specified MySQL table.
 - `tests/test_integration_mysql_load_dataframe.py` - Integration tests for `mysql_load_dataframe.py`.
 - `src/functions/textfile_to_dataframe.py` - **NEW:** Utility function to convert text files to DataFrames with proper typing.
-- `src/functions/extract_onet_api_occupation_codes.py` - **NEW:** Fetches all O*NET-SOC occupation codes and titles from the API.
-- `tests/test_integration_extract_onet_api_occupation_codes.py` - **NEW:** Integration tests for `extract_onet_api_occupation_codes.py`.
+- `src/functions/onet_api_extract_occupation.py` - **NEW:** Fetches all O*NET-SOC occupation codes, titles, and descriptions from the API.
+- `tests/test_integration_onet_api_extract_occupation.py` - **NEW:** Integration tests for `onet_api_extract_occupation.py`.
 - `src/functions/extract_onet_api_occupation_details.py` - **NEW:** Fetches detailed occupation data (description) for a list of occupation codes from the API.
 - `tests/test_integration_extract_onet_api_occupation_details.py` - **NEW:** Integration tests for `extract_onet_api_occupation_details.py`.
 - `src/functions/extract_onet_api_skills_data.py` - **NEW:** Parses skills data from detailed occupation API responses.
@@ -69,8 +69,8 @@
   - [x] 1.14 **NEW:** Refactor `extract_onet_data.py` to use specialized extraction functions and the new utility.
 
 - [x] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions**
-  - [x] 2.1 Create function `extract_onet_api_occupation_codes(api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_codes.py`. Inputs: API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes and titles. (Ref: `onet_api.mdc` Sec 3.1)
-  - [ ] 2.2 Create integration test for `extract_onet_api_occupation_codes` (`tests/test_integration_extract_onet_api_occupation_codes.py` and `.sh`).
+  - [x] 2.1 Create function `onet_api_extract_occupation(username: str, password: str, ...)` in `src/functions/onet_api_extract_occupation.py`. Inputs: API creds. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes, titles, and descriptions. (Ref: `onet_api.mdc` Sec 3.1)
+  - [ ] 2.2 Create integration test for `onet_api_extract_occupation` (`tests/test_integration_onet_api_extract_occupation.py` and `.sh`).
   - [ ] 2.3 Create function `extract_onet_api_occupation_details(occupation_codes_df: pd.DataFrame, api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_details.py`. Inputs: DataFrame of codes, API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_details_df": pd.DataFrame}}`. Fetches details for each code. (Ref: `onet_api.mdc` Sec 3.2)
   - [ ] 2.4 Create integration test for `extract_onet_api_occupation_details` (`tests/test_integration_extract_onet_api_occupation_details.py` and `.sh`).
   - [ ] 2.5 Create function `extract_onet_api_skills_data(occupation_details_json_list: list, occupation_codes: list)` in `src/functions/extract_onet_api_skills_data.py`. Inputs: list of JSON responses from occupation detail API calls, list of corresponding O*NET-SOC codes. Outputs: `{"success": bool, "message": str, "result": {"skills_api_df": pd.DataFrame}}`. Parses skills from API responses. (Ref: `onet_api.mdc` Sec 3.3)
@@ -81,7 +81,7 @@
   - [ ] 2.10 Create integration test for `mysql_upsert_dataframe` (`tests/test_integration_mysql_upsert_dataframe.py` and `.sh`) using temp table with sample API data.
   - [ ] 2.11 Define SQLAlchemy schemas for the API data landing tables in `src/config/schemas.py` for API data: `OnetApiOccupationData` and `OnetApiSkillsData`. Include source/timestamp fields. (Based on actual data structure from functions)
   - [ ] 2.12 Update `mysql_init_tables` function in `src/functions/mysql_init_tables.py` to optionally accept a list of specific table model classes to create/recreate, and update its integration test.
-  - [ ] 2.13 Create node `extract_load_api_data.py` in `src/nodes/`. This node will use `mysql_init_tables` (for API tables), `extract_onet_api_occupation_codes`, `extract_onet_api_occupation_details`, `extract_onet_api_skills_data`, and `mysql_upsert_dataframe` to extract and load/upsert API data into `OnetApiOccupationData` and `OnetApiSkillsData`.
+  - [ ] 2.13 Create node `extract_load_api_data.py` in `src/nodes/`. This node will use `mysql_init_tables` (for API tables), `onet_api_extract_occupation`, `extract_onet_api_occupation_details`, `extract_onet_api_skills_data`, and `mysql_upsert_dataframe` to extract and load/upsert API data into `OnetApiOccupationData` and `OnetApiSkillsData`.
   - [ ] 2.14 Create integration test for `extract_load_api_data` node (`tests/test_integration_extract_load_api_data.py` and `.sh` script).
 
 - [x] 3.0 **Phase 3: Database Normalization & Downstream Consumption Tables**

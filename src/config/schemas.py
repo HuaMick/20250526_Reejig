@@ -37,6 +37,51 @@ class OnetMappings:
         "Maximum": "maximum"
     }
 
+class Onet_Occupations_API_landing(Base):
+    __tablename__ = 'onet_occupations_api_landing'
+    onet_soc_code = Column(String(20), primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    last_updated = Column(Date, nullable=False)
+
+class Onet_Skills_API_landing(Base):
+    __tablename__ = 'onet_skills_api_landing'
+
+    onet_soc_code = Column(String(20), index=True)
+    element_id = Column(String(20), index=True) # No longer primary key alone
+    element_name = Column(String(255), nullable=False)
+    scale_id = Column(String(10), index=True)
+    data_value = Column(DECIMAL(5, 2), nullable=True)
+    n_value = Column(Integer, nullable=True)
+    standard_error = Column(DECIMAL(6, 4), nullable=True)
+    lower_ci_bound = Column(DECIMAL(6, 4), nullable=True)
+    upper_ci_bound = Column(DECIMAL(6, 4), nullable=True)
+    recommend_suppress = Column(CHAR(1), nullable=True)
+    not_relevant = Column(String(10), nullable=True)
+    date_recorded = Column(Date, nullable=True)
+    domain_source = Column(String(50), nullable=True)
+
+    # String columns for type handling
+    string_columns = ['element_id', 'element_name']
+
+    # Composite primary key definition
+    __table_args__ = (
+        PrimaryKeyConstraint('onet_soc_code', 'element_id', 'scale_id'),
+        {}
+    )
+
+class Onet_Scales_API_landing(Base):
+    __tablename__ = 'onet_scales_api_landing'
+
+    scale_id = Column(String(10), primary_key=True, index=True)
+    scale_name = Column(String(255), nullable=False)
+    minimum = Column(Integer)
+    maximum = Column(Integer)
+
+    # String columns for type handling
+    string_columns = ['scale_id', 'scale_name']
+
+    
 class Onet_Occupations_Landing(Base):
     __tablename__ = 'onet_occupations_landing'
 
@@ -137,17 +182,6 @@ def get_sqlalchemy_engine():
 
 
 if __name__ == '__main__':
-    # This part is for basic verification if you run this file directly.
-    # It doesn't create tables but shows how an engine could be made.
-    print("SQLAlchemy schema definitions loaded.")
-    print(f"Base.metadata.tables keys: {list(Base.metadata.tables.keys())}")
-    try:
-        # Attempt to create an engine just to check if env vars are loadable for it
-        # Ensure env/env.env is sourced or variables are set for this direct run
-        if not (os.getenv("MYSQL_USER") and os.getenv("MYSQL_PASSWORD") and os.getenv("MYSQL_DATABASE")):
-            print("Cannot create test engine: MYSQL_USER, MYSQL_PASSWORD, or MYSQL_DATABASE environment variables are not set.")
-        else:
-            engine = get_sqlalchemy_engine()
-            print(f"Successfully created a SQLAlchemy engine for: {engine.url}")
-    except Exception as e:
-        print(f"Error creating SQLAlchemy engine for testing: {e}") 
+    raise Exception("""
+    You are trying to run a schema definition file. It is not designed to be executable.
+    """)

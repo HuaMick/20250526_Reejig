@@ -8,11 +8,15 @@ alwaysApply: false
 Guidelines for managing task lists in markdown files to track progress on completing a PRD
 
 ## Task Implementation
-- **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say “yes” or "y"
+- **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say "yes" or "y"
+- **Function-Centric Execution**: When a sub-task involves creating or updating a function:
+    - Ensure the function's inputs and outputs are clearly understood and implemented as specified in the task.
+    - If the task involves chaining functions, verify the data flow between them.
+    - After implementing the function, proceed to its associated integration test sub-task (if it's the next sequential sub-task and also marked as to-do) before asking for user permission to move to a *different* function or a non-test sub-task. This promotes testing each function shortly after its development.
 - **Completion protocol:**  
   1. When you finish a **sub‑task**, immediately mark it as completed by changing `[ ]` to `[x]`.  
   2. If **all** subtasks underneath a parent task are now `[x]`, also mark the **parent task** as completed.  
-- Stop after each sub‑task and wait for the user’s go‑ahead.
+- Stop after each sub‑task and wait for the user's go‑ahead.
 
 ## Task List Maintenance
 
@@ -20,7 +24,7 @@ Guidelines for managing task lists in markdown files to track progress on comple
    - Mark tasks and subtasks as completed (`[x]`) per the protocol above.
    - Add new tasks as they emerge.
 
-2. **Maintain the “Relevant Files” section:**
+2. **Maintain the "Relevant Files" section:**
    - List every file created or modified.
    - Give each file a one‑line description of its purpose.
 
@@ -33,6 +37,16 @@ When working with task lists, the AI must:
    - Mark each finished **sub‑task** `[x]`.
    - Mark the **parent task** `[x]` once **all** its subtasks are `[x]`.
 3. Add newly discovered tasks.
-4. Keep “Relevant Files” accurate and up to date.
+4. Keep "Relevant Files" accurate and up to date.
 5. Before starting work, check which sub‑task is next.
 6. After implementing a sub‑task, update the file and then pause for user approval.
+
+## Testing Philosophy and Task Prioritization
+
+- **Integration-First Approach**: Especially in data engineering and MVP/POC phases, prioritize implementing integration tests that validate the core data flow and interactions between functions and components. **Every function should have an integration test.**
+- **Strategic Unit Testing**: While integration tests verify the overall flow and function interactions, unit tests are crucial for:
+    - Pinpointing the cause of failures identified by integration tests.
+    - Safely refactoring components once the overall design is stable.
+    - Testing complex, isolated business logic and its edge cases within a specific function or module.
+- **Task Order**: When processing tasks, if both integration and related unit tests are pending for a feature, consider discussing with the user whether to tackle the integration test first to validate the end-to-end functionality, especially if it's part of an early project phase. Unit tests for complex internal logic can then follow or be developed in parallel if the complex component is well-defined.
+- **Mindful Mocking**: Be aware of the limitations of mocks (potential for brittleness, maintenance overhead). Integration tests provide higher confidence by testing against real (or near-real) dependencies.

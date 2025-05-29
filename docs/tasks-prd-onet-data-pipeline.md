@@ -2,113 +2,111 @@
 
 - `src/config/schemas.py` - Defines SQLAlchemy models for database tables (`Occupations`, `Skills`, `Scales`, `OnetApiOccupationData`, `OnetApiSkillsData`).
 - `src/functions/mysql_init_tables.py` - Initializes database tables using SQLAlchemy models.
-- `src/functions/extract_onet_data.py` - Extracts data from O*NET `.txt` files (`Occupation.txt`, `Skills.txt`, `Scales.txt`) into pandas DataFrames.
-- `src/functions/mysql_load.py` - Loads data from DataFrames into MySQL tables (`Occupations`, `Skills`, `Scales`).
-- `src/functions/extract_onet_api_data.py` - **NEW:** Extracts data from O*NET Web Services API for `Occupation_Data` and `Skills` into pandas DataFrames. Will use `onet_api.mdc` for guidance.
-- `tests/test_extract_onet_api_data.py` - **NEW:** Unit tests for `extract_onet_api_data.py`.
-- `src/functions/mysql_upsert_api_data.py` - **NEW:** Upserts data from API-sourced DataFrames into `OnetApiOccupationData` and `OnetApiSkillsData` tables.
-- `tests/test_mysql_upsert_api_data.py` - **NEW:** Unit tests for `mysql_upsert_api_data.py`.
+- `tests/test_integration_mysql_init_tables.py` - Integration tests for `mysql_init_tables.py`.
+- `src/functions/extract_onet_data.py` - Extracts data from O*NET `.txt` files into pandas DataFrames.
+- `tests/test_integration_extract_onet_data.py` - Integration tests for `extract_onet_data.py`.
+- `src/functions/mysql_load_dataframe.py` - Loads a single pandas DataFrame into a specified MySQL table.
+- `tests/test_integration_mysql_load_dataframe.py` - Integration tests for `mysql_load_dataframe.py`.
+- `src/functions/extract_onet_api_occupation_codes.py` - **NEW:** Fetches all O*NET-SOC occupation codes and titles from the API.
+- `tests/test_integration_extract_onet_api_occupation_codes.py` - **NEW:** Integration tests for `extract_onet_api_occupation_codes.py`.
+- `src/functions/extract_onet_api_occupation_details.py` - **NEW:** Fetches detailed occupation data (description) for a list of occupation codes from the API.
+- `tests/test_integration_extract_onet_api_occupation_details.py` - **NEW:** Integration tests for `extract_onet_api_occupation_details.py`.
+- `src/functions/extract_onet_api_skills_data.py` - **NEW:** Parses skills data from detailed occupation API responses.
+- `tests/test_integration_extract_onet_api_skills_data.py` - **NEW:** Integration tests for `extract_onet_api_skills_data.py`.
+- `src/functions/get_onet_scales_reference.py` - **NEW:** Retrieves O*NET Scales Reference data (direct download or embedded).
+- `tests/test_integration_get_onet_scales_reference.py` - **NEW:** Integration tests for `get_onet_scales_reference.py`.
+- `src/functions/mysql_upsert_dataframe.py` - **NEW:** Upserts a pandas DataFrame into a specified MySQL table.
+- `tests/test_integration_mysql_upsert_dataframe.py` - **NEW:** Integration tests for `mysql_upsert_dataframe.py`.
 - `src/functions/llm_skill_profiler.py` - To house the LLM interaction logic for skill proficiency scoring.
-- `tests/test_llm_skill_profiler.py` - Unit tests for `llm_skill_profiler.py`.
-- `src/nodes/extract_load_text_files.py` - Orchestrates the initial data extraction from text files and loading into the database (formerly `extract_load.py`).
-- `src/nodes/extract_load_api_data.py` - **NEW:** Orchestrates the O*NET API data extraction and loading/upserting into the database.
-- `src/nodes/enrich_skill_data.py` - Orchestrates the LLM enrichment of skill proficiency data in the `Skills` table (for 'LV' scale data_values).
-- `src/functions/get_occupation_skills.py` - Retrieves occupation skills data, needs to be updated to use `Skills` table (filtering by onet_soc_code and scale_id='LV') with LLM-derived `data_value`.
-- `tests/test_get_occupation_skills.py` - Unit tests for `get_occupation_skills.py` (may need update).
-- `src/functions/identify_skill_gap.py` - Contains the core logic for comparing two occupations' skills (seems mostly complete for 'LV' scale, relies on input from `get_occupation_skills`).
-- `tests/test_identify_skill_gap.py` - Unit tests for `identify_skill_gap.py`.
+- `tests/test_integration_llm_skill_profiler.py` - Integration tests for `llm_skill_profiler.py`.
+- `src/nodes/extract_load_text_files.py` - Orchestrates text file data extraction and loading.
+- `tests/test_integration_extract_load_text_files.py` - Integration tests for `extract_load_text_files.py`.
+- `src/nodes/extract_load_api_data.py` - **NEW:** Orchestrates O*NET API data extraction and loading.
+- `tests/test_integration_extract_load_api_data.py` - **NEW:** Integration tests for `extract_load_api_data.py`.
+- `src/nodes/enrich_skill_data.py` - Orchestrates LLM enrichment of skill proficiency data.
+- `tests/test_integration_enrich_skill_data.py` - Integration tests for `enrich_skill_data.py`.
+- `src/functions/get_occupation_skills.py` - Retrieves occupation skills data for API.
+- `tests/test_integration_get_occupation_skills.py` - Integration tests for `get_occupation_skills.py`.
+- `src/functions/identify_skill_gap.py` - Contains the core logic for comparing two occupations' skills.
+- `tests/test_integration_identify_skill_gap.py` - Integration tests for `identify_skill_gap.py`.
 - `src/api/main.py` - Main FastAPI/Flask application file for the REST API.
 - `src/api/routers/skill_gap.py` - API router/controller for the `/skill-gap` endpoint.
 - `tests/test_api_skill_gap.py` - Integration tests for the `/skill-gap` API endpoint.
 - `docker-compose.yml` - Defines and configures services (MySQL, ETL, API).
 - `Dockerfile.api` - Dockerfile for the API service.
-- `Dockerfile.etl` - Dockerfile for the ETL service (if ETL is run as a separate containerized script).
+- `Dockerfile.etl` - Dockerfile for the ETL service.
 - `requirements.txt` - Python project dependencies.
 - `env/env.env` - Environment variable configuration.
-- `README.md` - Project documentation, setup, and API usage instructions.
-- `tests/test_integration_*.py` - Existing and new integration tests.
-- `tests/test_integration_*.sh` - Shell scripts for running integration tests.
+- `README.md` - Project documentation.
 
 ### Notes
 
-- Unit tests should typically be placed alongside the code files they are testing or in a corresponding `tests/unit` subdirectory.
-- Integration tests are typically in the `tests/` directory.
-- Use `pytest` (or `python -m pytest`) to run tests. Test discovery should find tests matching `test_*.py` patterns.
+- Unit tests (if any) are typically alongside the code or in `tests/unit/`.
+- Integration tests are in `tests/test_integration_<module_name>.py` and run via their `.sh` scripts.
+- Use `python -m pytest` for running tests.
 
 ## Tasks
 
-- [x] 1.0 **Phase 1: Setup & Database Schema Baseline (Text Files)** (PRD G2, FR2)
+- [x] 1.0 **Phase 1: Setup & Text File ETL Foundational Components**
   - [x] 1.1 Define environment variables for DB connection (`env/env.env`).
-  - [x] 1.2 Update `src/config/schemas.py` with SQLAlchemy models for `Occupations`, `Skills`, and `Scales` tables (from text files), ensuring all fields from PRD (FR2.2) are included.
-  - [x] 1.3 Implement `src/functions/mysql_init_tables.py` to create/recreate tables based on schemas for text file data.
-  - [x] 1.4 Define primary keys in `src/config/schemas.py` for text file tables.
-  - [x] 1.5 Create integration test for table initialization (`tests/test_integration_mysql_init_tables.py` and `.sh` script).
+  - [x] 1.2 Define SQLAlchemy schemas in `src/config/schemas.py` for `Occupations`, `Skills`, `Scales` tables (from text files).
+  - [x] 1.3 Create function `mysql_init_tables(engine, tables_to_create: list)` in `src/functions/mysql_init_tables.py`. Inputs: SQLAlchemy engine, list of table model classes. Outputs: `{"success": bool, "message": str}`. Initializes specified tables.
+  - [x] 1.4 Create integration test for `mysql_init_tables` (`tests/test_integration_mysql_init_tables.py` and `.sh` script).
+  - [x] 1.5 Create function `extract_onet_data(file_mapping: dict)` in `src/functions/extract_onet_data.py`. Inputs: dict mapping file key (e.g., 'occupations') to file path. Outputs: `{"success": bool, "message": str, "result": {"occupations_df": pd.DataFrame, ...}}`. Reads O*NET `.txt` files into DataFrames.
+  - [x] 1.6 Create integration test for `extract_onet_data` (`tests/test_integration_extract_onet_data.py` and `.sh` script).
+  - [x] 1.7 Create function `mysql_load_dataframe(df: pd.DataFrame, table_name: str, engine, if_exists: str = 'replace')` in `src/functions/mysql_load_dataframe.py`. Inputs: DataFrame, table name, SQLAlchemy engine, if_exists strategy. Outputs: `{"success": bool, "message": str}`. Loads DataFrame to MySQL.
+  - [x] 1.8 Create integration test for `mysql_load_dataframe` (`tests/test_integration_mysql_load_dataframe.py` and `.sh` script) using `Occupations` table as an example.
+  - [x] 1.9 Create node `extract_load_text_files.py` in `src/nodes/`. This node will use `mysql_init_tables`, `extract_onet_data`, and `mysql_load_dataframe` to initialize tables and load all three text files (`Occupations`, `Skills`, `Scales`).
+  - [x] 1.10 Create integration test for `extract_load_text_files` node (`tests/test_integration_extract_load_text_files.py` and `.sh` script).
+  - [x] 1.11 Review and Refine Phase 1 functions and node for clarity, efficiency, docstrings, and adherence to rules.
+  - [x] 1.12 Update `README.md` with setup/run instructions for Phase 1 text file ETL.
 
-- [x] 2.0 **Phase 1: ETL Pipeline - Text File Data Extraction & Basic Load** (PRD G1, G3 (partial), FR1, FR3.1, FR3.2, FR3.4)
-  - [x] 2.1 Implement `src/functions/extract_onet_data.py` to read `Occupation.txt`, `Skills.txt`, and `Scales.txt` into pandas DataFrames.
-  - [x] 2.2 Implement/Update `src/functions/mysql_load.py` to load data into `Occupations`, `Skills`, `Scales` tables from text file DataFrames.
-  - [x] 2.3 Create `src/nodes/extract_load_text_files.py` to orchestrate the extraction and loading of all three text files.
-  - [x] 2.4 Create/Update integration test for the basic ETL data loading process from text files (`tests/test_integration_mysql_load.py` and `.sh` script).
+- [ ] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions**
+  - [ ] 2.1 Define SQLAlchemy schemas in `src/config/schemas.py` for API data: `OnetApiOccupationData` and `OnetApiSkillsData`. Include source/timestamp fields.
+  - [ ] 2.2 Update `mysql_init_tables` function in `src/functions/mysql_init_tables.py` to optionally accept a list of specific table model classes to create/recreate, and update its integration test.
+  - [ ] 2.3 Create function `extract_onet_api_occupation_codes(api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_codes.py`. Inputs: API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes and titles. (Ref: `onet_api.mdc` Sec 3.1)
+  - [ ] 2.4 Create integration test for `extract_onet_api_occupation_codes` (`tests/test_integration_extract_onet_api_occupation_codes.py` and `.sh`).
+  - [ ] 2.5 Create function `extract_onet_api_occupation_details(occupation_codes_df: pd.DataFrame, api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_details.py`. Inputs: DataFrame of codes, API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_details_df": pd.DataFrame}}`. Fetches details for each code. (Ref: `onet_api.mdc` Sec 3.2)
+  - [ ] 2.6 Create integration test for `extract_onet_api_occupation_details` (`tests/test_integration_extract_onet_api_occupation_details.py` and `.sh`).
+  - [ ] 2.7 Create function `extract_onet_api_skills_data(occupation_details_json_list: list, occupation_codes: list)` in `src/functions/extract_onet_api_skills_data.py`. Inputs: list of JSON responses from occupation detail API calls, list of corresponding O*NET-SOC codes. Outputs: `{"success": bool, "message": str, "result": {"skills_api_df": pd.DataFrame}}`. Parses skills from API responses. (Ref: `onet_api.mdc` Sec 3.3)
+  - [ ] 2.8 Create integration test for `extract_onet_api_skills_data` (`tests/test_integration_extract_onet_api_skills_data.py` and `.sh`). (Requires sample API JSON responses for testing without live calls).
+  - [ ] 2.9 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`. Inputs: URL to `Scales_Reference.txt`. Outputs: `{"success": bool, "message": str, "result": {"scales_df": pd.DataFrame}}`. Downloads or uses embedded data. (Ref: `onet_api.mdc` Sec 3.4)
+  - [ ] 2.10 Create integration test for `get_onet_scales_reference` (`tests/test_integration_get_onet_scales_reference.py` and `.sh`).
+  - [ ] 2.11 Create function `mysql_upsert_dataframe(df: pd.DataFrame, table_name: str, engine, primary_key_cols: list)` in `src/functions/mysql_upsert_dataframe.py`. Inputs: DataFrame, table name, SQLAlchemy engine, list of PK columns for conflict resolution. Outputs: `{"success": bool, "message": str}`. Upserts DataFrame to MySQL.
+  - [ ] 2.12 Create integration test for `mysql_upsert_dataframe` (`tests/test_integration_mysql_upsert_dataframe.py` and `.sh`) using `OnetApiOccupationData` as an example.
+  - [ ] 2.13 Create node `extract_load_api_data.py` in `src/nodes/`. This node will use `mysql_init_tables` (for API tables), `extract_onet_api_occupation_codes`, `extract_onet_api_occupation_details`, `extract_onet_api_skills_data`, and `mysql_upsert_dataframe` to extract and load/upsert API data into `OnetApiOccupationData` and `OnetApiSkillsData`.
+  - [ ] 2.14 Create integration test for `extract_load_api_data` node (`tests/test_integration_extract_load_api_data.py` and `.sh` script).
 
-- [x] 3.0 **Phase 1: Refinement & Cleanup**
-  - [x] 3.1 Review `src/functions/extract_onet_data.py`, `src/functions/mysql_load.py`, and `src/nodes/extract_load_text_files.py` for clarity, efficiency, and adherence to `functions.mdc` guidelines.
-  - [x] 3.2 Ensure all existing integration tests (`mysql_init_tables`, `mysql_load`) are robust and cover key success/failure scenarios for Phase 1 scope.
-  - [x] 3.3 Verify `README.md` includes basic setup and run instructions for the Phase 1 ETL data pipeline (text files).
+- [ ] 3.0 **Phase 3: Database Normalization & Consumption Views**
+  - [ ] 3.1 Design and define SQL queries or SQLAlchemy views for `OccupationsView` and `SkillsView` that merge data from text-file and API tables. Document the merge logic (e.g., prioritizing sources, filling gaps).
+  - [ ] 3.2 Update `mysql_init_tables` or create a new function (e.g., `manage_database_views`) to create/refresh these views in `src/functions/`.
+  - [ ] 3.3 Create integration test for view creation/refresh logic.
+  - [ ] 3.4 Implement and test Foreign Key constraints for `Skills.onet_soc_code` -> `Occupations.onet_soc_code` and `Skills.scale_id` -> `Scales.scale_id`. Apply to API tables if appropriate. Update `mysql_load_dataframe` and `mysql_upsert_dataframe` to handle potential FK issues or ensure correct loading order if constraints are immediate.
+  - [ ] 3.5 Update integration tests to verify data integrity with FKs and test view content.
 
-- [ ] 4.0 **Phase 2: Data Ingestion - O*NET API Integration**
-  - [ ] 4.1 Define SQLAlchemy schemas in `src/config/schemas.py` for new tables to store API data: `OnetApiOccupationData` and `OnetApiSkillsData`. These tables will mirror the structure of `Occupation_Data.txt` and `Skills.txt` respectively, as closely as the API allows. Consider adding source/timestamp fields.
-  - [ ] 4.2 Update `src/functions/mysql_init_tables.py` to include creation of `OnetApiOccupationData` and `OnetApiSkillsData` tables. Ensure this function can be run without re-creating existing text-file based tables if not desired.
-  - [ ] 4.3 Create `src/functions/extract_onet_api_data.py`:
-    - [ ] 4.3.1 Implement logic to connect to O*NET API (handle auth, headers, clientname - refer to `.cursor/rules/onet_api.mdc`).
-    - [ ] 4.3.2 Implement function to fetch all occupation codes and titles (paginated) as per section 3.1 of `onet_api.mdc`.
-    - [ ] 4.3.3 Implement function to fetch detailed occupation data (description) for each occupation code, creating a DataFrame for `OnetApiOccupationData` (section 3.2 of `onet_api.mdc`).
-    - [ ] 4.3.4 Implement function to parse skills data from detailed occupation reports, creating a DataFrame for `OnetApiSkillsData` (section 3.3 of `onet_api.mdc`). Log missing fields as per rule.
-    - [ ] 4.3.5 Implement function to get `Scales_Reference.txt` data (direct download/embedded as per section 3.4 of `onet_api.mdc`) if not already robustly handled by text file ETL. This might be used to validate/supplement API skill scale data.
-  - [ ] 4.4 Create unit tests for `src/functions/extract_onet_api_data.py` (`tests/test_extract_onet_api_data.py`), mocking API calls.
-  - [ ] 4.5 Create `src/functions/mysql_upsert_api_data.py`:
-    - [ ] 4.5.1 Implement function to take DataFrames from `extract_onet_api_data.py` and upsert data into `OnetApiOccupationData` table.
-    - [ ] 4.5.2 Implement function to take DataFrames from `extract_onet_api_data.py` and upsert data into `OnetApiSkillsData` table.
-    - [ ] (Consider whether to clear tables before upsert or perform true upsert logic based on primary keys).
-  - [ ] 4.6 Create unit tests for `src/functions/mysql_upsert_api_data.py` (`tests/test_mysql_upsert_api_data.py`).
-  - [ ] 4.7 Create `src/nodes/extract_load_api_data.py` to orchestrate the API data extraction and loading/upserting process.
-  - [ ] 4.8 Create/Update integration test for the API data loading process (`tests/test_integration_api_load.py` and `.sh` script).
+- [ ] 4.0 **Phase 4: LLM Integration for Skill Proficiency**
+  - [ ] 4.1 Research and select/configure LLM for skill proficiency analysis.
+  - [ ] 4.2 Create function `llm_skill_profiler(skill_data: pd.DataFrame, text_column: str)` in `src/functions/llm_skill_profiler.py`. Inputs: DataFrame with skill info (e.g., from `SkillsView`), column name with text for LLM. Outputs: `{"success": bool, "message": str, "result": {"llm_scores_df": pd.DataFrame}}` with original data + LLM scores.
+  - [ ] 4.3 Create integration test for `llm_skill_profiler` (`tests/test_integration_llm_skill_profiler.py` and `.sh`). (May require mocking LLM calls for CI/CD).
+  - [ ] 4.4 Create node `enrich_skill_data.py` in `src/nodes/`. This node will:
+    - [ ] 4.4.1 Read data (e.g., from `SkillsView`, filtering for `scale_id` = 'LV').
+    - [ ] 4.4.2 Call `llm_skill_profiler`.
+    - [ ] 4.4.3 Upsert LLM-derived `data_value` back into a relevant table or a new `LLMSkillScores` table using `mysql_upsert_dataframe`.
+  - [ ] 4.5 Create integration test for `enrich_skill_data` node (`tests/test_integration_enrich_skill_data.py` and `.sh`).
 
-- [ ] 5.0 **Phase 3: Database Normalization & Creation of Consumption Views/Tables**
-  - [ ] 5.1 Define schema and implement creation of downstream normalized tables or materialized views that combine data from text-file sources and API sources. For example:
-    - [ ] 5.1.1 A consolidated `OccupationsView` that intelligently merges data from `Occupations` (text file) and `OnetApiOccupationData`.
-    - [ ] 5.1.2 A consolidated `SkillsView` that intelligently merges data from `Skills` (text file) and `OnetApiSkillsData`, potentially prioritizing one source over another or filling gaps.
-  - [ ] 5.2 Update `src/functions/mysql_init_tables.py` or create a new function/node to manage the creation/refresh of these normalized views/tables.
-  - [ ] 5.3 Re-introduce and test Foreign Key constraints in `src/config/schemas.py` for original `Skills.onet_soc_code` -> `Occupations.onet_soc_code` and `Skills.scale_id` -> `Scales.scale_id`. Apply similar constraints to API tables if appropriate.
-  - [ ] 5.4 Update `src/functions/mysql_load.py` (for text files) and `src/functions/mysql_upsert_api_data.py` (for API) to ensure data is loaded/upserted in an order that respects FK constraints if they are enforced during these operations.
-  - [ ] 5.5 Update integration tests to verify data integrity with foreign key constraints enabled and to test the creation and content of normalized views/tables.
+- [ ] 5.0 **Phase 5: REST API for Skill Gap Analysis**
+  - [ ] 5.1 Set up FastAPI framework in `src/api/main.py`.
+  - [ ] 5.2 Create function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine)` in `src/functions/get_occupation_skills.py`. Inputs: occupation code, scale ID to filter (e.g., 'LV'), SQLAlchemy engine. Outputs: `{"success": bool, "message": str, "result": {"skills_df": pd.DataFrame}}`. Uses `SkillsView` or LLM-enriched data.
+  - [ ] 5.3 Create integration test for `get_occupation_skills` (`tests/test_integration_get_occupation_skills.py` and `.sh`).
+  - [ ] 5.4 Review `identify_skill_gap.py`. Ensure it takes two DataFrames (from `get_occupation_skills`) as input and outputs `{"success": bool, "message": str, "result": {"skill_gap_df": pd.DataFrame}}`.
+  - [ ] 5.5 Create/Update integration test for `identify_skill_gap` (`tests/test_integration_identify_skill_gap.py` and `.sh`).
+  - [ ] 5.6 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py` using the functions above.
+  - [ ] 5.7 Create integration test for `/skill-gap` API endpoint (`tests/test_api_skill_gap.py` and `.sh`).
 
-- [ ] 6.0 **Phase 4: ETL Pipeline Enhancement - LLM Integration for Skill Proficiency** (PRD G3 (LLM part), FR3.3)
-  - [ ] 6.1 Research and select a suitable pre-trained LLM for analyzing skill proficiency.
-  - [ ] 6.2 Create `src/functions/llm_skill_profiler.py` to interact with the LLM. This function might take skill descriptions or contexts and return proficiency scores.
-  - [ ] 6.3 Create unit tests for `src/functions/llm_skill_profiler.py`.
-  - [ ] 6.4 Create `src/nodes/enrich_skill_data.py`. This node will:
-    - [ ] 6.4.1 Read data from the `SkillsView` (or relevant source table for skills that need enrichment, e.g., those with `scale_id` = 'LV').
-    - [ ] 6.4.2 For each relevant skill, call `llm_skill_profiler.py` to get an LLM-derived `data_value`.
-    - [ ] 6.4.3 Update the appropriate table (e.g., a new column in `SkillsView` or back into `Skills`/`OnetApiSkillsData` if direct update is preferred, or a new `LLMSkillScores` table) with the LLM scores.
-  - [ ] 6.5 Create/Update integration tests for LLM enrichment process.
-
-- [ ] 7.0 **Phase 5: REST API Implementation: Skill Gap Endpoint** (PRD G4, G5, FR4)
-  - [ ] 7.1 Choose and set up a Python web framework (e.g., FastAPI, Flask) in `src/api/`.
-  - [ ] 7.2 Update `src/functions/get_occupation_skills.py` to use the normalized/enriched skill data (e.g., from `SkillsView` or the table updated by LLM) for retrieving skills relevant to the `/skill-gap` endpoint (likely focusing on `scale_id`='LV').
-  - [ ] 7.3 Create/Update unit tests for `src/functions/get_occupation_skills.py`.
-  - [ ] 7.4 Review `src/functions/identify_skill_gap.py`. Ensure it correctly uses data from `get_occupation_skills`.
-  - [ ] 7.5 Create unit tests for `src/functions/identify_skill_gap.py`.
-  - [ ] 7.6 Create API main application file (`src/api/main.py`).
-  - [ ] 7.7 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py`. This endpoint will use `get_occupation_skills` and `identify_skill_gap`.
-  - [ ] 7.8 Implement logging for API.
-  - [ ] 7.9 Create integration tests for `/skill-gap` API endpoint (`tests/test_api_skill_gap.py`).
-
-- [ ] 8.0 **Phase 6: Containerization, Advanced Testing, and Documentation** (PRD G6, G7, G8)
-  - [ ] 8.1 Update `docker-compose.yml` to include the API service and any ETL services/nodes if they are to be run as separate containerized scripts/jobs.
-  - [ ] 8.2 Create `Dockerfile.api` for the API service.
-  - [ ] 8.3 Create `Dockerfile.etl` if ETL processes (text file, API, LLM enrichment) are containerized separately.
-  - [ ] 8.4 Ensure all dependencies are correctly listed in `requirements.txt`.
-  - [ ] 8.5 Update integration test shell scripts (`.sh`) to work within a Dockerized environment if necessary (e.g., using `docker-compose exec`).
-  - [ ] 8.6 Ensure all automated tests (unit and integration) pass consistently.
-  - [ ] 8.7 Update `README.md` with comprehensive information: full setup instructions (local and Docker), detailed database schema (including new API and view tables), data flow diagrams, design decisions, assumptions, and clear API usage examples for the `/skill-gap` endpoint.
-  - [ ] 8.8 Implement comprehensive error handling and logging across all components (ETL functions, nodes, API). 
+- [ ] 6.0 **Phase 6: Containerization, Final Testing, and Documentation**
+  - [ ] 6.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).
+  - [ ] 6.2 Create/Update `Dockerfile.api`, `Dockerfile.etl`.
+  - [ ] 6.3 Finalize `requirements.txt`.
+  - [ ] 6.4 Ensure all integration tests pass in Docker environment.
+  - [ ] 6.5 Update `README.md` (full setup, schema, data flow, API examples, design decisions).
+  - [ ] 6.6 Implement comprehensive error handling and logging across all components. 

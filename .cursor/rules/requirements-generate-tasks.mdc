@@ -18,11 +18,21 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 ## Process
 
 1.  **Receive PRD Reference:** The user points the AI to a specific PRD file
-2.  **Analyze PRD:** The AI reads and analyzes the functional requirements, user stories, and other sections of the specified PRD.
-3.  **Phase 1: Generate Parent Tasks:** Based on the PRD analysis, create the file and generate the main, high-level tasks required to implement the feature. Use your judgement on how many high-level tasks to use. It's likely to be about 5. Present these tasks to the user in the specified format (without sub-tasks yet). Inform the user: "I have generated the high-level tasks based on the PRD. Ready to generate the sub-tasks? Respond with 'Go' to proceed."
+2.  **Analyze PRD:** The AI reads and analyzes the functional requirements, user stories, and other sections of the specified PRD. The primary goal is to break down requirements into a series of **functions** that need to be created or modified. Consider how these functions will chain together. The **Testing Honeycomb/Integration-First philosophy** remains key: prioritize integration tests for core data flows and function interactions.
+3.  **Phase 1: Generate Parent Tasks:** Based on the PRD analysis, create the file and generate main, high-level tasks. These parent tasks should represent significant milestones or distinct components of the feature, often culminating in a node or a key functional output. Ensure testing tasks reflect the integration-first approach. Present these tasks to the user in the specified format (without sub-tasks yet). Inform the user: "I have generated the high-level tasks based on the PRD, emphasizing a function-driven approach and integration testing. Ready to generate the detailed function and test sub-tasks? Respond with 'Go' to proceed."
 4.  **Wait for Confirmation:** Pause and wait for the user to respond with "Go".
-5.  **Phase 2: Generate Sub-Tasks:** Once the user confirms, break down each parent task into smaller, actionable sub-tasks necessary to complete the parent task. Ensure sub-tasks logically follow from the parent task and cover the implementation details implied by the PRD.
-6.  **Identify Relevant Files:** Based on the tasks and PRD, identify potential files that will need to be created or modified. List these under the `Relevant Files` section, including corresponding test files if applicable.
+5.  **Phase 2: Generate Sub-Tasks:** Once the user confirms, break down each parent task into smaller, actionable sub-tasks. Many sub-tasks will involve:
+    *   **Creating or Updating Functions:**
+        *   Clearly state the function's purpose.
+        *   Define its expected **Inputs** (name, type, description).
+        *   Define its expected **Outputs** (structure, type, description, typically following `{"success": bool, "message": str, "result": dict}`).
+        *   Example: `- [ ] Create function `process_raw_data(data: pd.DataFrame, config: dict) -> dict` to clean and transform raw input. Inputs: raw pandas DataFrame, configuration dictionary. Outputs: dict with success status, message, and processed DataFrame.`
+    *   **Chaining Functions:** Describe how outputs of one function become inputs to another.
+    *   **Creating Nodes:** When a sequence of functions achieves a significant sub-goal, a task to create a node encapsulating this chain should be defined.
+    *   **Testing Sub-Tasks**:
+        *   For **every new function created**, a sub-task to create its corresponding **integration test** must be included immediately following the function creation sub-task. Reference `integration_tests.mdc`.
+        *   Unit tests should be generated for complex, isolated logic within a function or for refinement after integration tests pass. Reference `unit_tests.mdc`.
+6.  **Identify Relevant Files:** Based on the tasks (especially function and node creation), identify potential files that will need to be created or modified. List these under the `Relevant Files` section. For each function, list its source file (e.g., `src/functions/my_new_function.py`) and its integration test file (e.g., `tests/test_integration_my_new_function.py`).
 7.  **Generate Final Output:** Combine the parent tasks, sub-tasks, relevant files, and notes into the final Markdown structure.
 8.  **Save Task List:** Save the generated document in the `/tasks/` directory with the filename `tasks-[prd-file-name].md`, where `[prd-file-name]` matches the base name of the input PRD file (e.g., if the input was `prd-user-profile-editing.md`, the output is `tasks-prd-user-profile-editing.md`).
 
@@ -42,8 +52,11 @@ The generated task list _must_ follow this structure:
 
 ### Notes
 
-- Unit tests should typically be placed alongside the code files they are testing (e.g., `MyComponent.tsx` and `MyComponent.test.tsx` in the same directory).
-- Use `npx jest [optional/path/to/test/file]` to run tests. Running without a path executes all tests found by the Jest configuration.
+- Unit tests should typically be placed alongside the code files they are testing (e.g., `MyComponent.tsx` and `MyComponent.test.tsx` in the same directory), or in a corresponding `tests/unit` subdirectory if preferred for organization.
+- Integration tests for functions are typically in `tests/test_integration_<function_name>.py`.
+- Integration tests for nodes are typically in `tests/test_integration_<node_name>.py`.
+- Emphasize running integration tests using their `.sh` scripts to ensure proper environment setup.
+- Use `pytest` (or `python -m pytest`) to run tests. Test discovery should find tests matching `test_*.py` patterns.
 
 ## Tasks
 

@@ -129,3 +129,43 @@ Memory bank notes work as the working memory of agents.
 - The integration test `tests/test_integration_mysql_load.sh` now passes successfully.
 - Data for `Occupations`, `Skills`, and `Scales` is loaded without foreign key errors.
 - The database schema (as defined in `schemas.py`) no longer enforces foreign key relationships between `Skills.scale_id` <-> `Scales.scale_id` or `Skills.onet_soc_code` <-> `Occupations.onet_soc_code`. This will be revisited in a later phase for data normalization and validation.
+
+### API Data Extraction & Loading (Phase 2 - Generic Endpoints Approach)
+
+**Date**: 2025-05-30 (Please update with current date if different)
+
+**1. API Data Extraction Functions:**
+   - Implemented three separate functions to extract data directly from O*NET API generic list endpoints:
+     - `src/functions/onet_api_extract_occupation.py`: Fetches general occupation data from `/ws/database/rows/occupation_data`.
+     - `src/functions/onet_api_extract_skills.py`: Fetches general skills list from `/ws/database/rows/skills`.
+     - `src/functions/onet_api_extract_scales.py`: Fetches general scales reference data from `/ws/database/rows/scales_reference`.
+   - All functions use username/password authentication (from environment variables) and return pandas DataFrames within a standard dictionary structure (`{"success": bool, "message": str, "result": {"df_name": df}}`).
+
+**2. SQLAlchemy Schema Updates for API Landing Tables:**
+   - Ensured API landing tables in `src/config/schemas.py` are designed to store data "as is" from these generic endpoints:
+     - `Onet_Occupations_API_landing`: Stores data from `onet_api_extract_occupation`.
+     - `Onet_Skills_API_landing`: Stores data from `onet_api_extract_skills`. Schema updated to use an auto-incrementing `id` as the primary key, allowing `element_id` to have duplicates as returned by the API. It now includes `element_id`, `element_name`, `description`, and `last_updated`.
+     - `Onet_Scales_API_landing`: Stores data from `onet_api_extract_scales`.
+
+**3. API Data Extraction and Loading Node:**
+   - Created `src/nodes/extract_load_api.py` node.
+   - This node orchestrates the process:
+     - Retrieves API and database credentials from environment variables (e.g., `ONET_USERNAME`, `ONET_PASSWORD`, `MYSQL_USER`, etc.).
+     - Calls the three API extraction functions (`onet_api_extract_occupation`, `onet_api_extract_skills`, `onet_api_extract_scales`).
+     - Uses `src.functions.mysql_load_table.load_data_from_dataframe` to load the extracted DataFrames into their respective API landing tables (`Onet_Occupations_API_landing`, `Onet_Skills_API_landing`, `Onet_Scales_API_landing`). Tables are cleared before loading.
+
+**4. Node Execution Script:**
+   - Created `src/scripts/run_extract_load_api.sh` to execute the `extract_load_api.py` node. The script handles virtual environment activation and `PYTHONPATH` setup.
+
+**5. Integration Test for API Load Node:**
+   - Implemented `tests/test_integration_extract_load_api.py` with a corresponding shell script `tests/test_integration_extract_load_api.sh`.
+   - The test uses an in-memory SQLite database by mocking the node's `get_db_engine` function.
+   - It verifies that the `extract_load_api.py` node runs, attempts API calls (using credentials from `env/env.env`), and that the target tables are created and populated in the SQLite database.
+   - **Test Outcome**: The test successfully passed, loading data into the in-memory SQLite DB. Using credentials from `env/env.env`, the following record counts were observed:
+     - `Onet_Occupations_API_landing`: 20 rows
+     - `Onet_Skills_API_landing`: 20 rows (after schema change and removal of deduplication)
+     - `Onet_Scales_API_landing`: 20 rows
+
+**6. Troubleshooting & Key Decisions for API Skills Data:**
+   - Addressed initial `NOT NULL constraint failed` for `onet_skills_api_landing.onet_soc_code` by revising the table schema to align with the data actually provided by the generic `/ws/database/rows/skills` endpoint (which doesn't include `onet_soc_code`).
+   - Resolved subsequent `UNIQUE constraint failed` for `onet_skills_api_landing.element_id` by removing the deduplication step in `onet_api_extract_skills.py` and changing the `Onet_Skills_API_landing` primary key to a new auto-incrementing `id` column, as per the requirement to store API data "as is", including potential duplicates of `element_id`.

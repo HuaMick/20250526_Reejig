@@ -4,13 +4,17 @@ globs:
 alwaysApply: false
 ---
 # Integration Tests
+Integration tests are crucial for verifying that different parts of the application, especially functions and nodes, work together correctly to produce the expected results. In data-centric projects, they provide high confidence in the data flow and transformations.
+
+**Philosophy**: Adhering to a "Testing Honeycomb" or "Integration-First" model, every function and node should ideally have a corresponding integration test. This validates its interaction with real (or near-real) dependencies and ensures it behaves as expected within the broader system. Mocks should be used sparingly, primarily when isolating true external services that are out of scope for the current integration test.
+
 Integration tests check that multiple functions work together to produce the expected result.
 
 Rules:
 - Have fixtures in `./tests/fixtures/<fixture_name>.py`
 - Have a pytest implementation in `./tests/test_integration_<test_name>.py`
 - Have a shell script in `./tests/test_integration_<test_name>.sh` that sets up the environment and executes the test
-- Do not use mocking in integration tests, test real world assets
+- Do not use mocking in integration tests, test real world assets, if need be you can spin up a local sqlite database for testing.
 - Do not manufacture datasets for loading into a database (this is the same as mocking)
 - Decouple test implementation from test execution by using shell scripts for environment setup
 

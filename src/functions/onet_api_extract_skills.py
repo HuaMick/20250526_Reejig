@@ -62,6 +62,18 @@ def onet_api_extract_skills(
             # Add last_updated column
             df["last_updated"] = date.today()
 
+            # Ensure descriptions are handled if the column name isn't exactly 'description'
+            if 'description' not in df.columns and 'details' in df.columns: # example adjustment
+                df.rename(columns={'details': 'description'}, inplace=True)
+            elif 'description' not in df.columns and 'summary' in df.columns:
+                df.rename(columns={'summary': 'description'}, inplace=True)
+
+            # Drop duplicates based on element_id to prevent UNIQUE constraint errors
+            # if 'element_id' in df.columns:
+            #     df.drop_duplicates(subset=['element_id'], keep='first', inplace=True)
+            # else:
+            #     logging.warning("'element_id' column not found in skills data, cannot drop duplicates.")
+
         return {
             "success": True,
             "message": "Skills data extracted successfully.",

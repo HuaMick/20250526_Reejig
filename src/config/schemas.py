@@ -53,28 +53,16 @@ class Onet_Occupations_API_landing(Base):
 class Onet_Skills_API_landing(Base):
     __tablename__ = 'onet_skills_api_landing'
 
-    onet_soc_code = Column(String(20), index=True)
-    element_id = Column(String(20), index=True) # No longer primary key alone
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    element_id = Column(String(20), index=True)
     element_name = Column(String(255), nullable=False)
-    scale_id = Column(String(10), index=True)
-    data_value = Column(DECIMAL(5, 2), nullable=True)
-    n_value = Column(Integer, nullable=True)
-    standard_error = Column(DECIMAL(6, 4), nullable=True)
-    lower_ci_bound = Column(DECIMAL(6, 4), nullable=True)
-    upper_ci_bound = Column(DECIMAL(6, 4), nullable=True)
-    recommend_suppress = Column(CHAR(1), nullable=True)
-    not_relevant = Column(String(10), nullable=True)
-    date_recorded = Column(Date, nullable=True)
-    domain_source = Column(String(50), nullable=True)
+    description = Column(Text)
+    last_updated = Column(Date, nullable=False)
 
     # String columns for type handling
     string_columns = ['element_id', 'element_name']
 
-    # Composite primary key definition
-    __table_args__ = (
-        PrimaryKeyConstraint('onet_soc_code', 'element_id', 'scale_id'),
-        {}
-    )
+    # __table_args__ removed as simple PK is now 'id'
 
 class Onet_Scales_API_landing(Base):
     __tablename__ = 'onet_scales_api_landing'

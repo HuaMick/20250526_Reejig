@@ -4,7 +4,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from src.functions.onet_api_extract_occupation import onet_api_extract_occupation
+from functions.onet_api_extract_occupation import onet_api_extract_occupation
 from src.functions.mysql_load_table import load_data_from_dataframe
 import src.config.schemas as schemas # To access the model and Base
 

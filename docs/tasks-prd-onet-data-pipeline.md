@@ -62,37 +62,39 @@
   - [x] 1.12 Update `README.md` with setup/run instructions for Phase 1 text file ETL.
 
 - [ ] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions**
-  - [ ] 2.1 Define SQLAlchemy schemas in `src/config/schemas.py` for API data: `OnetApiOccupationData` and `OnetApiSkillsData`. Include source/timestamp fields.
-  - [ ] 2.2 Update `mysql_init_tables` function in `src/functions/mysql_init_tables.py` to optionally accept a list of specific table model classes to create/recreate, and update its integration test.
-  - [ ] 2.3 Create function `extract_onet_api_occupation_codes(api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_codes.py`. Inputs: API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes and titles. (Ref: `onet_api.mdc` Sec 3.1)
-  - [ ] 2.4 Create integration test for `extract_onet_api_occupation_codes` (`tests/test_integration_extract_onet_api_occupation_codes.py` and `.sh`).
-  - [ ] 2.5 Create function `extract_onet_api_occupation_details(occupation_codes_df: pd.DataFrame, api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_details.py`. Inputs: DataFrame of codes, API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_details_df": pd.DataFrame}}`. Fetches details for each code. (Ref: `onet_api.mdc` Sec 3.2)
-  - [ ] 2.6 Create integration test for `extract_onet_api_occupation_details` (`tests/test_integration_extract_onet_api_occupation_details.py` and `.sh`).
-  - [ ] 2.7 Create function `extract_onet_api_skills_data(occupation_details_json_list: list, occupation_codes: list)` in `src/functions/extract_onet_api_skills_data.py`. Inputs: list of JSON responses from occupation detail API calls, list of corresponding O*NET-SOC codes. Outputs: `{"success": bool, "message": str, "result": {"skills_api_df": pd.DataFrame}}`. Parses skills from API responses. (Ref: `onet_api.mdc` Sec 3.3)
-  - [ ] 2.8 Create integration test for `extract_onet_api_skills_data` (`tests/test_integration_extract_onet_api_skills_data.py` and `.sh`). (Requires sample API JSON responses for testing without live calls).
-  - [ ] 2.9 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`. Inputs: URL to `Scales_Reference.txt`. Outputs: `{"success": bool, "message": str, "result": {"scales_df": pd.DataFrame}}`. Downloads or uses embedded data. (Ref: `onet_api.mdc` Sec 3.4)
-  - [ ] 2.10 Create integration test for `get_onet_scales_reference` (`tests/test_integration_get_onet_scales_reference.py` and `.sh`).
-  - [ ] 2.11 Create function `mysql_upsert_dataframe(df: pd.DataFrame, table_name: str, engine, primary_key_cols: list)` in `src/functions/mysql_upsert_dataframe.py`. Inputs: DataFrame, table name, SQLAlchemy engine, list of PK columns for conflict resolution. Outputs: `{"success": bool, "message": str}`. Upserts DataFrame to MySQL.
-  - [ ] 2.12 Create integration test for `mysql_upsert_dataframe` (`tests/test_integration_mysql_upsert_dataframe.py` and `.sh`) using `OnetApiOccupationData` as an example.
+  - [ ] 2.1 Create function `extract_onet_api_occupation_codes(api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_codes.py`. Inputs: API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes and titles. (Ref: `onet_api.mdc` Sec 3.1)
+  - [ ] 2.2 Create integration test for `extract_onet_api_occupation_codes` (`tests/test_integration_extract_onet_api_occupation_codes.py` and `.sh`).
+  - [ ] 2.3 Create function `extract_onet_api_occupation_details(occupation_codes_df: pd.DataFrame, api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_details.py`. Inputs: DataFrame of codes, API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_details_df": pd.DataFrame}}`. Fetches details for each code. (Ref: `onet_api.mdc` Sec 3.2)
+  - [ ] 2.4 Create integration test for `extract_onet_api_occupation_details` (`tests/test_integration_extract_onet_api_occupation_details.py` and `.sh`).
+  - [ ] 2.5 Create function `extract_onet_api_skills_data(occupation_details_json_list: list, occupation_codes: list)` in `src/functions/extract_onet_api_skills_data.py`. Inputs: list of JSON responses from occupation detail API calls, list of corresponding O*NET-SOC codes. Outputs: `{"success": bool, "message": str, "result": {"skills_api_df": pd.DataFrame}}`. Parses skills from API responses. (Ref: `onet_api.mdc` Sec 3.3)
+  - [ ] 2.6 Create integration test for `extract_onet_api_skills_data` (`tests/test_integration_extract_onet_api_skills_data.py` and `.sh`). (Requires sample API JSON responses for testing without live calls).
+  - [ ] 2.7 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`. Inputs: URL to `Scales_Reference.txt`. Outputs: `{"success": bool, "message": str, "result": {"scales_df": pd.DataFrame}}`. Downloads or uses embedded data. (Ref: `onet_api.mdc` Sec 3.4)
+  - [ ] 2.8 Create integration test for `get_onet_scales_reference` (`tests/test_integration_get_onet_scales_reference.py` and `.sh`).
+  - [ ] 2.9 Create function `mysql_upsert_dataframe(df: pd.DataFrame, table_name: str, engine, primary_key_cols: list)` in `src/functions/mysql_upsert_dataframe.py`. Inputs: DataFrame, table name, SQLAlchemy engine, list of PK columns for conflict resolution. Outputs: `{"success": bool, "message": str}`. Upserts DataFrame to MySQL.
+  - [ ] 2.10 Create integration test for `mysql_upsert_dataframe` (`tests/test_integration_mysql_upsert_dataframe.py` and `.sh`) using temp table with sample API data.
+  - [ ] 2.11 Define SQLAlchemy schemas for the API data landing tables in `src/config/schemas.py` for API data: `OnetApiOccupationData` and `OnetApiSkillsData`. Include source/timestamp fields. (Based on actual data structure from functions)
+  - [ ] 2.12 Update `mysql_init_tables` function in `src/functions/mysql_init_tables.py` to optionally accept a list of specific table model classes to create/recreate, and update its integration test.
   - [ ] 2.13 Create node `extract_load_api_data.py` in `src/nodes/`. This node will use `mysql_init_tables` (for API tables), `extract_onet_api_occupation_codes`, `extract_onet_api_occupation_details`, `extract_onet_api_skills_data`, and `mysql_upsert_dataframe` to extract and load/upsert API data into `OnetApiOccupationData` and `OnetApiSkillsData`.
   - [ ] 2.14 Create integration test for `extract_load_api_data` node (`tests/test_integration_extract_load_api_data.py` and `.sh` script).
 
 - [ ] 3.0 **Phase 3: Database Normalization & Consumption Views**
-  - [ ] 3.1 Design and define SQL queries or SQLAlchemy views for `OccupationsView` and `SkillsView` that merge data from text-file and API tables. Document the merge logic (e.g., prioritizing sources, filling gaps).
-  - [ ] 3.2 Update `mysql_init_tables` or create a new function (e.g., `manage_database_views`) to create/refresh these views in `src/functions/`.
-  - [ ] 3.3 Create integration test for view creation/refresh logic.
-  - [ ] 3.4 Implement and test Foreign Key constraints for `Skills.onet_soc_code` -> `Occupations.onet_soc_code` and `Skills.scale_id` -> `Scales.scale_id`. Apply to API tables if appropriate. Update `mysql_load_dataframe` and `mysql_upsert_dataframe` to handle potential FK issues or ensure correct loading order if constraints are immediate.
-  - [ ] 3.5 Update integration tests to verify data integrity with FKs and test view content.
+  - [ ] 3.1 Analyze data from both sources (text files and API) to understand their structure and relationships.
+  - [ ] 3.2 Design and define SQL queries or SQLAlchemy views for `OccupationsView` and `SkillsView` that merge data from text-file and API tables. Document the merge logic (e.g., prioritizing sources, filling gaps).
+  - [ ] 3.3 Update `mysql_init_tables` or create a new function (e.g., `manage_database_views`) to create/refresh these views in `src/functions/`.
+  - [ ] 3.4 Create integration test for view creation/refresh logic.
+  - [ ] 3.5 Implement and test Foreign Key constraints for `Skills.onet_soc_code` -> `Occupations.onet_soc_code` and `Skills.scale_id` -> `Scales.scale_id`. Apply to API tables if appropriate. Update `mysql_load_dataframe` and `mysql_upsert_dataframe` to handle potential FK issues or ensure correct loading order if constraints are immediate.
+  - [ ] 3.6 Update integration tests to verify data integrity with FKs and test view content.
 
 - [ ] 4.0 **Phase 4: LLM Integration for Skill Proficiency**
   - [ ] 4.1 Research and select/configure LLM for skill proficiency analysis.
   - [ ] 4.2 Create function `llm_skill_profiler(skill_data: pd.DataFrame, text_column: str)` in `src/functions/llm_skill_profiler.py`. Inputs: DataFrame with skill info (e.g., from `SkillsView`), column name with text for LLM. Outputs: `{"success": bool, "message": str, "result": {"llm_scores_df": pd.DataFrame}}` with original data + LLM scores.
   - [ ] 4.3 Create integration test for `llm_skill_profiler` (`tests/test_integration_llm_skill_profiler.py` and `.sh`). (May require mocking LLM calls for CI/CD).
-  - [ ] 4.4 Create node `enrich_skill_data.py` in `src/nodes/`. This node will:
-    - [ ] 4.4.1 Read data (e.g., from `SkillsView`, filtering for `scale_id` = 'LV').
-    - [ ] 4.4.2 Call `llm_skill_profiler`.
-    - [ ] 4.4.3 Upsert LLM-derived `data_value` back into a relevant table or a new `LLMSkillScores` table using `mysql_upsert_dataframe`.
-  - [ ] 4.5 Create integration test for `enrich_skill_data` node (`tests/test_integration_enrich_skill_data.py` and `.sh`).
+  - [ ] 4.4 Design schema for LLM-enriched data storage, if needed, based on actual LLM output structure.
+  - [ ] 4.5 Create node `enrich_skill_data.py` in `src/nodes/`. This node will:
+    - [ ] 4.5.1 Read data (e.g., from `SkillsView`, filtering for `scale_id` = 'LV').
+    - [ ] 4.5.2 Call `llm_skill_profiler`.
+    - [ ] 4.5.3 Upsert LLM-derived `data_value` back into a relevant table or a new `LLMSkillScores` table using `mysql_upsert_dataframe`.
+  - [ ] 4.6 Create integration test for `enrich_skill_data` node (`tests/test_integration_enrich_skill_data.py` and `.sh`).
 
 - [ ] 5.0 **Phase 5: REST API for Skill Gap Analysis**
   - [ ] 5.1 Set up FastAPI framework in `src/api/main.py`.

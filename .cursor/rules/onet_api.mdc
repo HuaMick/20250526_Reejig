@@ -1,0 +1,473 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+O*NET API Data Extraction: Guidelines for Python Code Generation
+1. Overview and Critical Recommendations
+This document provides comprehensive guidelines for generating Python code to extract specific datasets from the O*NET program. The primary method of extraction discussed is the O*NET Web Services API, with the objective of populating pandas DataFrames. These DataFrames should, as closely as possible, mirror the structure and content of the downloadable O*NET text files: Skills.txt, Scales_Reference.txt, and Occupation_Data.txt.
+
+1.1. Objective
+The core objectives of these guidelines are:
+
+To define the necessary interactions with the O*NET Web Services API to retrieve data elements corresponding to those found in O*NET's Skills.txt, Scales_Reference.txt, and Occupation_Data.txt files.
+To furnish sufficient detail to enable an AI agent to generate functional Python code for this data extraction process. This includes handling authentication, forming appropriate API requests, parsing responses, and structuring the extracted data into pandas DataFrames.
+1.2. Core Challenge: API Design versus Bulk Data Requirements
+A fundamental aspect to understand is the intended purpose of the O*NET Web Services API versus the nature of acquiring complete datasets. The O*NET Web Services API is a RESTful service designed primarily for developers to integrate O*NET OnLine functionalities, such as keyword searches or specific occupation reports, into their own applications. While it provides access to a wealth of data, it is not inherently designed as a tool for bulk downloading entire database tables. The O*NET program explicitly provides these full datasets as downloadable flat text files, which is the officially recommended method for acquiring complete database snapshots.   
+
+This distinction is critical. Attempting to replicate large files like Skills.txt or Occupation_Data.txt by iterating through thousands of individual API calls will be a slow process. Furthermore, such operations are subject to API rate limits (e.g., 5 requests per second, 50,000 requests per day). Exceeding these limits can lead to temporary throttling or suspension of access. Therefore, any strategy to extract bulk data via the API must account for these constraints, implying potentially long execution times and the necessity for robust error handling and rate limit management. The most efficient path for obtaining the entirety of these datasets remains the direct download of the provided text files.   
+
+1.3. Specific Dataset Extraction Strategies
+Given the nature of the API, tailored strategies are required for each target dataset.
+
+1.3.1. Scales_Reference.txt
+The Scales_Reference.txt file contains metadata about the various scales used in the O*NET database, such as "Importance" or "Level," including their minimum and maximum values. This file is relatively small (typically around 29 rows) and its content is static reference information.   
+
+No specific, dedicated endpoint within the O*NET Web Services API documentation reviewed (e.g.) appears to serve the entire Scales_Reference.txt table as a single, distinct resource. While information about scales is implicitly used and may appear contextually within other API responses (e.g., when a skill is rated on an "Importance" scale), retrieving the complete, canonical list as presented in the .txt file is not a direct API function.   
+
+Considering its small size, static nature, and the availability of a direct download link from the O*NET Resource Center ((https://www.onetcenter.org/dl_files/database/29.3/txt/Scales_Reference.txt) as per ), the most practical approach for incorporating this data is not through iterative API calls.   
+
+Recommendation for AI Agent:
+The Python script should obtain the Scales_Reference.txt data by either:
+
+Downloading the file directly from the O*NET Resource Center using the provided URL. The script would then parse this local file.
+Embedding the content of this small, static file directly within the Python code (e.g., as a list of dictionaries) or a configuration file, which is then loaded into a DataFrame.
+Attempting to reconstruct Scales_Reference.txt from various API calls is not advisable unless a dedicated API endpoint for this purpose is explicitly identified and verified.
+
+1.3.2. Occupation_Data.txt
+The Occupation_Data.txt file contains fundamental information for each O*NET-SOC occupation, specifically its O*NET-SOC Code, official Title, and a detailed Description. For O*NET database version 29.3, this file encompasses 1,016 unique occupations.   
+
+The O*NET Web Services API provides functionality that can be leveraged to gather this information:
+
+An endpoint exists to list all available occupations, which returns the O*NET-SOC code and title for each.   
+Detailed reports for individual occupations, accessible via their O*NET-SOC code, are expected to contain the full occupational description.
+Strategy for AI Agent:
+A two-stage process is required:
+
+Retrieve All Occupation Identifiers: Make calls to the "see all occupations" API endpoint, handling pagination, to gather a complete list of O*NET-SOC codes and their corresponding titles.
+Fetch Detailed Descriptions: For each O*NET-SOC code obtained in the first stage, make a separate API call to its detailed occupation report endpoint. From this detailed report, extract the occupational description.
+The resulting data (O*NET-SOC Code, Title, Description) for each occupation can then be compiled into a DataFrame.
+
+1.3.3. Skills.txt
+The Skills.txt file is a more complex dataset. It links O*NET-SOC occupations to specific skill elements (e.g., "Reading Comprehension," "Critical Thinking") and provides associated data values on various scales (like Importance and Level), along with statistical metadata such as sample size (N), standard error, and confidence intervals. For O*NET database version 29.3, this file comprises 15 distinct fields and contains approximately 61,530 rows.   
+
+Replicating this file via the O*NET Web Services API (services.onetcenter.org) presents a significant challenge based on the available documentation. The reviewed API reference materials  do not clearly specify an endpoint that directly returns all detailed skill ratings for a specific occupation in a structure that mirrors the 15 columns of Skills.txt. While general occupation reports are mentioned , and the O*NET OnLine website interactively displays skills associated with occupations , the precise API endpoint structure for retrieving this granular, multi-faceted skill data (including all statistical measures for each skill and scale) is not evident from the provided information (attempts to access specific skill endpoint documentation were unsuccessful, e.g.). It is important to note that other APIs, such as the CareerOneStop API  or the Open Skills API , do offer skill-related data, but these are distinct services and not the target of the current data extraction task.   
+
+Strategy and Instructions for AI Agent:
+
+Primary Source of Skills Data: The detailed occupation report, obtained by calling the endpoint for a specific O*NET-SOC code (as used for Occupation_Data.txt), is the most likely place within the target API to find skills information. The generated code must parse this report to locate a section pertaining to "Skills."
+Data Mapping and Discrepancies: If a skills section is found, the agent must carefully parse it, attempting to map the available API fields to the 15 columns expected for Skills.txt. This includes identifying individual skill elements, their names, and the ratings on various scales (e.g., Importance, Level) along with any associated statistical data (N, Standard Error, etc.).
+Acknowledge Potential Granularity Issues: It is highly probable that the API's representation of skills within a general occupation report will not provide the full granularity of all 15 columns present in the Skills.txt file for every skill-occupation-scale combination. The generated Python code must be designed to handle this:
+It should log any of the 15 target Skills.txt columns for which corresponding data cannot be found in the API response.
+If no structured, detailed skills data is found within the occupation report, or if the data is significantly different from the Skills.txt format, this limitation must be clearly reported to the user.
+Alternative (User Consideration): The most reliable and complete method for obtaining the Skills.txt data remains the direct download from the O*NET Resource Center:(https://www.onetcenter.org/dl_files/database/29.3/txt/Skills.txt). The API approach should be considered a best-effort attempt to approximate this data.   
+2. O*NET Web Services API: Setup and General Usage
+Interacting with the O*NET Web Services API requires adherence to specific setup procedures and usage protocols.
+
+2.1. Registration and Credentials
+Access to the O*NET Web Services is restricted to registered developers. Developers must complete a sign-up process through the O*NET Center website. The registration form typically requires information about the developer's organization, contact details, and a description of the intended project or application. Upon successful registration and confirmation (usually via email), developers are provided with credentials (a username and an API key/password) necessary for API authentication.   
+
+Registration URL: https://services.onetcenter.org/developer/signup    
+
+AI Agent Instruction: The Python script must be designed to accept the user's O*NET Web Services username and API key as input. These credentials should be handled securely, for instance, by prompting the user at runtime, reading them from environment variables, or loading them from a dedicated configuration file. Hardcoding credentials directly into the script is strongly discouraged.
+
+2.2. Authentication
+The O*NET Web Services API employs HTTP Basic Authentication. Each API request must include an Authorization header containing the word "Basic" followed by a space and a Base64-encoded string of "username:api_key".   
+
+Format: Authorization: Basic <base64_encoded_string_of_username:api_key>
+
+AI Agent Instruction: When using the Python requests library, HTTP Basic Authentication can be conveniently handled by passing a tuple (username, api_key) to the auth parameter of the request function (e.g., requests.get(url, auth=('your_username', 'your_api_key'), headers=headers)).
+
+2.3. Base URL and API Version
+The general base URL for O*NET Web Services is https://services.onetcenter.org/ws/. Specific API endpoints are appended to this base. Much of the available documentation and examples (e.g.) refer to API version 1.9, often reflected in URL paths such as /v1.9/ws/.... While a newer version 2.0 has been mentioned as being in public beta , the guidelines and examples in this document will primarily focus on the structure observed for version 1.9, as it is more consistently documented in the provided materials.   
+
+The effective base URL for constructing specific API calls for version 1.9 services appears to be https://services.onetcenter.org/v1.9/ws/. Additionally, a clientname query parameter, representing the registered name of the client application, is typically required for API calls.
+
+AI Agent Instruction: For constructing API call URLs, use https://services.onetcenter.org/v1.9/ws/ as the foundational path for the endpoints detailed in this guide. The user-provided clientname must be included as a query parameter in all requests.
+
+2.4. Request and Response Format
+By default, O*NET Web Services API responses are returned in XML format. To receive responses in JSON format, which is generally easier to parse in Python, the request must include an HTTP Accept header with the value application/json. Both formats are fully supported and return the same informational content.   
+
+AI Agent Instruction: All API requests made by the Python script should include the header Accept: application/json. JSON responses can then be parsed using Python's built-in json library (typically via the response.json() method if using the requests library).
+
+2.5. Error Handling
+The API can return various standard HTTP error codes. For example, 404 (Not Found) if an endpoint or resource doesn't exist, or 500-series errors for server-side issues. Notably, errors with an HTTP status code of 422 (Unprocessable Entity) will usually contain a JSON or XML response body detailing the error. HTTP 429 errors indicate that rate limits have been exceeded.   
+
+AI Agent Instruction: The Python script must implement robust error handling:
+
+Always check the response.status_code after each API call.
+Specifically handle common and critical HTTP errors such as:
+401 Unauthorized: Incorrect credentials.
+403 Forbidden: Access denied to the resource.
+404 Not Found: Resource or endpoint does not exist.
+429 Too Many Requests: Rate limit exceeded.
+5xx Server Errors: Indicate problems on the server side.
+For 422 errors, attempt to parse the JSON error message from the response body to provide more specific feedback.
+Implement a retry mechanism with exponential backoff, particularly for 429 errors and transient server errors (e.g., 502, 503, 504), to improve resilience.
+2.6. Rate Limits
+To ensure service availability for all users, O*NET Web Services enforce rate limits. Access may be temporarily throttled or suspended if a user's requests exceed 5 requests per second or 50,000 requests per day.   
+
+These limits have significant implications for any attempt to extract large datasets by iterating through all occupations. For instance, retrieving data for over 1000 occupations , where each might require one or more API calls (e.g., one for the description, potentially another for skills), will take a considerable amount of time if adhering to the 5 requests/second limit. At this rate, 1000 calls would take a minimum of 200 seconds (over 3 minutes), not accounting for network latency, processing time, or politeness delays. The daily limit of 50,000 requests also constrains how many full dataset sweeps can be performed.   
+
+AI Agent Instruction:
+
+Implement a mandatory delay between consecutive API calls (e.g., time.sleep(0.25) to introduce a quarter-second pause, staying well within the 5 requests/second limit).
+If the script is intended for extensive or repeated runs, consider tracking the total number of requests made to respect the daily limit.
+Handle HTTP 429 "Too Many Requests" errors gracefully: the script should wait for an increasing amount of time (exponential backoff) before retrying. If limits are hit persistently, the script might need to terminate and inform the user.
+2.7. Terms of Service & Data License
+Usage of O*NET Web Services is governed by Terms of Service (ToS) and a Data License, which developers must agree to during registration. Key provisions include:   
+
+Attribution: Users must prominently display a URL or link to the O*NET Web Services site (https://services.onetcenter.org/) near where the O*NET information is used. This ensures end-users understand the origin of the data.   
+Data Modification: While users are permitted to change the format and organization of the information, they must not alter or modify it in any way that materially affects the accuracy, attribution, or intent of the provided data.   
+Application Registration: API services can only be used on websites or applications that the developer controls and has registered with O*NET.   
+No Redistribution of API Access: The license to use the API and republish data is non-transferable. This means a registered user cannot create their own API that simply passes through O*NET data to third parties under the original user's license terms.   
+Downloaded Database License: It's important to distinguish that data obtained from downloaded O*NET database files (e.g., the .txt files) is typically licensed under a Creative Commons Attribution 4.0 International License. This license also requires attribution to the O*NET Database and the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA), a link to the license, and an indication if any changes were made to the original data.   
+Adherence to these terms is crucial, as violations can result in termination of API access or breach of license agreements.
+
+Table 2.7.1: Key Licensing and Terms of Service Points
+
+Aspect	Requirement	Source(s)
+API Attribution	Link to https://services.onetcenter.org/	
+Data Modification (API)	Permitted for format/organization if accuracy, attribution, and intent are preserved.	
+API Key Usage	Only on registered applications; non-transferable for sub-licensing data via another API.	
+Downloaded Database Use	CC BY 4.0: Credit O*NET Database & USDOL/ETA, link license, indicate changes.	
+API Rate Limits	5 requests/second, 50,000 requests/day.	
+  
+AI Agent Instruction: While the Python script itself will not render HTML for attribution, its accompanying documentation (e.g., comments within the generated code, or a separate README) should clearly inform the end-user about the strict attribution requirements if the data extracted via the API is used in any public-facing application, report, or derivative work.
+
+3. API Endpoints for Data Extraction
+All API endpoints discussed below require authentication as detailed in Section 2.2, the Accept: application/json header (Section 2.4), and the clientname=<your_registered_client_name_here> query parameter.
+
+3.1. Retrieving All O*NET-SOC Occupation Codes
+To fetch occupation-specific data like descriptions or skills, a comprehensive list of all O*NET-SOC (Standard Occupational Classification) codes is first needed.
+
+Endpoint (API Version 1.9): GET https://services.onetcenter.org/v1.9/ws/online/occupations/
+
+This endpoint is derived from O*NET API documentation references.   
+Query Parameters:
+
+clientname=<your_registered_client_name> (Required)
+sort={name|code}: Specifies the sort order of the returned occupations. Using code is recommended for systematic processing. The default is name.   
+start=<integer>: The 1-based starting index for the occupations to be returned in the current paged response (e.g., start=1).
+end=<integer>: The 1-based ending index for the occupations to be returned. The default page size is 20 occupations.   
+Response Structure (JSON Example, based on ):   
+
+```json
+{
+   "sort" : "code",
+   "start" : 1,
+   "end" : 20,
+   "total" : 1016,
+   "link" : [
+      {
+         "href" : "https://services.onetcenter.org/v1.9/ws/online/occupations/?sort=code&start=21&end=40&clientname=your_client_name",
+         "rel" : "next"
+      }
+   ],
+   "occupation" : [
+      {
+         "href" : "/v1.9/ws/online/occupations/11-1011.00/",
+         "code" : "11-1011.00",
+         "title" : "Chief Executives",
+         "tags" : {
+            "bright_outlook" : true,
+            "green" : false
+         }
+      }
+      //... 19 more occupation objects
+   ]
+}
+```
+The total field indicates the total number of occupations available (e.g., 1016). The link array contains URLs for pagination; the rel: "next" link points to the subsequent page of results. Each object in the occupation array provides the code (O*NET-SOC code) and title for an occupation, along with a relative href to its detailed report.
+
+Pagination Handling:
+The API returns a limited number of occupations per request (default is 20). To retrieve all occupations, the client application must implement pagination. This involves:
+
+Making an initial request (e.g., start=1, end=20).
+Processing the occupation array from the response.
+Checking the link array for an object where rel is "next".
+If a "next" link exists, use its href value to make the subsequent request.
+Repeat this process until no "next" link is provided in the response, or until the number of retrieved occupations matches the total count.
+AI Agent Instruction: The Python script must implement this pagination logic to compile a complete list of O*NET-SOC codes and their titles. This list will serve as the basis for subsequent calls to fetch detailed data for each occupation.
+
+3.2. Extracting "Occupation Data" (Title, Description)
+This task aims to replicate the content of Occupation_Data.txt, which includes the O*NET-SOC Code, Title, and Description for each occupation.   
+
+Approach:
+
+The O*NET-SOC Code and Title are obtained from the paginated calls to the "all occupations" endpoint (Section 3.1).
+The Description for each occupation must be fetched by calling the detailed occupation report endpoint using its specific O*NET-SOC code.
+Endpoint (API Version 1.9) for Occupation Details: GET https://services.onetcenter.org/v1.9/ws/online/occupations/{onet_soc_code}/
+
+Replace {onet_soc_code} with an actual O*NET-SOC code (e.g., 11-1011.00). This URL structure is derived from the href attribute found in the response of the "all occupations" endpoint.   
+Query Parameters:
+
+clientname=<your_registered_client_name> (Required)
+Expected Response Structure (JSON - Conceptual, focusing on required fields):
+The full JSON response for an occupation's detailed report is extensive. The exact location of the canonical "Description" field (matching that in Occupation_Data.txt) needs to be confirmed by inspecting a live API response. It might be under a summary or similar key.
+
+```json
+// Conceptual structure - actual field names for description need verification
+{
+  "code": "11-1011.00",
+  "title": "Chief Executives",
+  "summary": { // Or a similar top-level key like "description" or "definition"
+     "what_they_do": "Determine and formulate policies and provide overall direction of companies or private and public sector organizations within guidelines set up by a board of directors or similar governing body. Plan, direct, or coordinate operational activities at the highest level of management with the help of subordinate executives and staff managers.", // This is an example, the actual description field needs to be located.
+     // The official O*NET-SOC description is sought here.
+  },
+  //... many other sections like "tasks", "tools_technology", "knowledge", "skills", "abilities", etc.
+}
+```
+The O*NET OnLine website  and the O*NET Code Connector  both present occupational descriptions, and the Occupation_Data.txt file explicitly contains a "Description" field. Logically, the detailed API report for an occupation should provide this same description.   
+
+AI Agent Instruction:
+For each O*NET-SOC code obtained from the process in Section 3.1:
+
+Construct the URL for the detailed occupation report.
+Make an API call to this endpoint.
+Parse the JSON response to extract the O*NET-SOC code, title, and the primary occupational description.
+Store these three pieces of information. This data will form the rows of the Occupation_Data DataFrame. The code and title from this detailed call should primarily serve as a confirmation against the list obtained in Section 3.1; the main purpose of this call is to get the description.
+3.3. Extracting "Skills" Data
+This is the most challenging dataset to replicate via the API, aiming to match the structure of Skills.txt. This file contains 15 distinct fields, including O*NET-SOC Code, Element ID (Skill ID), Element Name (Skill Name), Scale ID (e.g., IM for Importance, LV for Level), Data Value for that scale, and various statistical measures like N, Standard Error, Lower CI Bound, Upper CI Bound, Recommend Suppress, Not Relevant, Date, and Domain Source.   
+
+Endpoint Challenge:
+As discussed in Section 1.3.3, the available O*NET Web Services API documentation snippets  do not explicitly define a dedicated sub-endpoint (e.g., /ws/online/occupations/{onet_soc_code}/skills/) that returns skill data with the full 15-column granularity found in Skills.txt. While the O*NET OnLine website displays skills for occupations , translating this interactive display into a specific, documented API call that provides all necessary data fields for Skills.txt is not straightforward from the research. Attempts to find specific API documentation for skills endpoints were unsuccessful.   
+
+Hypothetical Structure within Main Occupation Report:
+The most plausible approach is that skills data, if available via the API, would be embedded within the comprehensive JSON response from the detailed occupation report endpoint: GET /ws/online/occupations/{onet_soc_code}/ (see Section 3.2). The structure below is hypothetical and must be verified by inspecting live API responses.
+
+```json
+// HYPOTHETICAL JSON structure for skills within a detailed occupation report
+{
+  //... (other occupation details like code, title, summary/description)
+  "report_items": { // Or "details", or another wrapper object
+    "item":[
+      {
+        "name": "Skills", // Identifier for the skills section
+        "element": [
+          {
+            "id": "2.A.1.a", // Element ID
+            "name": "Reading Comprehension", // Element Name
+            "description": "Understanding written sentences and paragraphs in work related documents.",
+            "measurement": [
+              {
+                "scale_id": "IM", // Scale ID (e.g., Importance)
+                "scale_name": "Importance",
+                "value": "4.50", // Data Value
+                "n": 100, // N
+                "standard_error": "0.12", // Standard Error
+                "lower_ci_bound": "4.20", // Lower CI Bound
+                "upper_ci_bound": "4.80", // Upper CI Bound
+                "recommend_suppress": "N", // Recommend Suppress
+                "not_relevant": "N" // Not Relevant (Note: this might be absent if relevant)
+              },
+              {
+                "scale_id": "LV", // Scale ID (e.g., Level)
+                "scale_name": "Level",
+                "value": "4.00",
+                 // ... other stats for Level scale
+              }
+            ],
+            "date_updated": "YYYY-MM-DD", // Potential mapping to 'Date'
+            "domain_source": "Analyst"    // Potential mapping to 'Domain Source'
+          }
+          //... more skill elements
+        ]
+      }
+      //... other report items like Knowledge, Abilities, etc.
+    ]
+  }
+}
+```
+The actual structure could vary significantly. For example, importance and level ratings might be nested directly under the skill element, not in a generic "measurement" array.
+
+High Risk of Incomplete Data:
+Replicating all 15 columns of Skills.txt for every skill associated with an occupation, including all statistical details for each relevant scale (Importance, Level), is ambitious using a general-purpose occupation report API. It is very likely that the API will provide a summary or a less detailed view of skills compared to the raw data file.
+
+AI Agent Instruction:
+
+For each occupation, after retrieving its detailed report (from Section 3.2), thoroughly parse the entire JSON response to locate a section pertaining to "Skills." This might be nested under keys like "report_items", "details", "content_model", or similar. The section might be identified by a "name": "Skills" attribute.
+If a "Skills" section is found:
+Iterate through each skill element listed.
+For each skill, attempt to extract its ID (e.g., 2.A.1.a) and name (e.g., "Reading Comprehension").
+Identify how different rating scales (e.g., "Importance," "Level") are represented for that skill. For each scale found:
+Extract the Scale ID (e.g., "IM", "LV").
+Extract the Data Value.
+Extract all available statistical measures: N, Standard Error, Lower CI Bound, Upper CI Bound.
+Extract any flags like Recommend Suppress or Not Relevant.
+Attempt to find overall Date and Domain Source fields applicable to the skills data for that occupation, or per skill if available.
+For each combination of (O*NET-SOC Code, Skill Element ID, Scale ID), create a record mapping the extracted API fields to the 15 target columns of Skills.txt.
+Crucially, the script must log extensively any of the 15 Skills.txt columns for which no corresponding data can be found in the API response. This provides vital feedback to the user about data completeness.
+If no detailed, structured skills data that can be reasonably mapped to the Skills.txt format is found within the occupation report, the script should clearly report this limitation for that occupation or overall.
+3.4. Extracting "Scales Reference" Data
+This task aims to replicate Scales_Reference.txt, which lists Scale ID, Scale Name, Minimum, and Maximum for all O*NET scales.   
+
+API Approach: As established in Section 1.3.1, a dedicated API endpoint to fetch the complete Scales Reference table is not apparent from the reviewed O*NET Web Services documentation. This is a small, static reference file.
+AI Agent Instruction:
+The primary and recommended method is not to use the API for this dataset.
+
+Direct File Usage (Preferred): The Python script should be designed to read the Scales_Reference.txt file directly. The user should be instructed to download this file from the O*NET Resource Center:(https://www.onetcenter.org/dl_files/database/29.3/txt/Scales_Reference.txt). The script will then parse this local file (tab-delimited) into a DataFrame.   
+Embedded Data (Alternative): Given the small and static nature of this data (29 rows ), its content can be directly embedded as a Python data structure (e.g., a list of dictionaries) within the generated script or a configuration file. This structure can then be easily converted to a pandas DataFrame.   
+Example of embedded data structure:
+```python
+# Embedded Scales Reference Data (partial example)
+scales_reference_data = [
+    {"Scale ID": "IM", "Scale Name": "Importance", "Minimum": 1, "Maximum": 5},
+    {"Scale ID": "LV", "Scale Name": "Level", "Minimum": 0, "Maximum": 7},
+    # ... other scales
+]
+# import pandas as pd
+# scales_df = pd.DataFrame(scales_reference_data)
+```
+4. Data Dictionary References for DataFrame Construction
+To ensure consistency with the O*NET database structure, the pandas DataFrames generated by the Python script should use column names as defined in the O*NET Data Dictionary. While the user query mentioned O*NET version 29.2, the available documentation snippets and direct file links often refer to version 2.3. Version 29.3 is more current and likely very similar in structure for these core files. Therefore, references will be made to the O*NET 29.3 Data Dictionary where available.
+
+The main landing page for the O*NET 29.3 Text Data Dictionary is: https://www.onetcenter.org/dictionary/29.3/text/.   
+
+4.1. Skills.txt Column Definitions
+The Skills.txt file describes the skills associated with each O*NET-SOC occupation, rated on various scales.
+
+Authoritative Dictionary Link (for structure): While the direct text dictionary page for skills (https://www.onetcenter.org/dictionary/29.3/text/skills.html from ) was noted as potentially inaccessible or lacking direct column listings during research , the O*NET 29.3 Excel Data Dictionary page for Skills  provides a clear description, stating it is "displayed in 15 tab delimited fields."   
+Expected Columns (15 fields, based on  and typical O*NET structure):   
+O*NET-SOC Code (Type: Character(10)) - The O*NET-SOC occupation code.
+Element ID (Type: Character Varying(20)) - The unique identifier for the skill element (e.g., "2.A.1.a").
+Element Name (Type: Character Varying(255)) - The descriptive name of the skill element (e.g., "Reading Comprehension").
+Scale ID (Type: Character Varying(3)) - The identifier for the rating scale used (e.g., "IM" for Importance, "LV" for Level).
+Data Value (Type: Decimal(5,2) or similar numeric) - The score or rating value on the specified scale.
+N (Type: Decimal(4,0) or Integer) - The number of respondents or data points contributing to the rating.
+Standard Error (Type: Decimal(8,4) or Float) - The standard error of the mean for the rating.
+Lower CI Bound (Type: Decimal(8,4) or Float) - The lower bound of the 95% confidence interval for the rating.
+Upper CI Bound (Type: Decimal(8,4) or Float) - The upper bound of the 95% confidence interval for the rating.
+Recommend Suppress (Type: Character(1) or Boolean) - A flag (e.g., 'Y'/'N') indicating if the data should be suppressed due to statistical reliability concerns.
+Not Relevant (Type: Character(1) or Boolean) - A flag (e.g., 'Y'/'N') indicating if the skill is not relevant to the occupation..   
+Date (Type: Character(10) or Date) - The date the data for this item was last updated or collected.
+Domain Source (Type: Character Varying(30)) - The source of the rating data (e.g., "Analyst," "Incumbent").    
+AI Agent Instruction: When parsing API responses for skills data, map the extracted API fields to these column names. If the API provides less detail (which is anticipated), the corresponding DataFrame columns should be populated with null/empty values or explicitly marked as "data not available from API."
+
+4.2. Scales_Reference.txt Column Definitions
+This file provides metadata for the scales used in O*NET ratings.
+
+Authoritative Dictionary Link: https://www.onetcenter.org/dictionary/29.3/text/scales_reference.html (from ). The Excel Data Dictionary page for Scales Reference  is also a reliable source for column structure.   
+Columns (4 fields, based on ):   
+Scale ID (Type: Character Varying(3)) - The unique identifier for the scale (e.g., "IM", "LV", "CT").
+Scale Name (Type: Character Varying(50)) - The descriptive name of the scale (e.g., "Importance," "Level," "Context").
+Minimum (Type: Integer(1)) - The minimum possible value on this scale.
+Maximum (Type: Integer(3)) - The maximum possible value on this scale.
+AI Agent Instruction: If using the direct download or embedded data method for Scales_Reference.txt, ensure the resulting DataFrame columns precisely match these names and implied data types.
+
+4.3. Occupation_Data.txt Column Definitions
+This file lists O*NET-SOC occupations with their titles and descriptions.
+
+Authoritative Dictionary Link: https://www.onetcenter.org/dictionary/29.3/text/occupation_data.html (from ). The Excel Data Dictionary page for Occupation Data  also details this structure.   
+Columns (3 fields, based on ):   
+O*NET-SOC Code (Type: Character(10)) - The O*NET-SOC occupation code.
+Title (Type: Character Varying(150)) - The official title of the O*NET-SOC occupation.
+Description (Type: Character Varying(1000)) - A detailed description of the occupation.
+AI Agent Instruction: Ensure the DataFrame created from the API calls detailed in Section 3.2 uses these exact column names.
+
+Table 4.1: Key Data File Column Summary
+
+File Name	Key Columns (Abbreviated for Brevity)	Source(s) for Column Definitions
+Skills.txt	O*NET-SOC Code, Element ID, Element Name, Scale ID, Data Value, N, SE, CI Bounds, Date...	 (Excel Dictionary)
+Scales_Reference.txt	Scale ID, Scale Name, Minimum, Maximum	 (Excel Dictionary)
+Occupation_Data.txt	O*NET-SOC Code, Title, Description	 (Excel Dictionary)
+  
+5. Python Code Generation Guidance for AI Agent
+The AI agent should generate Python code that adheres to the following guidelines and best practices to ensure robustness, maintainability, and correctness.
+
+5.1. Recommended Libraries:
+
+requests: For making HTTP/HTTPS API calls.
+pandas: For creating, manipulating, and storing data in DataFrames.
+json: For parsing JSON data from API responses.
+base64: For encoding credentials if manual Basic Authentication header construction is chosen (though requests' auth parameter is preferred).
+time: For implementing delays between API calls to respect rate limits (time.sleep()).
+os (for os.getenv): For securely accessing API credentials stored as environment variables. Alternatively, the python-dotenv library can be used to load credentials from a .env file.
+logging: For implementing structured logging throughout the script.
+5.2. Configuration and Credentials Management:
+
+Credentials: API username and key must not be hardcoded. The script should prompt the user for these at runtime, read them from environment variables (e.g., O*NET_USERNAME, O*NET_API_KEY), or load them from a secure configuration file (e.g., using configparser or python-dotenv).
+Client Name: The clientname parameter, required for API calls, should also be configurable by the user (e.g., via runtime input or environment variable).
+File Paths: If downloading files (like Scales_Reference.txt), allow the user to specify input/output paths.
+5.3. Modularity and Code Structure:
+
+Employ functions to encapsulate distinct pieces of logic. This improves readability and maintainability. Suggested functions include:
+A function to set up the requests.Session with default headers (e.g., Accept: application/json) and authentication.
+A function to fetch the complete list of O*NET-SOC codes, handling pagination internally.
+A function to fetch the detailed report for a single occupation, given its O*NET-SOC code.
+A dedicated function to parse the skills data from an occupation's JSON response (this will likely be complex).
+A function to load Scales_Reference.txt data (either from a local file or embedded data).
+Functions to transform the raw data collected from the API into the target pandas DataFrames.
+5.4. Logging:
+
+Implement comprehensive logging using Python's built-in logging module.
+Configure different log levels (e.g., INFO for general progress, WARNING for recoverable issues or missing data, ERROR for critical failures).
+Log important events such as:
+API calls being made (URL, parameters).
+Successful retrieval of key data points (e.g., number of occupations fetched).
+Errors encountered (status codes, error messages from API).
+Rate limit warnings or when delays are being applied.
+Crucially, log any discrepancies found when attempting to map API response data to the target Skills.txt columns (e.g., "Column 'Standard Error' not found in API response for skill X in occupation Y").
+5.5. DataFrame Creation and Population:
+
+For each target dataset (Occupation_Data, Skills), initialize an empty list.
+As data is fetched and parsed from the API for each occupation (or skill within an occupation), create a dictionary representing a single row for the DataFrame. The keys of this dictionary should correspond to the target column names.
+Append these dictionaries to the respective list.
+After all data for a dataset has been collected, create the pandas DataFrame from the list of dictionaries (e.g., pd.DataFrame(list_of_row_dictionaries)).
+Ensure that the column names in the final DataFrames strictly match those specified in Section 4. If a column cannot be populated from the API, it should still exist in the DataFrame, perhaps with None or NaN values.
+5.6. Main Execution Flow (Conceptual):
+
+Initialization:
+Load API credentials and clientname (from user input, environment variables, or config file).
+Set up logging.
+Scales Reference Data:
+Load or define the Scales_Reference data and create its DataFrame (as per Section 3.4).
+Fetch All Occupation Codes:
+Call the function to retrieve all O*NET-SOC codes and titles, handling pagination. Store this list.
+Initialize Data Accumulators:
+Create empty lists to hold row data for the Occupation_Data DataFrame and the Skills DataFrame.
+Iterate Through Occupations:
+For each O*NET-SOC code obtained:
+Log the current occupation being processed.
+Call the function to fetch the detailed occupation report.
+Process for Occupation_Data: Extract the O*NET-SOC code, title, and description. Create a dictionary and append it to the Occupation_Data list.
+Process for Skills Data: Call the function to parse skills information from the detailed report. This function should return a list of dictionaries, where each dictionary is a row for the Skills DataFrame (as one occupation can have many skills, and each skill can be rated on multiple scales, leading to multiple rows in Skills.txt for a single occupation). Append these skill-row dictionaries to the Skills data list.
+Implement a delay (time.sleep()) to respect API rate limits.
+Include error handling (e.g., try-except blocks) for API calls and parsing within the loop to allow the script to continue with other occupations if one fails.
+Create Final DataFrames:
+Create occupation_df = pd.DataFrame(occupation_data_list).
+Create skills_df = pd.DataFrame(skills_data_list).
+Output/Save Data (Optional):
+Provide options to save the created DataFrames to files (e.g., CSV, Excel).
+Reporting:
+Print a summary of actions taken (e.g., number of occupations processed, number of skills records created).
+Report any significant limitations encountered, especially regarding the completeness of the Skills data compared to Skills.txt.
+6. Summary of Limitations and Alternatives
+When using the O*NET Web Services API for the purpose of replicating bulk data files, it is essential to be aware of inherent limitations and consider alternative approaches.
+
+6.1. API versus Bulk Database Downloads
+The O*NET Web Services API is a powerful tool for integrating O*NET data and functionality into applications in real-time or for targeted lookups. However, it is not designed as a mechanism for downloading the entire O*NET database or large subsets thereof. The O*NET program provides the complete database in various formats (including tab-delimited text files) for direct download from the O*NET Resource Center.   
+
+For initial, comprehensive acquisition of datasets like Skills.txt, Occupation_Data.txt, and Scales_Reference.txt, direct download of these files is unequivocally the recommended, most efficient, and most reliable method. Attempting to reconstruct these files through iterative API calls will be:
+
+Time-consuming: Due to the need to make individual calls for each of the 1000+ occupations and adhere to rate limits.   
+Resource-intensive: Both for the client executing the script and potentially for the API servers.
+Potentially incomplete: The API may not expose all data fields with the same granularity or structure as found in the downloadable database files, particularly for complex datasets like Skills.txt.
+The API-driven approach described in these guidelines is more suitable for scenarios where:
+
+Targeted updates for specific occupations are needed.
+Real-time lookup of occupational data is required within an application.
+Direct file downloads are not feasible within a particular automated workflow (though even then, downloading once and then querying a local database copy is often more efficient).
+AI Agent Communication: The documentation accompanying the generated Python code should clearly state these points. Users should understand that while the script attempts to replicate the target files via API, using the official O*NET database downloads is the preferred method for obtaining the complete and canonical datasets. The API approach comes with trade-offs in terms of performance and potential data granularity.
+
+6.2. Data Granularity for Skills.txt
+The most significant potential limitation in this endeavor is achieving the full 15-column data granularity of Skills.txt for every skill-occupation-scale combination solely through the O*NET Web Services API (services.onetcenter.org). As highlighted throughout this document, the API's detailed occupation reports may not contain all the statistical measures and metadata fields present in the Skills.txt file.
+
+The AI agent must generate code that robustly attempts to parse whatever skills information is available but also meticulously logs and reports any discrepancies or missing fields when compared to the Skills.txt structure. Users must be prepared for the possibility that the Skills DataFrame generated via the API may not be a perfect one-to-one replication of the downloadable text file.
+
+6.3. Alternative APIs (For User Awareness Only)
+It is worth noting that other APIs exist which provide access to O*NET-related data or similar occupational information. Examples include:
+
+CareerOneStop API: Sponsored by the U.S. Department of Labor, this API offers occupation details, including skills, knowledge, and abilities, often derived from O*NET data.   
+Open Skills API (Data@Work): This project aims to provide a comprehensive data store for skills and their relation to jobs, also leveraging O*NET SOC codes.   
+These APIs have their own distinct endpoints, authentication mechanisms, data structures, and terms of service. They are not the target for the Python code generation described in these guidelines. However, they are mentioned for the user's broader awareness, as they might offer alternative views or aggregations of skills data if the primary O*NET Web Services API proves insufficient for the specific Skills.txt replication task. This information is purely informational and does not constitute an instruction for the AI agent to use these alternative APIs for the current request.

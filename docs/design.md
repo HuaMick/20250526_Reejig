@@ -27,7 +27,7 @@
 
 - I've successfully extracted all the datasets via the api, however have noticed that the api only returns 20 records per a page. Doesn't make sense to make so many api calls to populate the dataset when we have a large number of the records via the text files. Seems like the API supports filtering (to be tested) which would allow us to design the app as a middleware, but the requirements seem to imply we want to store the data. I'll have the api supplement any missing data 
 
-- I've realised the API filtering doesn't support a not in list of ids. Theres a datestamp, but the extracts I loaded dont have a datestamp. To meet the requirement if a pipeline that uses the API, will need to design a pull pipeline rather then a push, that gets the data ifs not already available. For these requirements I think this architecture makes more sense them spaming the API to try and load hundreds of records.
+- I've realised the API filtering doesn't support a not in list of ids. Theres a datestamp, but the extracts I loaded dont have a datestamp. To meet the requirement if a pipeline that uses the API, will need to design a pull pipeline rather then a push, that gets the data ifs not already available. For these requirements I think this architecture makes more sense them spaming the API to try and load hundreds of records. Gemini has suggested we park this, and work on during phase 5 which I think makes sense.
 
 ## Project Plan
 

@@ -68,15 +68,22 @@
   - [x] 1.13 **NEW:** Create utility function `textfile_to_dataframe()` to simplify file processing.
   - [x] 1.14 **NEW:** Refactor `extract_onet_data.py` to use specialized extraction functions and the new utility.
 
-- [x] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions**
-  - [x] 2.1 Create function `onet_api_extract_occupation(username: str, password: str, ...)` in `src/functions/onet_api_extract_occupation.py`. Inputs: API creds. Outputs: `{"success": bool, "message": str, "result": {"occupation_codes_df": pd.DataFrame}}`. Fetches all O*NET-SOC codes, titles, and descriptions. (Ref: `onet_api.mdc` Sec 3.1)
-  - [x] 2.2 Create integration test for `onet_api_extract_occupation` (and its loading) (`tests/test_integration_api_extract_load_occupations.py` and `.sh`).
-  - [x] 2.3 Create function `extract_onet_api_occupation_details(occupation_codes_df: pd.DataFrame, api_username: str, api_key: str, client_name: str, base_url: str)` in `src/functions/extract_onet_api_occupation_details.py`. Inputs: DataFrame of codes, API creds, client name, base URL. Outputs: `{"success": bool, "message": str, "result": {"occupation_details_df": pd.DataFrame}}`. Fetches details for each code. (Ref: `onet_api.mdc` Sec 3.2)
-  - [x] 2.5 Create function `onet_api_extract_skills_data(occupation_details_df: pd.DataFrame)` in `src/functions/onet_api_extract_skills_data.py`. Inputs: DataFrame with O*NET-SOC codes and XML details. Outputs: `{"success": bool, "message": str, "result": {"skills_api_df": pd.DataFrame}}`. Parses skills from API responses. (Ref: `onet_api.mdc` Sec 3.3)
-  - [x] 2.7 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`. Inputs: URL to `Scales_Reference.txt`. Outputs: `{"success": bool, "message": str, "result": {"scales_df": pd.DataFrame}}`. Downloads or uses embedded data. (Ref: `onet_api.mdc` Sec 3.4)
-  - [x] 2.11 Define SQLAlchemy schemas for the API data landing tables in `src/config/schemas.py` for API data: `OnetApiOccupationData` and `OnetApiSkillsData`. Include source/timestamp fields. (Based on actual data structure from functions)
-  - [x] 2.13 Create node `extract_load_api.py` in `src/nodes/`. This node uses `onet_api_extract_occupation`, `onet_api_extract_skills`, `onet_api_extract_scales`, and `load_data_from_dataframe` to extract data from generic O*NET API list endpoints and load it into their respective API landing tables (`Onet_Occupations_API_landing`, `Onet_Skills_API_landing`, `Onet_Scales_API_landing`).
-  - [x] 2.14 Create integration test for `extract_load_api.py` node (`tests/test_integration_extract_load_api.py` and `.sh` script).
+- [ ] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions (Supporting Bulk and On-Demand/Filtered Fetching)**
+  - [x] 2.1 **MODIFIED (On-Demand):** Update function `onet_api_extract_occupation(username: str, password: str, filter_params: Optional[list] = None, ...)` in `src/functions/onet_api_extract_occupation.py`.
+    - Inputs: API creds, optional list of filter strings (e.g., `["onetsoc_code.eq.CODE"]`).
+    - Logic: If `filter_params` are provided, include them in the API request. Continues to support pagination for all results (filtered or unfiltered).
+    - Outputs: `{"success": bool, "message": str, "result": {"occupation_df": pd.DataFrame}}`.
+  - [ ] 2.1.1 **NEW (On-Demand):** Create integration test specifically for filtered `onet_api_extract_occupation` to verify it correctly fetches single or specific records based on filters (e.g., by `onetsoc_code`).
+  - [x] 2.2 Create/Update integration test for bulk `onet_api_extract_occupation` (and its loading) (`tests/test_integration_api_extract_load_occupations.py` and `.sh`).
+  - [ ] 2.3 **MODIFIED (On-Demand):** Review/Update `extract_onet_api_occupation_details` (if still used directly, or its logic incorporated elsewhere) to potentially leverage filtering if fetching for a *single* known occupation code. This might be superseded by direct filtered calls in the on-demand flow.
+  - [ ] 2.4 **NEW (On-Demand):** Design and implement similar `filter_params` and specific filter tests for `onet_api_extract_skills` and `onet_api_extract_scales` functions.
+    - [ ] 2.4.1 Update `onet_api_extract_skills` to accept `filter_params` and add integration test for filtered skill extraction.
+    - [ ] 2.4.2 Update `onet_api_extract_scales` to accept `filter_params` and add integration test for filtered scale extraction.
+  - [x] 2.5 Create function `onet_api_extract_skills_data(occupation_details_df: pd.DataFrame)` in `src/functions/onet_api_extract_skills_data.py`. (This function parses XML details; may need adjustment if detailed occupation data is fetched differently in on-demand flow).
+  - [x] 2.7 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`.
+  - [x] 2.11 Define SQLAlchemy schemas for the API data landing tables in `src/config/schemas.py`.
+  - [x] 2.13 Create node `extract_load_api.py` in `src/nodes/`. This node is for *bulk* API data extraction using the updated functions (without filters or with broad filters if ever needed for bulk).
+  - [x] 2.14 Create integration test for `extract_load_api.py` node.
 
 - [x] 3.0 **Phase 3: Database Normalization & Downstream Consumption Tables**
   - [x] 3.1 Analyze data from both sources (text files and API) to understand their structure and relationships.
@@ -109,14 +116,27 @@
     - [ ] 4.5.3 Upsert LLM-derived `data_value` back into a relevant table or a new `LLMSkillScores` table using `mysql_upsert_dataframe`.
   - [ ] 4.6 Create integration test for `enrich_skill_data` node (`tests/test_integration_enrich_skill_data.py` and `.sh`).
 
-- [ ] 5.0 **Phase 5: REST API for Skill Gap Analysis**
+- [ ] 5.0 **Phase 5: REST API for Skill Gap Analysis (Incorporating On-Demand API Fetching & Caching)**
   - [ ] 5.1 Set up FastAPI framework in `src/api/main.py`.
-  - [ ] 5.2 Create function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine)` in `src/functions/get_occupation_skills.py`. Inputs: occupation code, scale ID to filter (e.g., 'LV'), SQLAlchemy engine. Outputs: `{"success": bool, "message": str, "result": {"skills_df": pd.DataFrame}}`. Uses `SkillsView` or LLM-enriched data.
-  - [ ] 5.3 Create integration test for `get_occupation_skills` (`tests/test_integration_get_occupation_skills.py` and `.sh`).
-  - [ ] 5.4 Review `identify_skill_gap.py`. Ensure it takes two DataFrames (from `get_occupation_skills`) as input and outputs `{"success": bool, "message": str, "result": {"skill_gap_df": pd.DataFrame}}`.
-  - [ ] 5.5 Create/Update integration test for `identify_skill_gap` (`tests/test_integration_identify_skill_gap.py` and `.sh`).
-  - [ ] 5.6 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py` using the functions above.
-  - [ ] 5.7 Create integration test for `/skill-gap` API endpoint (`tests/test_api_skill_gap.py` and `.sh`).
+  - [ ] 5.2 **NEW (On-Demand):** Define strategy for caching API-fetched data. This includes deciding where (e.g., existing landing tables or new dedicated cache tables) and how (e.g., simple insert on miss, TTL).
+  - [ ] 5.3 **NEW (On-Demand):** Create/Refactor a function, e.g., `ensure_occupation_data_is_present(onet_soc_code: str, engine, api_credentials: dict)` that:
+    - Checks local DB (downstream tables like `Occupations`, `Occupation_Skills`) for the given `onet_soc_code`.
+    - If data is missing or incomplete for the analysis:
+        - Calls the modified API extraction functions (`onet_api_extract_occupation`, `onet_api_extract_skills`, etc.) using `filter_params` to fetch data for the specific `onet_soc_code`.
+        - Loads the fetched data into the API landing tables (e.g., `Onet_Occupations_API_landing`).
+        - Triggers a transformation/population process (similar to `transform.py` node, but targeted for the new data) to move data from landing tables to downstream consumption tables (`Occupations`, `Skills`, `Occupation_Skills`).
+        - Returns a success/failure status for data presence.
+  - [ ] 5.4 **MODIFIED (On-Demand):** Update function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine, api_credentials: dict)` in `src/functions/get_occupation_skills.py`.
+    - Inputs: occupation code, scale ID to filter (e.g., 'LV'), SQLAlchemy engine, API credentials.
+    - Logic:
+        - Call `ensure_occupation_data_is_present()` for the `onet_soc_code`.
+        - If successful, retrieve occupation skills data from local downstream tables.
+    - Outputs: `{"success": bool, "message": str, "result": {"skills_df": pd.DataFrame}}`. Uses `SkillsView` or LLM-enriched data.
+  - [ ] 5.5 Create integration test for the updated `get_occupation_skills`. This test should cover scenarios where data is purely local, and where on-demand API fetching and caching is triggered.
+  - [ ] 5.6 Review `identify_skill_gap.py`. Ensure it takes two DataFrames (from `get_occupation_skills`) as input.
+  - [ ] 5.7 Create/Update integration test for `identify_skill_gap`.
+  - [ ] 5.8 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py` using the functions above. Ensure it passes API credentials (if needed by `get_occupation_skills`) securely.
+  - [ ] 5.9 Create integration test for `/skill-gap` API endpoint.
 
 - [ ] 6.0 **Phase 6: Containerization, Final Testing, and Documentation**
   - [ ] 6.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).

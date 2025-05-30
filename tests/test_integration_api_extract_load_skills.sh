@@ -9,7 +9,6 @@ if [ -d ".venv" ]; then
     source .venv/bin/activate
 else
     echo "Virtual environment .venv not found. Please ensure it is created and dependencies are installed."
-    # exit 1 # Optionally exit if venv is critical, or proceed if system python is acceptable for some cases.
 fi
 
 # Apply environment variables from env/env.env if it exists
@@ -20,13 +19,13 @@ else
     echo "Warning: Environment file env/env.env not found. API credentials might be missing."
 fi
 
-# Add project root to PYTHONPATH to ensure modules are found
+# Add project src to PYTHONPATH to ensure modules are found
 export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
 echo "PYTHONPATH set to: $PYTHONPATH"
 
 # Define the test file and function
-TEST_FILE="tests/test_integration_api_extract_load_occupations.py"
-TEST_FUNCTION="test_extract_and_load_filtered_api_occupation"
+TEST_FILE="tests/test_integration_api_extract_load_skills.py"
+TEST_FUNCTION="test_extract_and_load_filtered_api_skills"
 
 echo "Running integration test: ${TEST_FILE}::${TEST_FUNCTION}"
 

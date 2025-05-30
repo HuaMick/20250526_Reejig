@@ -54,15 +54,30 @@ class Onet_Skills_API_landing(Base):
     __tablename__ = 'onet_skills_api_landing'
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    element_id = Column(String(20), index=True)
+    onetsoc_code = Column(String(20), index=True, nullable=True)
+    element_id = Column(String(20), index=True, nullable=False)
     element_name = Column(String(255), nullable=False)
-    description = Column(Text)
+    scale_id = Column(String(10), index=True, nullable=True)
+    scale_name = Column(String(255), nullable=True)
+    data_value = Column(DECIMAL(10, 2), nullable=True)
+    importance = Column(DECIMAL(10, 2), nullable=True)
+    level = Column(DECIMAL(10, 2), nullable=True)
+    n_value = Column(Integer, nullable=True)
+    standard_error = Column(DECIMAL(10, 4), nullable=True)
+    lower_ci_bound = Column(DECIMAL(10, 4), nullable=True)
+    upper_ci_bound = Column(DECIMAL(10, 4), nullable=True)
+    recommend_suppress = Column(String(1), nullable=True)
+    not_relevant = Column(String(10), nullable=True)
+    description = Column(Text, nullable=True)
+    domain_source = Column(String(50), nullable=True)
+    onet_update_date = Column(Date, nullable=True)
     last_updated = Column(Date, nullable=False)
 
     # String columns for type handling
-    string_columns = ['element_id', 'element_name']
+    string_columns = ['onetsoc_code', 'element_id', 'element_name', 'scale_id', 'scale_name', 'recommend_suppress', 'not_relevant', 'domain_source']
 
-    # __table_args__ removed as simple PK is now 'id'
+    # __table_args__ can be added later if specific unique constraints are needed for combined keys
+    # e.g., UniqueConstraint('onetsoc_code', 'element_id', 'scale_id', name='uix_onet_skill_api')
 
 class Onet_Scales_API_landing(Base):
     __tablename__ = 'onet_scales_api_landing'

@@ -27,7 +27,7 @@ echo "Running integration test for extract_load_api node..."
 
 # Run the specific pytest test file and function
 # -s: show print statements, -v: verbose output
-python -m pytest "$PROJECT_ROOT/tests/test_integration_extract_load_api.py::test_extract_load_api_node_runs" -v -s
+python -m pytest "$PROJECT_ROOT/tests/test_integration_extract_load_api.py::test_extract_load_api_node_targeted" -v -s
 
 TEST_EXIT_CODE=$?
 

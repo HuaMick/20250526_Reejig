@@ -1,3 +1,10 @@
+"""
+Execute this node using the shell script.
+Path to shell script:
+src/scripts/example_node.sh
+"""
+
+
 import os
 import sys
 from src.functions.example_function import example_function

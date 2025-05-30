@@ -19,15 +19,18 @@ if not logger.handlers:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-def test_extract_and_load_api_occupations():
+# Define constants for the test
+TEST_ONET_SOC_CODE = "15-1254.00"  # Web Developers
+EXPECTED_TITLE_CONTAINS = "Web Developers"
+
+def test_extract_and_load_filtered_api_occupation():
     """
-    Integration test for extracting O*NET API occupation data 
+    Integration test for extracting a single O*NET API occupation by onet_soc_code
     and loading it into the Onet_Occupations_API_landing table.
     Uses an in-memory SQLite database for testing.
     """
-    logger.info("Starting integration test: test_extract_and_load_api_occupations")
+    logger.info(f"Starting integration test for filtered occupation: {TEST_ONET_SOC_CODE}")
 
-    # 1. Get API Credentials
     onet_username = os.getenv("ONET_USERNAME")
     onet_password = os.getenv("ONET_PASSWORD")
 
@@ -35,35 +38,44 @@ def test_extract_and_load_api_occupations():
     assert onet_password, "ONET_PASSWORD environment variable not set."
     logger.info("Successfully retrieved O*NET API credentials.")
 
-    # 2. Extract data from O*NET API
-    logger.info("Attempting to extract O*NET occupation data from API...")
-    api_extraction_result = onet_api_extract_occupation(username=onet_username, password=onet_password)
+    # Define filter for the specific occupation code
+    filter_list = [f"onetsoc_code.eq.{TEST_ONET_SOC_CODE}"]
+    logger.info(f"Attempting to extract O*NET occupation data from API with filter: {filter_list}...")
+    
+    api_extraction_result = onet_api_extract_occupation(
+        username=onet_username, 
+        password=onet_password,
+        filter_params=filter_list
+    )
     
     logger.info(f"API Extraction Result: Success={api_extraction_result['success']}, Message='{api_extraction_result['message']}'")
     assert api_extraction_result["success"], f"O*NET API extraction failed: {api_extraction_result['message']}"
     
     occupations_df = api_extraction_result["result"]["occupation_df"]
     assert isinstance(occupations_df, pd.DataFrame), "API extraction did not return a DataFrame."
-    assert not occupations_df.empty, "API extraction returned an empty DataFrame."
     
-    if occupations_df.empty:
-        logger.warning("API extraction returned an empty DataFrame. Test will proceed but no data will be loaded.")
-        # Depending on requirements, you might assert not occupations_df.empty here.
-        # For now, we'll allow it and check loading an empty DF.
-    else:
-        logger.info(f"Successfully extracted {len(occupations_df)} occupation records from API.")
-        assert 'onet_soc_code' in occupations_df.columns, "DataFrame missing 'onet_soc_code' column."
-        assert 'title' in occupations_df.columns, "DataFrame missing 'title' column."
+    logger.info(f"Extracted DataFrame shape: {occupations_df.shape}")
+    logger.info(f"Extracted DataFrame content:\n{occupations_df.to_string()}")
+
+    assert len(occupations_df) == 1, f"Expected 1 record for {TEST_ONET_SOC_CODE}, but got {len(occupations_df)}."
+    
+    # Verify content of the fetched record
+    if not occupations_df.empty:
+        # Use .get with a default for safety, though an error here would mean API response changed or parsing failed
+        actual_soc_code = occupations_df.iloc[0].get('onet_soc_code', 'MISSING_onet_soc_code') 
+        actual_title = occupations_df.iloc[0].get('title', 'MISSING_title')
+        logger.info(f"Found onet_soc_code: {actual_soc_code}, title: {actual_title}")
+        assert actual_soc_code == TEST_ONET_SOC_CODE, f"Fetched onet_soc_code '{actual_soc_code}' does not match expected '{TEST_ONET_SOC_CODE}'."
+        assert EXPECTED_TITLE_CONTAINS.lower() in actual_title.lower(), f"Fetched title '{actual_title}' does not contain expected text '{EXPECTED_TITLE_CONTAINS}'."
         assert 'last_updated' in occupations_df.columns, "DataFrame missing 'last_updated' column."
+    else:
+        assert False, "API extraction returned an unexpectedly empty DataFrame for a specific code."
 
-
-    # 3. Setup in-memory SQLite database and create table
     logger.info("Setting up in-memory SQLite database and creating table...")
     engine = create_engine("sqlite:///:memory:")
-    schemas.Base.metadata.create_all(engine) # Create all tables defined in schemas using the Base
+    schemas.Base.metadata.create_all(engine)
     logger.info(f"Table '{schemas.Onet_Occupations_API_landing.__tablename__}' created in in-memory SQLite database.")
 
-    # 4. Load data into the database
     logger.info(f"Attempting to load DataFrame into '{schemas.Onet_Occupations_API_landing.__tablename__}' table...")
     
     load_result = load_data_from_dataframe(
@@ -73,34 +85,31 @@ def test_extract_and_load_api_occupations():
         clear_existing=True 
     )
 
-    logger.info(f"Load Data Result: Success={load_result['success']}, Message='{load_result['message']}', Records Loaded={load_result.get('result', {}).get('records_loaded')}")
+    records_loaded = load_result.get("result", {}).get("records_loaded", 0)
+    logger.info(f"Load Data Result: Success={load_result['success']}, Message='{load_result['message']}', Records Loaded={records_loaded}")
     assert load_result["success"], f"Failed to load data into database: {load_result['message']}"
+    assert records_loaded == 1, f"Expected 1 record to be loaded, but {records_loaded} were."
 
-    expected_records = len(occupations_df)
-    assert load_result.get("result", {}).get("records_loaded") == expected_records, \
-        f"Number of records loaded ({load_result.get('result', {}).get('records_loaded')}) " \
-        f"does not match expected ({expected_records})."
+    logger.info("Verifying data in the in-memory database...")
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    try:
+        count_query = text(f"SELECT COUNT(*) FROM {schemas.Onet_Occupations_API_landing.__tablename__}")
+        record_count = session.execute(count_query).scalar_one()
+        logger.info(f"Found {record_count} records in '{schemas.Onet_Occupations_API_landing.__tablename__}' table after load.")
+        assert record_count == 1, f"Database record count ({record_count}) does not match expected (1) after load."
 
-    # 5. Verify data in the database (optional, but good for confidence)
-    if not occupations_df.empty:
-        logger.info("Verifying data in the in-memory database...")
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        try:
-            count_query = text(f"SELECT COUNT(*) FROM {schemas.Onet_Occupations_API_landing.__tablename__}")
-            record_count = session.execute(count_query).scalar_one()
-            logger.info(f"Found {record_count} records in '{schemas.Onet_Occupations_API_landing.__tablename__}' table after load.")
-            assert record_count == expected_records, \
-                f"Database record count ({record_count}) does not match expected ({expected_records}) after load."
+        # Using text() for parameterization in read_sql is safer
+        stmt = text(f"SELECT title FROM {schemas.Onet_Occupations_API_landing.__tablename__} WHERE onet_soc_code = :code")
+        first_row_df = pd.read_sql(stmt, engine, params={"code": TEST_ONET_SOC_CODE})
+        logger.info(f"Row from database for {TEST_ONET_SOC_CODE}:\n{first_row_df.to_string()}")
+        assert not first_row_df.empty, f"No record found in DB for {TEST_ONET_SOC_CODE}"
+        # Ensure title column exists before trying to access it
+        assert 'title' in first_row_df.columns, "'title' column not found in DataFrame loaded from DB."
+        assert EXPECTED_TITLE_CONTAINS.lower() in first_row_df.iloc[0]['title'].lower(), f"Title in DB does not contain '{EXPECTED_TITLE_CONTAINS}'"
 
-            # Fetch a sample row if data exists
-            first_row_df = pd.read_sql(f"SELECT * FROM {schemas.Onet_Occupations_API_landing.__tablename__} LIMIT 1", engine)
-            logger.info(f"Sample row from database:\n{first_row_df.to_string()}")
-
-        finally:
-            session.close()
-    else:
-        logger.info("Skipping database verification as input DataFrame was empty.")
+    finally:
+        session.close()
         
-    logger.info(f"SUMMARY: Successfully extracted and loaded {expected_records} rows into '{schemas.Onet_Occupations_API_landing.__tablename__}'.")
-    logger.info("Integration test: test_extract_and_load_api_occupations finished successfully.") 
+    logger.info(f"SUMMARY: Successfully extracted and loaded 1 row for {TEST_ONET_SOC_CODE} ('{EXPECTED_TITLE_CONTAINS}') into '{schemas.Onet_Occupations_API_landing.__tablename__}'.")
+    logger.info("Integration test for filtered occupation finished successfully.") 

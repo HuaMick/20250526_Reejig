@@ -171,21 +171,39 @@ returns: """
     - [x] 4.9 Create shell script `llm_skill_proficiency_request.sh` to execute the node.
 
 - [ ] 5.0 **Phase 5: REST API for Skill Gap Analysis (Incorporating On-Demand API Fetching & Caching)**
-  - [ ] 5.1 Set up FastAPI framework in `src/api/main.py`.
-  - [ ] 5.2 Create function `ensure_occupation_data_is_present(onet_soc_code: str, engine)` that:
+  - [ ] 5.1 Create function `ensure_occupation_data_is_present(onet_soc_code: str, engine)` that:
     - Checks local DB for the given `onet_soc_code`.
     - If data is missing or incomplete:
         - Calls `onet_api_pull(onet_soc_code)` to fetch occupation and skills data.
         - Loads the fetched data into the appropriate tables.
         - Returns a success/failure status.
-  - [ ] 5.3 Update function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine)` to:
-    - Call `ensure_occupation_data_is_present()` for the `onet_soc_code`.
+  - [ ] 5.2 Create function `ensure_skills_data_is_present(onet_soc_code: str, engine)` that:
+    - Checks local DB for the given `onet_soc_code`.
+    - If data is missing or incomplete:
+        - Calls `onet_api_pull(onet_soc_code)` to fetch occupation and skills data.
+        - Loads the fetched data into the appropriate tables.
+        - Returns a success/failure status.
+  - [ ] 5.3 Create function `get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str)`:
+    - **IMPLEMENTATION NOTE:** This is to meet the requirements as per the requirements spec.
+    ```python
+    # parameters: from_onet_soc_code, to_onet_soc_code
+    # returns: [skill_name,...] # list of skills required by the second occupation that are not present in the first
+    ```
+  - [ ] 5.4 Refactor function `get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str)` to ensure it works with the latest schema:
+    - **IMPLEMENTATION NOTE:** Felt this was way more valuable than just a list of missing skills and made more sense so I implemented this as well.
+    ```python
+    # parameters: from_onet_soc_code, to_onet_soc_code
+    # returns: [{element_id:..., skill_name:..., proficiency_level:...},{}] # list of skills required by the second occupation that the first occupation either does not have or the level is lower then the second occupation.
+    ```
+  - [ ] 5.5 Set up FastAPI framework in `src/api/main.py`.
+  - [ ] 5.6 Update function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine)` to:
+    - Call `ensure_occupation_data_is_present()` for the `onet_soc_code`.  (Note: consider if `ensure_skills_data_is_present` is also needed here or if `ensure_occupation_data_is_present` covers skills adequately for this function's purpose).
     - If successful, retrieve occupation skills data from local tables.
-  - [ ] 5.4 Create integration test for the updated `get_occupation_skills`.
-  - [ ] 5.5 Review `identify_skill_gap.py` and ensure it properly processes the output from `get_occupation_skills`.
-  - [ ] 5.6 Create/Update integration test for `identify_skill_gap`.
-  - [ ] 5.7 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py`.
-  - [ ] 5.8 Create integration test for `/skill-gap` API endpoint.
+  - [ ] 5.7 Create integration test for the updated `get_occupation_skills`.
+  - [ ] 5.8 Review `identify_skill_gap.py` (or alternative files for `get_skills_gap` / `get_skills_gap_by_lvl`) and ensure it properly processes the output from the relevant skill fetching/comparison functions.
+  - [ ] 5.9 Create/Update integration test for `identify_skill_gap` (or the new gap functions).
+  - [ ] 5.10 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py`. This endpoint should utilize the functions from 5.3 and/or 5.4.
+  - [ ] 5.11 Create integration test for `/skill-gap` API endpoint.
 
 - [ ] 6.0 **Phase 6: Containerization, Final Testing, and Documentation**
   - [ ] 6.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).

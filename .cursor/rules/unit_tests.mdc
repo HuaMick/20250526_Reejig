@@ -6,6 +6,11 @@ alwaysApply: false
 # Unit Tests
 Unit tests check individual functions and components in isolation.
 
+**Context within Testing Philosophy**: While integration tests are prioritized for validating function/node interactions and end-to-end flows (Testing Honeycomb model), unit tests serve a vital, complementary role. They are particularly useful for:
+- Isolating and debugging complex algorithmic logic within a specific function after an integration test has failed, helping to pinpoint the exact source of an error.
+- Providing a fast feedback loop when refactoring the internal implementation of a function, once its contract (inputs/outputs) is stable and validated by integration tests.
+- Thoroughly testing edge cases and boundary conditions of a specific piece of logic that might be cumbersome or slow to validate repeatedly through broader integration tests.
+
 Unit tests should:
 - Have a pytest file in `./tests/test_unit_<test_name>.py`
 - Have a shell script in `./tests/test_unit_<test_name>.sh` that sets up the environment and executes the test

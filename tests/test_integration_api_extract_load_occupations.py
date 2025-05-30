@@ -3,14 +3,21 @@ import logging
 import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+import sys # Import sys to get stderr for the handler
 
 from functions.onet_api_extract_occupation import onet_api_extract_occupation
 from src.functions.mysql_load_table import load_data_from_dataframe
 import src.config.schemas as schemas # To access the model and Base
 
-# Configure logging for the test
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s')
+# Configure specific logger for this test module
+logger = logging.getLogger(__name__) # Using __name__ is good practice for module-specific logger
+logger.setLevel(logging.INFO)
+# Add a stream handler to output to stderr, which pytest -s will show
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(funcName)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 def test_extract_and_load_api_occupations():
     """
@@ -35,8 +42,9 @@ def test_extract_and_load_api_occupations():
     logger.info(f"API Extraction Result: Success={api_extraction_result['success']}, Message='{api_extraction_result['message']}'")
     assert api_extraction_result["success"], f"O*NET API extraction failed: {api_extraction_result['message']}"
     
-    occupations_df = api_extraction_result["result"]
+    occupations_df = api_extraction_result["result"]["occupation_df"]
     assert isinstance(occupations_df, pd.DataFrame), "API extraction did not return a DataFrame."
+    assert not occupations_df.empty, "API extraction returned an empty DataFrame."
     
     if occupations_df.empty:
         logger.warning("API extraction returned an empty DataFrame. Test will proceed but no data will be loaded.")
@@ -44,8 +52,6 @@ def test_extract_and_load_api_occupations():
         # For now, we'll allow it and check loading an empty DF.
     else:
         logger.info(f"Successfully extracted {len(occupations_df)} occupation records from API.")
-        logger.info(f"DataFrame columns: {occupations_df.columns.tolist()}")
-        logger.info(f"DataFrame head:\n{occupations_df.head().to_string()}")
         assert 'onet_soc_code' in occupations_df.columns, "DataFrame missing 'onet_soc_code' column."
         assert 'title' in occupations_df.columns, "DataFrame missing 'title' column."
         assert 'last_updated' in occupations_df.columns, "DataFrame missing 'last_updated' column."
@@ -59,7 +65,6 @@ def test_extract_and_load_api_occupations():
 
     # 4. Load data into the database
     logger.info(f"Attempting to load DataFrame into '{schemas.Onet_Occupations_API_landing.__tablename__}' table...")
-    logger.info(f"DataFrame to load (first 5 rows if not empty):\n{occupations_df.head().to_string() if not occupations_df.empty else 'Empty DataFrame'}")
     
     load_result = load_data_from_dataframe(
         df=occupations_df,
@@ -97,4 +102,5 @@ def test_extract_and_load_api_occupations():
     else:
         logger.info("Skipping database verification as input DataFrame was empty.")
         
+    logger.info(f"SUMMARY: Successfully extracted and loaded {expected_records} rows into '{schemas.Onet_Occupations_API_landing.__tablename__}'.")
     logger.info("Integration test: test_extract_and_load_api_occupations finished successfully.") 

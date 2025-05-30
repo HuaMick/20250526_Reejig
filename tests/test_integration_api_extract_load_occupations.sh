@@ -21,7 +21,7 @@ else
 fi
 
 # Add project root to PYTHONPATH to ensure modules are found
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
 echo "PYTHONPATH set to: $PYTHONPATH"
 
 # Define the test file and function

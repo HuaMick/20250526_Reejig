@@ -6,7 +6,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.functions.get_occupation_skills import get_occupation_skills
-from src.functions.identify_skill_gap import identify_skill_gap
+from functions.get_skills_gap_by_lvl import identify_skill_gap
 from src.config.schemas import get_sqlalchemy_engine, Occupation
 from sqlalchemy.orm import sessionmaker
 

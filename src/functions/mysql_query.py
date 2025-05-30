@@ -84,15 +84,16 @@ if __name__ == "__main__":
     print(f"\nExecuting query: \"{test_query}\"...")
     query_result = mysql_query(test_query)
     
-    # 3. Print the raw result from the function
-    print("\nFunction Call Result:")
-    print(query_result) # Prints the full success/message/result dictionary
+    # 3. Print the result summary
+    print(f"\nFunction Call Result for query '{test_query}':")
+    print(f"  Success: {query_result['success']}")
+    print(f"  Message: {query_result['message']}")
 
-    # Optionally, print a formatted summary if successful
-    if query_result["success"] and query_result["result"]:
-        print("  Query executed. Columns:", query_result["result"].get("columns"))
-        print(f"  Number of rows returned: {len(query_result['result'].get('rows', []))}")
-        # for row in query_result["result"].get("rows", [])[:2]: # Print first 2 sample rows
-        #     print(f"    - {row}")
+    if query_result['success'] and query_result.get('result'):
+        print(f"  Columns: {query_result['result'].get('columns')}")
+        rows = query_result['result'].get('rows', [])
+        print(f"  Rows returned: {len(rows)}")
+        if rows:
+            print(f"  First row example: {rows[0]}")
             
     print("\nExample finished.")

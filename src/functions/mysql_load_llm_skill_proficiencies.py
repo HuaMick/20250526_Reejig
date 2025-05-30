@@ -227,7 +227,7 @@ if __name__ == '__main__':
     }
 
     # 2. Call the loading function (clear_existing=True to ensure idempotency for example)
-    print("\n--- Attempting to load mock LLM data (clear_existing=True for both tables) ---")
+    print("\n--- Loading mock LLM data (clear_existing=True for both tables) ---")
     load_result_clear = mysql_load_llm_skill_proficiencies(
         llm_assessment_output=mock_llm_output,
         engine=example_engine,
@@ -235,25 +235,8 @@ if __name__ == '__main__':
         clear_replies_table=True
     )
     print("Load Result (clear_existing=True):")
-    print(json.dumps(load_result_clear, indent=2, default=str))
-
-    # 3. Call again with clear_existing=False to demonstrate PK issue if schema not changed
-    print("\n--- Attempting to load same mock LLM data again (clear_existing=False) ---")
-    # This will attempt to load the same records again.
-    # If clear_existing is False, records that would violate the composite primary key constraints
-    # (i.e., duplicates based on the combination of PK fields) will not be inserted.
-    # The warning messages in the function's output should indicate if fewer records than expected were loaded.
-    load_result_append = mysql_load_llm_skill_proficiencies(
-        llm_assessment_output=mock_llm_output, # Using the same data
-        engine=example_engine,
-        clear_requests_table=False, 
-        clear_replies_table=False
-    )
-    print("Load Result (clear_existing=False):")
-    # Using json.dumps with default=str for datetime, though not strictly necessary here
-    # as we are printing the function's return dict which should already be JSON-serializable.
-    import json # ensure json is imported for the print
-    print(json.dumps(load_result_append, indent=2, default=str))
+    print(f"  Success: {load_result_clear['success']}, Message: {load_result_clear['message']}")
+    print(f"  Requests Loaded: {load_result_clear['requests_loaded']}, Replies Loaded: {load_result_clear['replies_loaded']}")
 
 
     # Example with empty data
@@ -264,6 +247,7 @@ if __name__ == '__main__':
         engine=example_engine
     )
     print("Load Result (empty data):")
-    print(json.dumps(load_result_empty, indent=2, default=str))
+    print(f"  Success: {load_result_empty['success']}, Message: {load_result_empty['message']}")
+    print(f"  Requests Loaded: {load_result_empty['requests_loaded']}, Replies Loaded: {load_result_empty['replies_loaded']}")
     
     print("\nExample finished.") 

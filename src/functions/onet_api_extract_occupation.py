@@ -150,25 +150,30 @@ if __name__ == '__main__':
     if not ONET_USERNAME or not ONET_PASSWORD or ONET_USERNAME == "YOUR_ONET_USERNAME" or ONET_PASSWORD == "YOUR_ONET_PASSWORD":
         print("Please set ONET_USERNAME and ONET_PASSWORD environment variables to run the example.")
     else:
-        print("Attempting to extract O*NET occupation data with pagination (no filter)...")
-        extraction_result_all = onet_api_extract_occupation(username=ONET_USERNAME, password=ONET_PASSWORD)
-        if extraction_result_all["success"]:
-            df_all = extraction_result_all["result"]["occupation_df"]
-            print(f"Total occupations (no filter): {len(df_all)}")
-            if not df_all.empty:
-                print("First 2 (no filter):")
-                print(df_all.head(2))
-        else:
-            print(f"Failed (no filter): {extraction_result_all['message']}")
+        # print("Attempting to extract O*NET occupation data with pagination (no filter)...")
+        # extraction_result_all = onet_api_extract_occupation(username=ONET_USERNAME, password=ONET_PASSWORD)
+        # if extraction_result_all["success"]:
+        #     df_all = extraction_result_all["result"]["occupation_df"]
+        #     print(f"Total occupations (no filter): {len(df_all)}")
+        #     if not df_all.empty:
+        #         print("First 2 (no filter):")
+        #         print(df_all.head(2))
+        # else:
+        #     print(f"Failed (no filter): {extraction_result_all['message']}")
 
-        print("\nAttempting to extract specific O*NET occupation data (15-1254.00 Web Developers)...")
+        print("\nMinimalistic happy path example for onet_api_extract_occupation:")
+        print("Attempting to extract specific O*NET occupation data (e.g., 15-1254.00 Web Developers)...")
         test_filter = ["onetsoc_code.eq.15-1254.00"]
         extraction_result_filtered = onet_api_extract_occupation(username=ONET_USERNAME, password=ONET_PASSWORD, filter_params=test_filter)
-        if extraction_result_filtered["success"]:
+        
+        print(f"\nFunction Call Result (filtered for {test_filter[0]}):")
+        print(f"  Success: {extraction_result_filtered['success']}")
+        print(f"  Message: {extraction_result_filtered['message']}")
+
+        if extraction_result_filtered["success"] and extraction_result_filtered["result"]:
             df_filtered = extraction_result_filtered["result"]["occupation_df"]
-            print(f"Total occupations (filtered for 15-1254.00): {len(df_filtered)}")
+            print(f"  Total occupations extracted: {len(df_filtered)}")
             if not df_filtered.empty:
-                print("Filtered result:")
-                print(df_filtered)
-        else:
-            print(f"Failed (filtered): {extraction_result_filtered['message']}")
+                print(f"  First extracted occupation details: \n{df_filtered.head(1)}")
+        
+        print("\nExample finished.")

@@ -110,40 +110,25 @@ Ensure your response is properly formatted as valid JSON and includes all requir
 if __name__ == "__main__":
     print("Minimalistic happy path example for gemini_llm_prompt:")
     
-    # Define sample data
+    # 1. Define sample occupation data (with skills)
     example_occupation_data = {
         "onet_id": "15-1252.00",
         "name": "Software Developer",
         "skills": [
             {"skill_name": "Programming", "proficiency_level": 5.0},
-            {"skill_name": "Problem Solving", "proficiency_level": 4.5},
-            {"skill_name": "Communication", "proficiency_level": 3.8}
+            {"skill_name": "Problem Solving", "proficiency_level": 4.5}
         ]
     }
     
-    example_occupation_no_skills = {
-        "onet_id": "10-1010.10",
-        "name": "Manager of Things",
-        "skills": []
-    }
-
-    # Call the function with the occupation data
-    result1 = gemini_llm_prompt(occupation_data=example_occupation_data)
+    # 2. Call the function to generate the prompt
+    prompt_result = gemini_llm_prompt(occupation_data=example_occupation_data)
     
-    # Print the results
-    print("\nFunction Call Result (with skills):")
-    print(f"  Success: {result1['success']}")
-    print(f"  Message: {result1['message']}")
-    if result1['success']:
-        # print(f"  Prompt:\n{result1['result']['prompt']}") # Full prompt can be long
-        print(f"  Prompt (first 300 chars): {result1['result']['prompt'][:300]}...")
-
-    result2 = gemini_llm_prompt(occupation_data=example_occupation_no_skills)
-    print("\nFunction Call Result (no skills listed):")
-    print(f"  Success: {result2['success']}")
-    print(f"  Message: {result2['message']}")
-    if result2['success']:
-        print(f"  Prompt (first 300 chars): {result2['result']['prompt'][:300]}...")
-
+    # 3. Print the result summary
+    print("\nFunction Call Result:")
+    print(f"  Success: {prompt_result['success']}")
+    print(f"  Message: {prompt_result['message']}")
+    if prompt_result['success'] and prompt_result['result']:
+        # The full prompt can be very long, so we print a snippet.
+        print(f"  Generated Prompt (first 100 chars): {prompt_result['result']['prompt'][:100]}...")
     
     print("\nExample finished.") 

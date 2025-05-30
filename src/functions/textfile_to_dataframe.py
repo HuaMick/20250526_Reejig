@@ -64,3 +64,42 @@ def textfile_to_dataframe(
     except Exception as e:
         result['error'] = f"Error processing file {os.path.basename(file_path)}: {str(e)}"
         return result
+
+if __name__ == '__main__':
+    # Minimalistic happy path example for textfile_to_dataframe.
+    # This example assumes a sample tab-separated text file named 'sample_data.txt'
+    # exists in the same directory with simple data.
+
+    # 1. Create a dummy sample_data.txt for the example
+    sample_file_path = "sample_data.txt"
+    with open(sample_file_path, 'w') as f:
+        f.write("col1\\tcol2\\tcol3\\n")
+        f.write("a\\tb\\t1\\n")
+        f.write("c\\td\\t2\\n")
+
+    # 2. Define parameters for the function call
+    rename_map = {"col1": "ID", "col2": "Value"}
+    dtypes = {"col3": int} # 'ID' and 'Value' will be inferred as object/string
+
+    print(f"Attempting to convert '{sample_file_path}' to DataFrame...")
+    conversion_result = textfile_to_dataframe(
+        file_path=sample_file_path,
+        column_rename_map=rename_map,
+        dtype=dtypes
+    )
+
+    # 3. Print the result summary
+    print("\\nFunction Call Result:")
+    print(f"  Success: {conversion_result['success']}")
+    if conversion_result['success'] and conversion_result['df'] is not None:
+        print(f"  DataFrame shape: {conversion_result['df'].shape}")
+        print("  DataFrame head:")
+        print(conversion_result['df'].head())
+    elif conversion_result['error']:
+        print(f"  Error: {conversion_result['error']}")
+
+    # 4. Clean up the dummy file
+    if os.path.exists(sample_file_path):
+        os.remove(sample_file_path)
+
+    print("\\nExample finished.")

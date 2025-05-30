@@ -93,15 +93,16 @@ if __name__ == "__main__":
     print(f"\n--- Attempting to get skills for occupation: {occupation_code} ---")
     result = get_occupation_skills(occupation_code)
     
-    # 3. Print the raw result from the function
-    print(f"\nFunction Call Result:")
-    print(result) # Prints the full success/message/result dictionary
+    # 3. Print the result summary
+    print(f"\nFunction Call Result for {occupation_code}:")
+    print(f"  Success: {result['success']}")
+    print(f"  Message: {result['message']}")
 
-    # Optionally, print a summary if successful and skills are found
-    if result['success'] and result['result'] and result['result']['skills']:
-        print(f"  Successfully found {len(result['result']['skills'])} skills for {result['result']['occupation_title']}.")
-        print(f"  Sample skill: {result['result']['skills'][0]}")
-    elif result['success']:
-        print(f"  Call was successful, but no skills found for {result.get('result', {}).get('occupation_title', occupation_code)} or occupation not found as per message.")
-
+    if result['success'] and result.get('result'):
+        res_data = result['result']
+        print(f"  Occupation Title: {res_data.get('occupation_title')}")
+        print(f"  Number of skills found: {len(res_data.get('skills', []))}")
+        if res_data.get('skills'):
+            print(f"  First skill: {res_data['skills'][0]}")
+    
     print("\nExample finished.")

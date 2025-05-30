@@ -301,6 +301,23 @@ Memory bank notes work as the working memory of agents.
      - Executes the `src/nodes/llm_skill_proficiency_request.py` node, passing an occupation code provided as a command-line argument to the script.
      - The script has been made executable (`chmod +x`).
 
+**7. On-Demand Data Population in `get_occupation_and_skills` (as of 2025-06-04):**
+   - The `get_occupation_and_skills` function in `src/functions/get_occupation_and_skills.py` was updated.
+   - If occupation data is not found locally via `get_occupation`, it calls `onet_api_extract_occupation` to fetch data from the O*NET API, loads it into `Onet_Occupations_API_landing`, and then structures the occupation details.
+   - Similarly, if skills data is not found locally via `get_occupation_skills` or if the local skills list is empty, it calls `onet_api_extract_skills` to fetch skills from the O*NET API (filtered for the specific occupation), loads them into `Onet_Skills_API_landing`, and then structures the skills list (focusing on 'LV' scale proficiency).
+   - API credentials are retrieved from environment variables (`ONET_USERNAME`, `ONET_PASSWORD`).
+   - The `if __name__ == "__main__":` block in `get_occupation_and_skills.py` was updated to test this new logic, including scenarios where data might need to be fetched from the API.
+
+**8. Integration Test for `get_occupation_and_skills` with API Fallback (as of 2025-06-04):**
+    - Created `tests/test_integration_get_occupation_and_skills_with_api_fallback.py`.
+    - This test verifies that `get_occupation_and_skills` correctly fetches data for "11-2021.00" (Marketing Managers), first attempting local retrieval and then falling back to O*NET API calls if data is not present locally.
+    - The test setup ensures that the API landing tables (`Onet_Occupations_API_landing`, `Onet_Skills_API_landing`) are initially clear of data for "11-2021.00".
+    - Asserts that the function returns successfully, the data structure is correct, and that the occupation and relevant skills data (e.g., for Marketing Managers) are present in the output.
+    - Verifies that data for "11-2021.00" is indeed loaded into `Onet_Occupations_API_landing` and `Onet_Skills_API_landing` tables as part of the fallback mechanism.
+    - Created the corresponding shell script `tests/test_integration_get_occupation_and_skills_with_api_fallback.sh` to execute the Python test.
+    - The shell script was updated to comply with `integration_tests.mdc` guidelines, including correct project root pathing, virtual environment activation, environment variable sourcing, and targeted test execution.
+    - The script was made executable (`chmod +x`). The test passed successfully.
+
 **Next Steps:**
    - Further refinement of LLM prompt for better skill proficiency assessments
    - Integration with REST API for skill gap analysis

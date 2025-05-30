@@ -1,9 +1,9 @@
 import os
 import sys
 from src.functions.extract_onet_data import extract_onet_data, extract_occupations, extract_skills, extract_scales
-from functions.mysql_load_table import load_data_from_dataframe
+from src.functions.mysql_load_table import load_data_from_dataframe
 from src.functions.mysql_connection import get_mysql_connection # For verification step
-from src.config.schemas import get_sqlalchemy_engine
+from src.config.schemas import get_sqlalchemy_engine, Onet_Occupations_Landing, Onet_Skills_Landing, Onet_Scales_Landing
 
 def main():
     """
@@ -54,23 +54,27 @@ def main():
             print(f"DataFrame for {filename} is empty. Skipping load.")
             continue
         
-        # Map filenames to table names in the database (using Occupations, Skills, Scales as logical table names)
-        table_name_to_load = None
+        # Map filenames to SQLAlchemy models
+        model_to_load = None
+        table_name = None
         if filename == 'occupations.txt':
-            table_name_to_load = 'Occupations'  # Will be mapped to Onet_Occupations_Landing in mysql_load.py
+            model_to_load = Onet_Occupations_Landing
+            table_name = 'Occupations'
         elif filename == 'skills.txt':
-            table_name_to_load = 'Skills'  # Will be mapped to Onet_Skills_Landing in mysql_load.py
+            model_to_load = Onet_Skills_Landing
+            table_name = 'Skills'
         elif filename == 'scales.txt':
-            table_name_to_load = 'Scales'  # Will be mapped to Onet_Scales_Landing in mysql_load.py
+            model_to_load = Onet_Scales_Landing
+            table_name = 'Scales'
         else:
             print(f"Warning: Unknown file type {filename} encountered in extracted data. Skipping load.")
             continue
 
-        print(f"--- Loading data into {table_name_to_load} table ---")
-        load_result = load_data_from_dataframe(df, table_name_to_load, engine)
-        print(f"{table_name_to_load} load: {load_result['message']}")
+        print(f"--- Loading data into {table_name} table ---")
+        load_result = load_data_from_dataframe(df, model_to_load, engine)
+        print(f"{table_name} load: {load_result['message']}")
         if not load_result['success']:
-            print(f"CRITICAL ERROR: Stopping due to error in loading data into {table_name_to_load} table.")
+            print(f"CRITICAL ERROR: Stopping due to error in loading data into {table_name} table.")
             sys.exit(1)
 
     # Step 4: Verifying Data (Optional but good for a node)
@@ -121,69 +125,5 @@ def main():
     print("\nO*NET data extraction and loading process finished.")
 
 
-def main_direct_extract():
-    """
-    Alternative approach that directly uses the individual extraction functions.
-    This demonstrates how to use the refactored functions for direct extraction.
-    """
-    print("Starting O*NET data extraction and loading process (direct approach)...")
-
-    # Step 1: Get SQLAlchemy engine
-    print("\n--- Initializing Database Connection ---")
-    try:
-        engine = get_sqlalchemy_engine()
-        print("SQLAlchemy engine created successfully.")
-    except ValueError as ve:
-        print(f"ERROR: Failed to create SQLAlchemy engine: {ve}")
-        print("Ensure MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables are set.")
-        sys.exit(1)
-    except Exception as e:
-        print(f"CRITICAL ERROR: Failed to create SQLAlchemy engine: {e}")
-        sys.exit(1)
-
-    # Step 2: Direct extraction using individual functions
-    print("\n--- Extracting O*NET Data (Direct Approach) ---")
-    extraction_configs = [
-        {'name': 'Occupations', 'function': extract_occupations, 'table_name': 'Occupations'},
-        {'name': 'Skills', 'function': extract_skills, 'table_name': 'Skills'},
-        {'name': 'Scales', 'function': extract_scales, 'table_name': 'Scales'}
-    ]
-    
-    extraction_success = False
-    for config in extraction_configs:
-        print(f"\nExtracting {config['name']} data...")
-        result = config['function']()
-        
-        if result['success']:
-            extraction_success = True
-            df = result['df']
-            print(f"Successfully extracted {len(df)} {config['name']} records.")
-            
-            # Step 3: Load data into database
-            print(f"Loading {config['name']} data into database...")
-            if df.empty:
-                print(f"DataFrame for {config['name']} is empty. Skipping load.")
-                continue
-                
-            load_result = load_data_from_dataframe(df, config['table_name'], engine)
-            print(f"{config['name']} load: {load_result['message']}")
-            if not load_result['success']:
-                print(f"CRITICAL ERROR: Stopping due to error in loading data into {config['table_name']} table.")
-                sys.exit(1)
-        else:
-            print(f"Error extracting {config['name']}: {result['error']}")
-    
-    if not extraction_success:
-        print("CRITICAL ERROR: All extraction attempts failed. Exiting.")
-        sys.exit(1)
-
-    # Step 4: Verification (would use the updated verification code with table mapping)
-    # ... 
-
-    print("\nO*NET data extraction and loading process (direct approach) finished.")
-
-
 if __name__ == '__main__':
-    # Choose which approach to use
-    main()  # Use the combined extract_onet_data approach
-    # main_direct_extract()  # Use the direct extraction approach with individual functions
+    main()  

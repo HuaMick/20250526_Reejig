@@ -11,7 +11,7 @@ source ./.venv/bin/activate
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # Run the extract and load script
-python src/nodes/extract_load.py
+python src/nodes/extract_load_txt.py
 
 # Deactivate the virtual environment
 deactivate

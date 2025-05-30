@@ -132,7 +132,7 @@ Memory bank notes work as the working memory of agents.
 
 ### API Data Extraction & Loading (Phase 2 - Generic Endpoints Approach)
 
-**Date**: 2025-05-30 (Please update with current date if different)
+**Date**: 2025-05-31
 
 **1. API Data Extraction Functions:**
    - Implemented three separate functions to extract data directly from O*NET API generic list endpoints:
@@ -169,3 +169,78 @@ Memory bank notes work as the working memory of agents.
 **6. Troubleshooting & Key Decisions for API Skills Data:**
    - Addressed initial `NOT NULL constraint failed` for `onet_skills_api_landing.onet_soc_code` by revising the table schema to align with the data actually provided by the generic `/ws/database/rows/skills` endpoint (which doesn't include `onet_soc_code`).
    - Resolved subsequent `UNIQUE constraint failed` for `onet_skills_api_landing.element_id` by removing the deduplication step in `onet_api_extract_skills.py` and changing the `Onet_Skills_API_landing` primary key to a new auto-incrementing `id` column, as per the requirement to store API data "as is", including potential duplicates of `element_id`.
+
+### On-Demand API Data Extraction Strategy (as of 2025-06-01)
+
+**Background and Problem:**
+- The O*NET API data doesn't provide reliable "last updated" timestamps for the TXT file downloads, making it difficult to determine when data needs refreshing.
+- Initial observation showed that API pagination limits results to 20 records per page by default.
+
+**Strategy Shift:**
+- Implemented an on-demand pull strategy with local caching instead of periodic bulk downloads.
+- Key components:
+  1. When specific occupation data is needed, check if it exists in local database
+  2. If not found, make targeted API requests using filter parameters
+  3. Cache results in database to avoid unnecessary future API calls
+
+**Implementation:**
+1. **Updated `onet_api_extract_occupation.py`**:
+   - Modified to accept optional `filter_params` list (e.g., `["onetsoc_code.eq.15-1254.00"]`)
+   - Enhanced to follow pagination links automatically (supports both filtered and unfiltered requests)
+   - Updated function now concatenates all results from paginated responses
+
+2. **Updated `onet_api_extract_skills.py`**:
+   - Added similar filtering capability with pagination support
+   - Maintains the same interface pattern as the occupation extraction function
+
+3. **Integration Tests**:
+   - Updated `test_integration_api_extract_load_occupations.py` to test specific occupation fetching
+   - Successfully tested targeted extraction of "15-1254.00" (Web Developers)
+   - Test demonstrates API call, data extraction, and local caching functionality
+
+**Benefits:**
+- More efficient use of API resources (only requesting what's needed)
+- Always up-to-date data for requested occupations
+- Reduced initial load time as data is fetched incrementally
+- Progressive build-up of local cache based on actual usage patterns
+
+**Next Steps:**
+- Complete the on-demand extraction/caching strategy for all O*NET data types
+- Implement a comprehensive function to check for locally cached data before making API calls
+- Develop an expiry/refresh mechanism for cached data based on usage patterns
+
+### Occupation-Specific API Data Extraction (as of 2025-06-03)
+
+**Background and Implementation:**
+- Implemented `onet_api_pull.py` to fetch occupation-specific data from the O*NET API for a single occupation code
+- This function provides a streamlined approach for retrieving both occupation details and associated skills data
+- Will serve as a fallback data source when local data isn't available for a specific occupation
+
+**Key Components:**
+1. **Main Function: `onet_api_pull(occupation_code)`**
+   - Takes a single occupation code (e.g., "15-1252.00") as input
+   - Validates and formats the occupation code to ensure proper API request format
+   - Retrieves O*NET API credentials from environment variables
+   - Makes API calls to fetch both occupation data and skills data
+   - Returns both datasets as pandas DataFrames in a standard response format
+
+2. **Helper Functions:**
+   - `format_occupation_code()`: Validates and standardizes occupation code formats (handles various input formats)
+   - `get_onet_api_credentials()`: Securely retrieves API credentials from environment variables
+   - `fetch_occupation_data()`: Retrieves detailed occupation information
+   - `fetch_skills_data()`: Gets skills data specifically for the requested occupation
+
+3. **Data Structure Compatibility:**
+   - Occupation data follows the same structure as used in the database tables
+   - Skills data is structured to be compatible with existing skills tables
+   - Both datasets include timestamps and source information
+
+**Integration Plan:**
+- This function will be used by the skill gap analysis workflow when local data is unavailable
+- The returned DataFrames can be loaded into the database using existing load functions
+- Allows for immediate response to user queries while asynchronously updating the local database
+
+**Next Steps:**
+- Create integration tests for `onet_api_pull.py`
+- Integrate with the skill gap analysis workflow
+- Implement LLM capability for skill proficiency scoring (for bonus points)

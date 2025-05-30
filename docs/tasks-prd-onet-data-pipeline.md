@@ -8,8 +8,8 @@
 - `src/functions/mysql_load_dataframe.py` - Loads a single pandas DataFrame into a specified MySQL table.
 - `tests/test_integration_mysql_load_dataframe.py` - Integration tests for `mysql_load_dataframe.py`.
 - `src/functions/textfile_to_dataframe.py` - **NEW:** Utility function to convert text files to DataFrames with proper typing.
-- `src/functions/onet_api_extract_occupation.py` - **NEW:** Fetches all O*NET-SOC occupation codes, titles, and descriptions from the API.
-- `tests/test_integration_onet_api_extract_occupation.py` - **NEW:** Integration tests for `onet_api_extract_occupation.py`.
+- `src/functions/onet_api_extract_occupation.py` - **UPDATED:** Fetches O*NET-SOC occupation codes, titles, and descriptions from the API with optional filtering.
+- `tests/test_integration_onet_api_extract_occupation.py` - **UPDATED:** Integration tests for `onet_api_extract_occupation.py` including filter tests.
 - `src/functions/extract_onet_api_occupation_details.py` - **NEW:** Fetches detailed occupation data (description) for a list of occupation codes from the API.
 - `tests/test_integration_extract_onet_api_occupation_details.py` - **NEW:** Integration tests for `extract_onet_api_occupation_details.py`.
 - `src/functions/extract_onet_api_skills_data.py` - **NEW:** Parses skills data from detailed occupation API responses.
@@ -73,17 +73,23 @@
     - Inputs: API creds, optional list of filter strings (e.g., `["onetsoc_code.eq.CODE"]`).
     - Logic: If `filter_params` are provided, include them in the API request. Continues to support pagination for all results (filtered or unfiltered).
     - Outputs: `{"success": bool, "message": str, "result": {"occupation_df": pd.DataFrame}}`.
-  - [ ] 2.1.1 **NEW (On-Demand):** Create integration test specifically for filtered `onet_api_extract_occupation` to verify it correctly fetches single or specific records based on filters (e.g., by `onetsoc_code`).
+    - **IMPLEMENTATION NOTE:** Successfully updated to handle pagination and concatenate results from all pages.
+  - [x] 2.1.1 **NEW (On-Demand):** Create integration test specifically for filtered `onet_api_extract_occupation` to verify it correctly fetches single or specific records based on filters (e.g., by `onetsoc_code`).
+    - **IMPLEMENTATION NOTE:** Successfully tested with `["onetsoc_code.eq.15-1254.00"]` filter to fetch Web Developers occupation.
   - [x] 2.2 Create/Update integration test for bulk `onet_api_extract_occupation` (and its loading) (`tests/test_integration_api_extract_load_occupations.py` and `.sh`).
   - [ ] 2.3 **MODIFIED (On-Demand):** Review/Update `extract_onet_api_occupation_details` (if still used directly, or its logic incorporated elsewhere) to potentially leverage filtering if fetching for a *single* known occupation code. This might be superseded by direct filtered calls in the on-demand flow.
-  - [ ] 2.4 **NEW (On-Demand):** Design and implement similar `filter_params` and specific filter tests for `onet_api_extract_skills` and `onet_api_extract_scales` functions.
-    - [ ] 2.4.1 Update `onet_api_extract_skills` to accept `filter_params` and add integration test for filtered skill extraction.
+  - [x] 2.4 **NEW (On-Demand):** Design and implement similar `filter_params` and specific filter tests for `onet_api_extract_skills` and `onet_api_extract_scales` functions.
+    - [x] 2.4.1 Update `onet_api_extract_skills` to accept `filter_params` and add integration test for filtered skill extraction.
+      - **IMPLEMENTATION NOTE:** Updated function to accept filters and handle pagination similarly to the occupation extraction.
     - [ ] 2.4.2 Update `onet_api_extract_scales` to accept `filter_params` and add integration test for filtered scale extraction.
+      - **IMPLEMENTATION NOTE:** Scales are static reference data that doesn't need occupation-specific filtering.
   - [x] 2.5 Create function `onet_api_extract_skills_data(occupation_details_df: pd.DataFrame)` in `src/functions/onet_api_extract_skills_data.py`. (This function parses XML details; may need adjustment if detailed occupation data is fetched differently in on-demand flow).
   - [x] 2.7 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`.
   - [x] 2.11 Define SQLAlchemy schemas for the API data landing tables in `src/config/schemas.py`.
   - [x] 2.13 Create node `extract_load_api.py` in `src/nodes/`. This node is for *bulk* API data extraction using the updated functions (without filters or with broad filters if ever needed for bulk).
   - [x] 2.14 Create integration test for `extract_load_api.py` node.
+  - [x] 2.15 **NEW (On-Demand):** Document the on-demand pull strategy with caching in `memory_bank/notes.md`.
+    - **IMPLEMENTATION NOTE:** Added detailed notes on the strategy shift to on-demand pulling with local caching.
 
 - [x] 3.0 **Phase 3: Database Normalization & Downstream Consumption Tables**
   - [x] 3.1 Analyze data from both sources (text files and API) to understand their structure and relationships.

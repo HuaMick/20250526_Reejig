@@ -4,7 +4,6 @@ Path to shell script:
 src/scripts/example_node.sh
 """
 
-
 import os
 import sys
 from src.functions.example_function import example_function

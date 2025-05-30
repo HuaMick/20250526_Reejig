@@ -7,7 +7,6 @@ from typing import List, Optional # For type hinting
 
 from src.functions.onet_api_extract_occupation import onet_api_extract_occupation
 from src.functions.onet_api_extract_skills import onet_api_extract_skills
-from src.functions.onet_api_extract_occupation_specific_skills import onet_api_extract_occupation_specific_skills # NEW
 from src.functions.mysql_load_table import load_data_from_dataframe
 import src.config.schemas as schemas
 

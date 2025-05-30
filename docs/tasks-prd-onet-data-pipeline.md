@@ -20,6 +20,13 @@
 - `tests/test_integration_mysql_upsert_dataframe.py` - **NEW:** Integration tests for `mysql_upsert_dataframe.py`.
 - `src/functions/populate_skills_reference.py` - **NEW:** Populates the Skills table from raw data tables.
 - `src/functions/populate_occupation_skills.py` - **NEW:** Populates the Occupation_Skills table from raw data tables.
+- `src/functions/get_occupation_and_skills.py` - **NEW:** Retrieves structured occupation data with associated skills for a specific occupation code.
+- `src/functions/gemini_llm_prompt.py` - **NEW:** Generates LLM prompts for skill proficiency assessment.
+- `src/functions/gemini_llm_request.py` - **NEW:** Handles API communication with Google's Gemini LLM.
+- `src/functions/mysql_load_llm_skill_proficiencies.py` - **NEW:** Loads LLM assessment results into database tables.
+- `tests/test_integration_llm_skill_assessment_pipeline.py` - **NEW:** Integration test for the LLM skill proficiency assessment pipeline.
+- `tests/test_integration_load_llm_proficiencies.py` - **NEW:** Integration test for mysql_load_llm_skill_proficiencies.
+- `tests/fixtures/fixture_llm_assessment_output.py` - **NEW:** Fixture with mock LLM assessment data for testing.
 - `src/functions/llm_skill_profiler.py` - To house the LLM interaction logic for skill proficiency scoring.
 - `tests/test_integration_llm_skill_profiler.py` - Integration tests for `llm_skill_profiler.py`.
 - `src/nodes/extract_load.py` - Orchestrates text file data extraction and loading.
@@ -34,6 +41,8 @@
 - `tests/test_integration_get_occupation_skills.py` - Integration tests for `get_occupation_skills.py`.
 - `src/functions/identify_skill_gap.py` - Contains the core logic for comparing two occupations' skills.
 - `tests/test_integration_identify_skill_gap.py` - Integration tests for `identify_skill_gap.py`.
+- `src/functions/onet_api_pull.py` - **NEW:** Fetches occupation and skills data from O*NET API for a specific occupation code.
+- `tests/test_integration_onet_api_pull.py` - **NEW:** Integration tests for `onet_api_pull.py`.
 - `src/api/main.py` - Main FastAPI/Flask application file for the REST API.
 - `src/api/routers/skill_gap.py` - API router/controller for the `/skill-gap` endpoint.
 - `tests/test_api_skill_gap.py` - Integration tests for the `/skill-gap` API endpoint.
@@ -43,6 +52,8 @@
 - `requirements.txt` - Python project dependencies.
 - `env/env.env` - Environment variable configuration.
 - `README.md` - Project documentation.
+- `src/nodes/llm_skill_proficiency_request.py` - **NEW:** Node to orchestrate LLM skill proficiency assessment for an occupation.
+- `src/scripts/llm_skill_proficiency_request.sh` - **NEW:** Shell script to execute the llm_skill_proficiency_request node.
 
 ### Notes
 
@@ -68,7 +79,7 @@
   - [x] 1.13 **NEW:** Create utility function `textfile_to_dataframe()` to simplify file processing.
   - [x] 1.14 **NEW:** Refactor `extract_onet_data.py` to use specialized extraction functions and the new utility.
 
-- [ ] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions (Supporting Bulk and On-Demand/Filtered Fetching)**
+- [x] 2.0 **Phase 2: Data Ingestion - O*NET API Integration Functions (Supporting Bulk and On-Demand/Filtered Fetching)**
   - [x] 2.1 **MODIFIED (On-Demand):** Update function `onet_api_extract_occupation(username: str, password: str, filter_params: Optional[list] = None, ...)` in `src/functions/onet_api_extract_occupation.py`.
     - Inputs: API creds, optional list of filter strings (e.g., `["onetsoc_code.eq.CODE"]`).
     - Logic: If `filter_params` are provided, include them in the API request. Continues to support pagination for all results (filtered or unfiltered).
@@ -77,11 +88,9 @@
   - [x] 2.1.1 **NEW (On-Demand):** Create integration test specifically for filtered `onet_api_extract_occupation` to verify it correctly fetches single or specific records based on filters (e.g., by `onetsoc_code`).
     - **IMPLEMENTATION NOTE:** Successfully tested with `["onetsoc_code.eq.15-1254.00"]` filter to fetch Web Developers occupation.
   - [x] 2.2 Create/Update integration test for bulk `onet_api_extract_occupation` (and its loading) (`tests/test_integration_api_extract_load_occupations.py` and `.sh`).
-  - [ ] 2.3 **MODIFIED (On-Demand):** Review/Update `extract_onet_api_occupation_details` (if still used directly, or its logic incorporated elsewhere) to potentially leverage filtering if fetching for a *single* known occupation code. This might be superseded by direct filtered calls in the on-demand flow.
   - [x] 2.4 **NEW (On-Demand):** Design and implement similar `filter_params` and specific filter tests for `onet_api_extract_skills` and `onet_api_extract_scales` functions.
     - [x] 2.4.1 Update `onet_api_extract_skills` to accept `filter_params` and add integration test for filtered skill extraction.
       - **IMPLEMENTATION NOTE:** Updated function to accept filters and handle pagination similarly to the occupation extraction.
-    - [ ] 2.4.2 Update `onet_api_extract_scales` to accept `filter_params` and add integration test for filtered scale extraction.
       - **IMPLEMENTATION NOTE:** Scales are static reference data that doesn't need occupation-specific filtering.
   - [x] 2.5 Create function `onet_api_extract_skills_data(occupation_details_df: pd.DataFrame)` in `src/functions/onet_api_extract_skills_data.py`. (This function parses XML details; may need adjustment if detailed occupation data is fetched differently in on-demand flow).
   - [x] 2.7 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`.
@@ -90,6 +99,8 @@
   - [x] 2.14 Create integration test for `extract_load_api.py` node.
   - [x] 2.15 **NEW (On-Demand):** Document the on-demand pull strategy with caching in `memory_bank/notes.md`.
     - **IMPLEMENTATION NOTE:** Added detailed notes on the strategy shift to on-demand pulling with local caching.
+  - [x] 2.16 **NEW:** Create `onet_api_pull.py` function to fetch occupation and skills data for a specific occupation code.
+    - **IMPLEMENTATION NOTE:** Function successfully implemented with proper error handling, data formatting, and compatibility with existing database schema.
 
 - [x] 3.0 **Phase 3: Database Normalization & Downstream Consumption Tables**
   - [x] 3.1 Analyze data from both sources (text files and API) to understand their structure and relationships.
@@ -111,38 +122,70 @@
     - [x] 3.7.3 Update integration test for `get_occupation()` and `get_occupation_skills()`.
   - [x] 3.8 Document simplified data model showing flow from raw to downstream tables.
 
-- [ ] 4.0 **Phase 4: LLM Integration for Skill Proficiency**
-  - [ ] 4.1 Research and select/configure LLM for skill proficiency analysis.
-  - [ ] 4.2 Create function `llm_skill_profiler(skill_data: pd.DataFrame, text_column: str)` in `src/functions/llm_skill_profiler.py`. Inputs: DataFrame with skill info (e.g., from `SkillsView`), column name with text for LLM. Outputs: `{"success": bool, "message": str, "result": {"llm_scores_df": pd.DataFrame}}` with original data + LLM scores.
-  - [ ] 4.3 Create integration test for `llm_skill_profiler` (`tests/test_integration_llm_skill_profiler.py` and `.sh`). (May require mocking LLM calls for CI/CD).
-  - [ ] 4.4 Design schema for LLM-enriched data storage, if needed, based on actual LLM output structure.
-  - [ ] 4.5 Create node `enrich_skill_data.py` in `src/nodes/`. This node will:
-    - [ ] 4.5.1 Read data (e.g., from `SkillsView`, filtering for `scale_id` = 'LV').
-    - [ ] 4.5.2 Call `llm_skill_profiler`.
-    - [ ] 4.5.3 Upsert LLM-derived `data_value` back into a relevant table or a new `LLMSkillScores` table using `mysql_upsert_dataframe`.
-  - [ ] 4.6 Create integration test for `enrich_skill_data` node (`tests/test_integration_enrich_skill_data.py` and `.sh`).
+- [x] 4.0 **Phase 4: LLM Integration for Skill Proficiency (Bonus Points)**
+  - [x] 4.1 Create function gemini_llm_request, it should take a prompt and return the llm response.
+  - [x] 4.2 Create function generate_llm_skill_proficiency_prompt for generating the prompt for the llm.         
+        
+```python
+parameters:
+occupation_data={onet_id:..., name:..., skills:[{skill_element_id, skill_name:..., proficiency_level:...}], }
+
+returns: """
+  1.  Analyze the skills of the `to_occupation` object provided in the input.
+  2.  For each skill listed in `to_occupation.skills`, determine a proficiency level.
+      The proficiency level should be categorized (e.g., Novice, Beginner, Intermediate,
+      Advanced, Expert) and optionally assigned a numerical score on a defined scale
+      (e.g., 1-5, the prompt can specify this scale).
+  3.  Provide a detailed justification/explanation for each assigned proficiency level. This explanation should be in the context of the `to_occupation`'s typical
+      duties and responsibilities.
+  4.  If a `from_occupation` object is provided, the LLM should consider its skills and
+      proficiencies as context. This might involve commenting on skill transferability,
+      gaps, or how experience in the `from_occupation` might influence the learning
+      curve or proficiency in the `to_occupation`'s skills.
+  5.  Structure its entire response as a single, valid JSON object. The required schema
+      for this JSON object is as follows:
+      ```json
+      {
+        "skill_proficiency_assessment": {
+          "llm_onet_soc_code": "string (O*NET code of the occupation being assessed, i.e., to_occupation)",
+          "llm_occupation_name": "string (Name of the occupation being assessed)",
+          "assessed_skills": [
+            {
+              "llm_skill_name": "string (Name of the skill, from to_occupation.skills.skill_name)",
+              "llm_assigned_proficiency_description": "string (e.g., 'Intermediate', 'Advanced', 'Expert')",
+              "llm_assigned_proficiency_level": "number | null (e.g., 3.5 on a 1-7 scale)",
+              "llm_explanation": "string (LLM's detailed reasoning for the assigned proficiency, considering the occupation's demands. If from_occupation was provided, this may include comparative notes.)"
+            }
+            // ... This array will contain one object for each skill in to_occupation.skills
+          ]
+        },
+      }
+      ```
+```
+    - [x] 4.3 Create function get_occupation_and_skills for getting and structuring the data that needs to be passed to 4.2 (generating the prompt for the llm).    
+    - [x] 4.4 Update the @Schema @mysql_init_tables and @mysql_load_tables to initialize tables in the database to store the LLM responses.
+    - [x] 4.5 Create function mysql_load_llm_skill_proficiencies to load LLM assessment results into the database.
+    - [x] 4.6 Create integration tests for the LLM skill proficiency assessment pipeline.
+    - [x] 4.7 Align documentation with the implemented LLM response schema.
+    - [x] 4.8 Create node `llm_skill_proficiency_request.py` to orchestrate the pipeline for a single occupation.
+    - [x] 4.9 Create shell script `llm_skill_proficiency_request.sh` to execute the node.
 
 - [ ] 5.0 **Phase 5: REST API for Skill Gap Analysis (Incorporating On-Demand API Fetching & Caching)**
   - [ ] 5.1 Set up FastAPI framework in `src/api/main.py`.
-  - [ ] 5.2 **NEW (On-Demand):** Define strategy for caching API-fetched data. This includes deciding where (e.g., existing landing tables or new dedicated cache tables) and how (e.g., simple insert on miss, TTL).
-  - [ ] 5.3 **NEW (On-Demand):** Create/Refactor a function, e.g., `ensure_occupation_data_is_present(onet_soc_code: str, engine, api_credentials: dict)` that:
-    - Checks local DB (downstream tables like `Occupations`, `Occupation_Skills`) for the given `onet_soc_code`.
-    - If data is missing or incomplete for the analysis:
-        - Calls the modified API extraction functions (`onet_api_extract_occupation`, `onet_api_extract_skills`, etc.) using `filter_params` to fetch data for the specific `onet_soc_code`.
-        - Loads the fetched data into the API landing tables (e.g., `Onet_Occupations_API_landing`).
-        - Triggers a transformation/population process (similar to `transform.py` node, but targeted for the new data) to move data from landing tables to downstream consumption tables (`Occupations`, `Skills`, `Occupation_Skills`).
-        - Returns a success/failure status for data presence.
-  - [ ] 5.4 **MODIFIED (On-Demand):** Update function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine, api_credentials: dict)` in `src/functions/get_occupation_skills.py`.
-    - Inputs: occupation code, scale ID to filter (e.g., 'LV'), SQLAlchemy engine, API credentials.
-    - Logic:
-        - Call `ensure_occupation_data_is_present()` for the `onet_soc_code`.
-        - If successful, retrieve occupation skills data from local downstream tables.
-    - Outputs: `{"success": bool, "message": str, "result": {"skills_df": pd.DataFrame}}`. Uses `SkillsView` or LLM-enriched data.
-  - [ ] 5.5 Create integration test for the updated `get_occupation_skills`. This test should cover scenarios where data is purely local, and where on-demand API fetching and caching is triggered.
-  - [ ] 5.6 Review `identify_skill_gap.py`. Ensure it takes two DataFrames (from `get_occupation_skills`) as input.
-  - [ ] 5.7 Create/Update integration test for `identify_skill_gap`.
-  - [ ] 5.8 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py` using the functions above. Ensure it passes API credentials (if needed by `get_occupation_skills`) securely.
-  - [ ] 5.9 Create integration test for `/skill-gap` API endpoint.
+  - [ ] 5.2 Create function `ensure_occupation_data_is_present(onet_soc_code: str, engine)` that:
+    - Checks local DB for the given `onet_soc_code`.
+    - If data is missing or incomplete:
+        - Calls `onet_api_pull(onet_soc_code)` to fetch occupation and skills data.
+        - Loads the fetched data into the appropriate tables.
+        - Returns a success/failure status.
+  - [ ] 5.3 Update function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine)` to:
+    - Call `ensure_occupation_data_is_present()` for the `onet_soc_code`.
+    - If successful, retrieve occupation skills data from local tables.
+  - [ ] 5.4 Create integration test for the updated `get_occupation_skills`.
+  - [ ] 5.5 Review `identify_skill_gap.py` and ensure it properly processes the output from `get_occupation_skills`.
+  - [ ] 5.6 Create/Update integration test for `identify_skill_gap`.
+  - [ ] 5.7 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py`.
+  - [ ] 5.8 Create integration test for `/skill-gap` API endpoint.
 
 - [ ] 6.0 **Phase 6: Containerization, Final Testing, and Documentation**
   - [ ] 6.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).

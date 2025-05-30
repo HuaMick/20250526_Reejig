@@ -2,7 +2,7 @@ import os
 from sqlalchemy.orm import sessionmaker
 from typing import Dict, Any
 
-from src.config.schemas import get_sqlalchemy_engine, Occupation
+from src.config.schemas import get_sqlalchemy_engine, Onet_Occupations_Landing
 
 def get_occupation(occupation_code: str) -> Dict[str, Any]:
     """
@@ -28,8 +28,8 @@ def get_occupation(occupation_code: str) -> Dict[str, Any]:
     
     try:
         # Query the occupation data
-        occupation = session.query(Occupation).filter(
-            Occupation.onet_soc_code == occupation_code
+        occupation = session.query(Onet_Occupations_Landing).filter(
+            Onet_Occupations_Landing.onet_soc_code == occupation_code
         ).first()
         
         if not occupation:

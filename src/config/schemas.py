@@ -1,7 +1,7 @@
-from sqlalchemy import create_engine, Column, String, Text, Integer, DECIMAL, Date, ForeignKey, PrimaryKeyConstraint, CHAR, UniqueConstraint
-from sqlalchemy.orm import relationship, declarative_base
 import os
 from typing import Dict
+from sqlalchemy import create_engine, Column, String, Text, Integer, DECIMAL, Date, DateTime, ForeignKey, PrimaryKeyConstraint, CHAR, UniqueConstraint
+from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
@@ -108,7 +108,7 @@ class Onet_Skills_Landing(Base):
     __tablename__ = 'onet_skills_landing'
 
     onet_soc_code = Column(String(20), index=True)
-    element_id = Column(String(20), index=True) # No longer primary key alone
+    element_id = Column(String(20), index=True)
     element_name = Column(String(255), nullable=False)
     scale_id = Column(String(10), index=True)
     data_value = Column(DECIMAL(5, 2), nullable=True)
@@ -143,7 +143,6 @@ class Onet_Scales_Landing(Base):
 
 
 # Downstream normalized tables
-
 class Skills(Base):
     __tablename__ = 'skills'
 
@@ -163,15 +162,46 @@ class Occupation_Skills(Base):
     source = Column(String(50), nullable=False)  # 'text_file', 'api', or 'merged'
     last_updated = Column(Date, nullable=False)
 
-    # Define unique constraint to prevent duplicates
     __table_args__ = (
         PrimaryKeyConstraint('id'),
-        # Adding a unique constraint on onet_soc_code and element_id
-        # to prevent multiple proficiency entries for the same occupation-skill pair
         UniqueConstraint('onet_soc_code', 'element_id', name='uix_occupation_skill'),
         {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_0900_ai_ci"}
     )
 
+class LLM_Skill_Proficiency_Requests(Base):
+    __tablename__ = 'llm_skill_proficiency_requests'
+    request_id = Column(String(36), index=True, nullable=False)
+    request_model = Column(String(255), nullable=False)
+    request_onet_soc_code = Column(String(20), index=True, nullable=False)
+    request_skill_element_id = Column(String(20), index=True, nullable=False)
+    request_skill_name = Column(String(255), nullable=False)
+    request_timestamp = Column(DateTime, nullable=False)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('request_id', 'request_onet_soc_code', 'request_skill_element_id', name='pk_llm_skill_proficiency_requests'),
+        {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_0900_ai_ci"}
+    )
+
+class LLM_Skill_Proficiency_Replies(Base):
+    """
+    Will store LLM responses for skill proficiency levels. 
+    Responses can duplicate if the LLM is asked to assess the same skill for the same occupation.
+    """
+    __tablename__ = 'llm_skill_proficiency_replies'
+
+    request_id = Column(String(36), index=True, nullable=False)
+    llm_onet_soc_code = Column(String(20), index=True, nullable=False)
+    llm_occupation_name = Column(String(255), nullable=False)
+    llm_skill_name = Column(String(255), nullable=False)
+    llm_assigned_proficiency_description = Column(String(255), nullable=True)
+    llm_assigned_proficiency_level = Column(Integer, nullable=True)
+    llm_explanation = Column(Text, nullable=True)
+    assessment_timestamp = Column(DateTime, nullable=False) # Assuming DateTime is imported, similar to Date
+
+    __table_args__ = (
+        PrimaryKeyConstraint('request_id', 'llm_onet_soc_code', 'llm_skill_name', name='pk_llm_skill_proficiency_replies'),
+        {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_0900_ai_ci"}
+    )
 
 # Example function to create an engine (can be used by other scripts)
 # This helps centralize engine creation if needed, though mysql_init_tables will create its own.

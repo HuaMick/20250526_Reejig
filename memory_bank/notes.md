@@ -244,3 +244,65 @@ Memory bank notes work as the working memory of agents.
 - Create integration tests for `onet_api_pull.py`
 - Integrate with the skill gap analysis workflow
 - Implement LLM capability for skill proficiency scoring (for bonus points)
+
+### LLM Skill Proficiency Assessment Pipeline Implementation (as of 2025-05-28)
+
+**1. Schema Updates for LLM Data:**
+   - Added `LLM_Skill_Proficiency_Requests` and `LLM_Skill_Proficiency_Replies` tables to `schemas.py`
+   - Implemented with composite primary keys (`request_id`, `request_onet_soc_code`, `request_skill_element_id`) for requests table
+   - Similar composite key structure for replies table to ensure proper data relationships
+
+**2. Core LLM Pipeline Functions:**
+   - **`get_occupation_and_skills.py`**: Retrieves occupation data and associated skills
+     - Refactored to take a single occupation code and return occupation details with skills
+     - Enhanced to include skill_element_id in output for downstream traceability
+   - **`gemini_llm_prompt.py`**: Generates structured prompts for LLM skill proficiency assessment
+     - Simplified to focus on single occupation analysis rather than "from/to" comparison
+     - Includes comprehensive skill information formatting with proper handling of empty skill lists
+   - **`gemini_llm_request.py`**: Handles API communication with Google's Gemini LLM
+     - Added batch_request_id generation (UUID) for grouping related LLM requests
+     - Structures request and reply data to match database schema requirements
+     - Implements proper datetime handling using timezone-aware timestamps
+   - **`mysql_load_llm_skill_proficiencies.py`**: Loads LLM assessment results into database
+     - Processes output from gemini_llm_request into appropriate DataFrame structures
+     - Handles composite key constraints for both request and reply tables
+     - Includes proper error handling with detailed status reporting
+
+**3. Integration Testing:**
+   - Created comprehensive integration test for the full LLM assessment pipeline
+   - Test covers data retrieval, prompt generation, LLM API call, and result validation
+   - Implemented custom JSON encoders to handle special data types (Decimal, datetime)
+   - Added test for mysql_load_llm_skill_proficiencies with in-memory SQLite database
+   - Created fixture with mock LLM assessment data for consistent testing
+
+**4. Key Challenges Resolved:**
+   - Proper handling of composite primary keys in database schema
+   - JSON processing for LLM responses (removing markdown fences, increasing token limits)
+   - Database type conversion (datetime, Decimal) for proper storage and retrieval
+   - Alignment between prompt structure, LLM response schema, and database tables
+
+**5. Current Pipeline Flow:**
+   1. Retrieve occupation data with skills using `get_occupation_and_skills`
+   2. Generate LLM assessment prompt with `gemini_llm_prompt`
+   3. Make LLM API call using `gemini_llm_request`
+   4. Parse and structure LLM response data
+   5. Store request and response data in database using `mysql_load_llm_skill_proficiencies`
+
+**6. Orchestration Node and Execution Script:**
+   - Created `src/nodes/llm_skill_proficiency_request.py` node.
+     - This node (`assess_skills_for_occupation` function) orchestrates the entire pipeline for a single occupation code:
+       - Fetches occupation details and skills using `get_occupation_and_skills`.
+       - Generates an LLM prompt using `gemini_llm_prompt`.
+       - Makes an API request to the Gemini LLM via `gemini_llm_request`.
+       - Loads the LLM's response into the MySQL database using `mysql_load_llm_skill_proficiencies` and the actual database engine.
+     - The node script is also executable from the command line, accepting an occupation code as an argument.
+   - Created `src/scripts/llm_skill_proficiency_request.sh` shell script.
+     - This script handles environment setup (virtual environment, PYTHONPATH).
+     - Executes the `src/nodes/llm_skill_proficiency_request.py` node, passing an occupation code provided as a command-line argument to the script.
+     - The script has been made executable (`chmod +x`).
+
+**Next Steps:**
+   - Further refinement of LLM prompt for better skill proficiency assessments
+   - Integration with REST API for skill gap analysis
+   - Enhanced error handling and retry mechanisms for API failures
+   - Performance optimization for bulk processing

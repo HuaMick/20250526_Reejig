@@ -1,12 +1,7 @@
-import os
-# import sys # Removed sys.path modification
 from sqlalchemy.orm import sessionmaker
 from typing import Dict, Any, List
 
-# Add project root to sys.path - This line is removed
-# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-from src.config.schemas import get_sqlalchemy_engine, Occupation, OccupationSkill, SkillReference
+from src.config.schemas import get_sqlalchemy_engine, Onet_Occupations_Landing, Occupation_Skills, Skills
 
 def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
     """
@@ -31,8 +26,8 @@ def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
     
     try:
         # Get occupation title first to ensure occupation exists
-        occupation = session.query(Occupation).filter(
-            Occupation.onet_soc_code == occupation_code
+        occupation = session.query(Onet_Occupations_Landing).filter(
+            Onet_Occupations_Landing.onet_soc_code == occupation_code
         ).first()
         
         if not occupation:
@@ -44,14 +39,14 @@ def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
             
         # Get skills data from the OccupationSkills and SkillsReference tables
         skills_query_result = session.query(
-            OccupationSkill.element_id,
-            SkillReference.element_name,
-            OccupationSkill.proficiency_level
+            Occupation_Skills.element_id,
+            Skills.element_name,
+            Occupation_Skills.proficiency_level
         ).join(
-            SkillReference,
-            OccupationSkill.element_id == SkillReference.element_id
+            Skills,
+            Occupation_Skills.element_id == Skills.element_id
         ).filter(
-            OccupationSkill.onet_soc_code == occupation_code
+            Occupation_Skills.onet_soc_code == occupation_code
         ).all()
         
         skills_list: List[Dict[str, Any]] = []

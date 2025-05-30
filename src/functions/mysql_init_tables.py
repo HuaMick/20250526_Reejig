@@ -2,7 +2,6 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 from src.config.schemas import Base # Import your Base and models
-# from src.functions.mysql_connection import get_mysql_connection # No longer needed directly for table creation logic
 
 def initialize_database_tables():
     """

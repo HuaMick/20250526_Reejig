@@ -29,6 +29,10 @@
 
 - I've realised the API filtering doesn't support a not in list of ids. Theres a datestamp, but the extracts I loaded dont have a datestamp. To meet the requirement if a pipeline that uses the API, will need to design a pull pipeline rather then a push, that gets the data ifs not already available. For these requirements I think this architecture makes more sense them spaming the API to try and load hundreds of records. Gemini has suggested we park this, and work on during phase 5 which I think makes sense.
 
+- I've implemented the API calls just to verify my assumptions around their behaviour. Makes sense for the api to scan the database and then leverage the api if it cant find the code. We want the api calls to return the data directly to the analysis so we can respond to the user as fast as possible, then we can store the data in the database for future requests.
+
+- I've successfully been able to use the onet data to generate a prompt to gemini and have it return a structured json. 
+
 ## Project Plan
 
 ### 1. Project Setup

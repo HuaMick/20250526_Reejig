@@ -128,42 +128,43 @@
   - [x] 4.1 Create function gemini_llm_request, it should take a prompt and return the llm response.
   - [x] 4.2 Create function generate_llm_skill_proficiency_prompt for generating the prompt for the llm.         
         
-```python
-parameters:
-occupation_data={onet_id:..., name:..., skills:[{skill_element_id, skill_name:..., proficiency_level:...}], }
+    ```python
+    parameters:
+    occupation_data={onet_id:..., name:..., skills:[{skill_element_id, skill_name:..., proficiency_level:...}], }
 
-returns: """
-  1.  Analyze the skills of the `to_occupation` object provided in the input.
-  2.  For each skill listed in `to_occupation.skills`, determine a proficiency level.
-      The proficiency level should be categorized (e.g., Novice, Beginner, Intermediate,
-      Advanced, Expert) and optionally assigned a numerical score on a defined scale
-      (e.g., 1-5, the prompt can specify this scale).
-  3.  Provide a detailed justification/explanation for each assigned proficiency level. This explanation should be in the context of the `to_occupation`'s typical
-      duties and responsibilities.
-  4.  If a `from_occupation` object is provided, the LLM should consider its skills and
-      proficiencies as context. This might involve commenting on skill transferability,
-      gaps, or how experience in the `from_occupation` might influence the learning
-      curve or proficiency in the `to_occupation`'s skills.
-  5.  Structure its entire response as a single, valid JSON object. The required schema
-      for this JSON object is as follows:
-      ```json
-      {
-        "skill_proficiency_assessment": {
-          "llm_onet_soc_code": "string (O*NET code of the occupation being assessed, i.e., to_occupation)",
-          "llm_occupation_name": "string (Name of the occupation being assessed)",
-          "assessed_skills": [
-            {
-              "llm_skill_name": "string (Name of the skill, from to_occupation.skills.skill_name)",
-              "llm_assigned_proficiency_description": "string (e.g., 'Intermediate', 'Advanced', 'Expert')",
-              "llm_assigned_proficiency_level": "number | null (e.g., 3.5 on a 1-7 scale)",
-              "llm_explanation": "string (LLM's detailed reasoning for the assigned proficiency, considering the occupation's demands. If from_occupation was provided, this may include comparative notes.)"
-            }
-            // ... This array will contain one object for each skill in to_occupation.skills
-          ]
-        },
-      }
-      ```
-```
+    returns: """
+      1.  Analyze the skills of the `to_occupation` object provided in the input.
+      2.  For each skill listed in `to_occupation.skills`, determine a proficiency level.
+          The proficiency level should be categorized (e.g., Novice, Beginner, Intermediate,
+          Advanced, Expert) and optionally assigned a numerical score on a defined scale
+          (e.g., 1-5, the prompt can specify this scale).
+      3.  Provide a detailed justification/explanation for each assigned proficiency level. This explanation should be in the context of the `to_occupation`'s typical
+          duties and responsibilities.
+      4.  If a `from_occupation` object is provided, the LLM should consider its skills and
+          proficiencies as context. This might involve commenting on skill transferability,
+          gaps, or how experience in the `from_occupation` might influence the learning
+          curve or proficiency in the `to_occupation`'s skills.
+      5.  Structure its entire response as a single, valid JSON object. The required schema
+          for this JSON object is as follows:
+          ```json
+          {
+            "skill_proficiency_assessment": {
+              "llm_onet_soc_code": "string (O*NET code of the occupation being assessed, i.e., to_occupation)",
+              "llm_occupation_name": "string (Name of the occupation being assessed)",
+              "assessed_skills": [
+                {
+                  "llm_skill_name": "string (Name of the skill, from to_occupation.skills.skill_name)",
+                  "llm_assigned_proficiency_description": "string (e.g., 'Intermediate', 'Advanced', 'Expert')",
+                  "llm_assigned_proficiency_level": "number | null (e.g., 3.5 on a 1-7 scale)",
+                  "llm_explanation": "string (LLM's detailed reasoning for the assigned proficiency, considering the occupation's demands. If from_occupation was provided, this may include comparative notes.)"
+                }
+                // ... This array will contain one object for each skill in to_occupation.skills
+              ]
+            },
+          }
+          ```
+    """
+    ```
     - [x] 4.3 Create function get_occupation_and_skills for getting and structuring the data that needs to be passed to 4.2 (generating the prompt for the llm).    
     - [x] 4.4 Update the @Schema @mysql_init_tables and @mysql_load_tables to initialize tables in the database to store the LLM responses.
     - [x] 4.5 Create function mysql_load_llm_skill_proficiencies to load LLM assessment results into the database.
@@ -188,12 +189,15 @@ returns: """
 ```
   - [x] 5.5 Create function `get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str)`:
     - **IMPLEMENTATION NOTE:** Successfully implemented to identify skills present in target occupation but missing in source occupation. Function filters out skills with proficiency level 0 to ensure meaningful comparisons. Integration tests verify functionality with different occupation combinations.
+    
     ```python
     # parameters: from_onet_soc_code, to_onet_soc_code
     # returns: [skill_name,...] # list of skills required by the second occupation that are not present in the first
     ```
+    
   - [x] 5.6 Implement function `get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str)` to ensure it works with the latest schema:
     - **IMPLEMENTATION NOTE:** Successfully implemented to identify both missing skills and skills with higher proficiency requirements in the target occupation. Function utilizes get_occupation_and_skills with API fallback capability and the identify_skill_gap function for detailed analysis. Comprehensive integration tests verify all functionality.
+    
     ```python
     # parameters: from_onet_soc_code, to_onet_soc_code
     # returns: [{element_id:..., skill_name:..., from_proficiency_level:..., to_proficiency_level:...},{}] # list of skills required by the second occupation that the first occupation either does not have or where the proficiency level is lower than in the second occupation.
@@ -215,54 +219,80 @@ returns: """
   - [x] 5.11 Create/Update integration test for `identify_skill_gap` (or the new gap functions).
     - **IMPLEMENTATION NOTE:** Comprehensive integration tests were created for both `get_skills_gap` and `get_skills_gap_by_lvl` functions in previous tasks.
   
-  - [x] 5.12 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py`. This endpoint should:
-    - Utilize the functions from 5.5 and/or 5.6, preferably the more comprehensive `get_skills_gap_by_lvl` function.
-    - Transform the internal skill gap data structure to match exactly the API response format specified in the PRD's FR4.3.
-    - **IMPLEMENTATION NOTE:** Successfully implemented the `/skill-gap` endpoint with both basic and enhanced functionality. The endpoint supports a query parameter `include_proficiency` to toggle between simple skill name list and detailed proficiency-level analysis. The response format matches the specified requirements.
+  - [x] 5.12 Implement separate endpoints for skill gap analysis in `src/api/routers/skill_gap.py`:
+    - `GET /skill-gap` endpoint for basic skill gap (skill names only)
+    - `GET /skill-gap-by-lvl` endpoint for detailed skill gap with proficiency levels
+    - Both endpoints should transform the internal skill gap data structure to match exactly the API response format specified in the PRD's FR4.3.
+    - **IMPLEMENTATION NOTE:** Successfully refactored the API to use separate endpoints for basic and detailed skill gap analysis. The `/skill-gap` endpoint returns a simple list of skill names, while the `/skill-gap-by-lvl` endpoint provides detailed proficiency information. This provides clearer API design and makes future changes easier.
   
   - [x] 5.13 Create integration test for `/skill-gap` API endpoint.
     - **IMPLEMENTATION NOTE:** Created comprehensive integration tests in `tests/test_api_skill_gap.py` that verify all functionality of the endpoint, including basic skill gap, proficiency-level skill gap, same occupation comparison, and error handling for invalid occupation codes.
 
-- [x] 6.0 **Phase 6: Containerization, Final Testing, and Documentation**
-  - [x] 6.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).
+- [ ] 6.0 **Phase 6: Automated Testing Suite**
+  - [ ] 6.1 Setup a test env with a postgresql database, this can act as a clean room for our automated tests to run in.
+  - [ ] 6.2 Review existing integration tests and adapt them for the automated testing suite.
+    - Review each test and determine if it should be included or moved to tests/archive folder
+    - Update tests to work in isolation by leveraging existing functions to create mock assets
+    - Ensure tests use consistent mock occupation data so they can be used for end-to-end testing
+  - [ ] 6.3 Review functions and create any missing integration tests.
+  - [ ] 6.4 Test each integration test in isolation using the test env with the postgresql database.
+  - [ ] 6.5 Review all functions and see if we can remove any redundancies and make the code simpler and shorter if possible. See if the config api_exception_handles can be used to remove unnecessary exception handling.
+  - [ ] 6.6 Rerun all the integration functions.
+  - [ ] 6.7 Create an end to end integration test, this test should chain database creation, table initiation, loading the data to generating the skill gaps. Will leave the llm component out for now as that has not been implemented yet.
+
+- [x] 7.0 **Phase 7: Containerization, Final Testing, and Documentation**
+  - [x] 7.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).
     - **IMPLEMENTATION NOTE:** Enhanced the existing Docker Compose file to include API and ETL services alongside the MySQL database. Added proper dependency configuration to ensure services start in the correct order, with the ETL pipeline running after the database is healthy, and the API server dependent on the database. Set up appropriate networking, environment variables, and volume mounts.
   
-  - [x] 6.2 Create/Update `Dockerfile.api`, `Dockerfile.etl`.
+  - [x] 7.2 Create/Update `Dockerfile.api`, `Dockerfile.etl`.
     - **IMPLEMENTATION NOTE:** Created Dockerfile.api for the REST API service using a Python 3.12 slim image, with appropriate environment variable configuration and uvicorn server setup. Created Dockerfile.etl for the ETL pipeline with a shell script that runs the full data processing sequence (extract_load_text_files, extract_load_api, transform) and exits when complete.
   
-  - [x] 6.3 Finalize `requirements.txt`.
-    - **IMPLEMENTATION NOTE:** The requirements.txt file was already complete with all necessary dependencies for the project.
+  - [x] 7.3 Ensure all integration tests pass in Docker environment.
   
-  - [x] 6.4 Ensure all integration tests pass in Docker environment.
-    - **IMPLEMENTATION NOTE:** Fixed the API integration test that was failing due to an XML parsing error from the O*NET API. Updated the test to accept either a 404 or 500 status code for invalid occupation codes, with verification of the error message content. All integration tests now pass successfully.
-  
-  - [ ] 6.5 Update `README.md` (full setup, schema, data flow, API examples, design decisions).
+  - [ ] 7.4 Test the API when deployed locally.
+    - **NOTE TO DEVELOPER:** Deploy the application locally using Docker and manually test the API endpoints to ensure they're working correctly with real data.
 
-- [ ] 7.0 **Phase 7: LLM-Enhanced Skill Gap Analysis (OPTIONAL)**
-  - [ ] 7.1 Create a new function `get_skills_gap_with_llm_descriptions` that:
+  - [ ] 7.5 Update `README.md` (full setup, schema, data flow, API examples, design decisions).
+
+- [ ] 8.0 **Phase 8: Cloud Deployment (OPTIONAL)**
+  - [ ] 8.1 Create cloud deployment configuration for GCP Cloud Run
+    - [ ] Prepare production-ready Docker image with proper security hardening
+    - [ ] Set up environment variables for GCP Cloud Run deployment
+    - [ ] Configure proper networking and security settings
+  - [ ] 8.2 Set up CI/CD pipeline for automated deployment
+    - [ ] Configure GitHub Actions or Cloud Build workflow
+    - [ ] Implement testing as part of the deployment pipeline
+    - [ ] Set up monitoring and alerting
+  - [ ] 8.3 Document cloud deployment process and maintenance procedures
+    - [ ] Create deployment runbook
+    - [ ] Document rollback procedures
+    - [ ] Add monitoring dashboard setup instructions
+
+- [ ] 9.0 **Phase 9: LLM-Enhanced Skill Gap Analysis (OPTIONAL)**
+  - [ ] 9.1 Create a new function `get_skills_gap_with_llm_descriptions` that:
     - Uses the existing LLM skill assessment to get proficiency data for both occupations
     - Compares LLM-assigned proficiency levels to identify gaps
     - Generates detailed descriptions for each gap via additional LLM calls
-  - [ ] 7.2 Enhance the API endpoint to optionally include LLM-generated gap descriptions
+  - [ ] 9.2 Enhance the API endpoint to optionally include LLM-generated gap descriptions
     - Add a query parameter (e.g., `?include_llm_descriptions=true`) to request the enhanced output
     - Implement a fallback to standard gap analysis if LLM processing fails
-  - [ ] 7.3 Update documentation to include this advanced feature
+  - [ ] 9.3 Update documentation to include this advanced feature
     - Add examples of both standard and LLM-enhanced API responses
     - Document performance and cost considerations
-  - [ ] 7.4 Create integration tests for the LLM-enhanced skill gap analysis 
+  - [ ] 9.4 Create integration tests for the LLM-enhanced skill gap analysis 
 
-- [ ] 8.0 **Phase 8: API Data Normalization Pipeline (OPTIONAL/OUT OF SCOPE)**
-  - [ ] 8.1 Design and implement an ETL pipeline for API data
+- [ ] 10.0 **Phase 10: API Data Normalization Pipeline (OUT OF SCOPE)**
+  - [ ] 10.1 Design and implement an ETL pipeline for API data
     - Create transformation functions to convert API landing table data to normalized schema
     - Implement deduplication and data quality checks
     - Add incremental loading capability to avoid duplicating data
-  - [ ] 8.2 Create scheduling for periodic API data normalization
+  - [ ] 10.2 Create scheduling for periodic API data normalization
     - Implement a schedule to run the normalization pipeline at regular intervals
     - Add logging and monitoring for the scheduled process
-  - [ ] 8.3 Create integration tests for the normalization pipeline
+  - [ ] 10.3 Create integration tests for the normalization pipeline
     - Test data transformation accuracy
     - Test incremental loading functionality
     - Test error handling and recovery
-  - [ ] 8.4 Update documentation with details on the normalization process
-    - **IMPLEMENTATION NOTE:** While the on-demand API fetching with caching currently stores data in landing tables, a full ETL pipeline to normalize this data into the core tables would be a valuable future enhancement. This was deprioritized as we've already demonstrated API data fetching capability, and the current implementation is sufficient for the skill gap analysis features. Additionally, this would benefit from further product design input before implementation. 
+  - [ ] 10.4 Update documentation with details on the normalization process
+    - **IMPLEMENTATION NOTE:** While the on-demand API fetching with caching currently stores data in landing tables, a full ETL pipeline to normalize this data into the core tables would be a valuable future enhancement. This was deprioritized as we've already demonstrated API data fetching capability, and the current implementation is sufficient for the skill gap analysis features. Additionally, this would benefit from further product design input before implementation.
         

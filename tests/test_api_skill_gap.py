@@ -58,16 +58,16 @@ def test_skill_gap_endpoint_basic(check_api_credentials):
     if response.json()["skill_gaps"]:
         assert isinstance(response.json()["skill_gaps"][0], str)
 
-def test_skill_gap_endpoint_with_proficiency(check_api_credentials):
-    """Test the skill gap endpoint with proficiency levels."""
+def test_skill_gap_by_level_endpoint(check_api_credentials):
+    """Test the skill gap by level endpoint with proficiency levels."""
     # Using occupation codes identified by the user as having different skills
     from_occupation = "11-1011.00"  # Chief Executives
     to_occupation = "11-2021.00"    # Marketing Managers
     
-    response = client.get(f"/api/v1/skill-gap?from_occupation={from_occupation}&to_occupation={to_occupation}&include_proficiency=true")
+    response = client.get(f"/api/v1/skill-gap-by-lvl?from_occupation={from_occupation}&to_occupation={to_occupation}")
     
     # Print the response for debugging
-    print("\nAPI Test Results - Skill Gap with Proficiency:")
+    print("\nAPI Test Results - Skill Gap By Level:")
     print(f"Status Code: {response.status_code}")
     print(f"Response: {response.json()}")
     
@@ -99,7 +99,18 @@ def test_skill_gap_endpoint_same_occupation(check_api_credentials):
     response = client.get(f"/api/v1/skill-gap?from_occupation={occupation}&to_occupation={occupation}")
     
     # Print the response for debugging
-    print("\nAPI Test Results - Same Occupation:")
+    print("\nAPI Test Results - Same Occupation (Basic):")
+    print(f"Status Code: {response.status_code}")
+    print(f"Response: {response.json()}")
+    
+    # Assertions
+    assert response.status_code == 200
+    assert len(response.json()["skill_gaps"]) == 0
+    
+    # Also test the skill-gap-by-lvl endpoint with same occupation
+    response = client.get(f"/api/v1/skill-gap-by-lvl?from_occupation={occupation}&to_occupation={occupation}")
+    
+    print("\nAPI Test Results - Same Occupation (By Level):")
     print(f"Status Code: {response.status_code}")
     print(f"Response: {response.json()}")
     
@@ -112,10 +123,11 @@ def test_skill_gap_endpoint_invalid_occupation():
     from_occupation = "99-9999.99"  # Invalid code
     to_occupation = "11-1011.00"    # Chief Executives
     
+    # Test basic endpoint
     response = client.get(f"/api/v1/skill-gap?from_occupation={from_occupation}&to_occupation={to_occupation}")
     
     # Print the response for debugging
-    print("\nAPI Test Results - Invalid Occupation:")
+    print("\nAPI Test Results - Invalid Occupation (Basic):")
     print(f"Status Code: {response.status_code}")
     print(f"Response: {response.json()}")
     
@@ -124,4 +136,15 @@ def test_skill_gap_endpoint_invalid_occupation():
     assert response.status_code in [404, 500], f"Expected status code 404 or 500, got {response.status_code}"
     
     # Verify error message contains relevant information
-    assert "occupation" in response.json()["detail"].lower(), "Error message should mention the occupation issue" 
+    assert "occupation" in response.json()["detail"].lower(), "Error message should mention the occupation issue"
+    
+    # Test by-level endpoint
+    response = client.get(f"/api/v1/skill-gap-by-lvl?from_occupation={from_occupation}&to_occupation={to_occupation}")
+    
+    print("\nAPI Test Results - Invalid Occupation (By Level):")
+    print(f"Status Code: {response.status_code}")
+    print(f"Response: {response.json()}")
+    
+    # Assertions
+    assert response.status_code in [404, 500]
+    assert "occupation" in response.json()["detail"].lower() 

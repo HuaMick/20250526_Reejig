@@ -17,6 +17,59 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - onet-network
+
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile.etl
+    container_name: onet_etl
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./database:/app/database # Mount database files
+      - ./env:/app/env # Mount environment files
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-onet_data}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - ONET_USERNAME=${ONET_USERNAME}
+      - ONET_PASSWORD=${ONET_PASSWORD}
+    networks:
+      - onet-network
+    # Entry point set in Dockerfile.etl - will run the ETL pipeline once and exit
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: onet_api
+    ports:
+      - "8000:8000" # Expose API port to the host
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-onet_data}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - ONET_USERNAME=${ONET_USERNAME}
+      - ONET_PASSWORD=${ONET_PASSWORD}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    restart: unless-stopped
+    networks:
+      - onet-network
 
 volumes:
   mysql_data: # Define the named volume for persistence 
+
+networks:
+  onet-network:
+    driver: bridge 

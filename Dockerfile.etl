@@ -1,0 +1,41 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Copy requirements file and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire codebase
+COPY . .
+
+# Set environment variables
+ENV PYTHONPATH=/app
+
+# Create a shell script to run the ETL pipeline
+RUN echo '#!/bin/bash\n\
+echo "Starting ETL pipeline..."\n\
+\n\
+# Initialize database tables\n\
+python -m src.nodes.extract_load_text_files\n\
+\n\
+# Extract and load data from API if needed\n\
+python -m src.nodes.extract_load_api\n\
+\n\
+# Transform data for consumption\n\
+python -m src.nodes.transform\n\
+\n\
+echo "ETL pipeline completed."\n\
+' > /app/run_etl.sh \
+&& chmod +x /app/run_etl.sh
+
+# Command to run the ETL pipeline
+CMD ["/app/run_etl.sh"]
+
+# Create a directory for entrypoint scripts
+RUN mkdir -p /app/docker-entrypoint-scripts
+COPY docker-entrypoint-etl.sh /app/docker-entrypoint-scripts/
+RUN chmod +x /app/docker-entrypoint-scripts/docker-entrypoint-etl.sh
+
+# Entrypoint will be the script that runs the ETL pipeline
+ 

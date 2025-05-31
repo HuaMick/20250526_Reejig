@@ -506,3 +506,41 @@ Memory bank notes work as the working memory of agents.
      - Verify each change with integration tests against the test database
 
 The next session will focus on implementing this refactoring plan systematically, starting with the core infrastructure functions.
+
+### Test Suite Implementation (as of 2025-06-12)
+
+**1. Integration Test Suite Scripts:**
+   - Implemented two approaches for running the full integration test suite:
+     - `tests/test_suite/run_test_suite.sh`: Runs all integration tests directly using pytest.
+     - `tests/test_suite/run_test_suite_using_sh.sh`: Executes each individual test's `.sh` script sequentially.
+   
+**2. Key Test Suite Features:**
+   - **Direct pytest approach (`run_test_suite.sh`):**
+     - Simple, streamlined execution of all integration tests with a single pytest command.
+     - Activates virtual environment and sources environment variables.
+     - Uses pytest's `-v` (verbose) and `-s` (show print statements) flags for detailed output.
+     - More efficient but may encounter issues with test isolation or environment setup.
+   
+   - **Individual script approach (`run_test_suite_using_sh.sh`):**
+     - Runs each test's corresponding `.sh` script sequentially.
+     - Ensures each test gets the exact environment setup it expects (as defined in its dedicated script).
+     - Adds a 2-second pause between tests to allow resources to settle.
+     - More reliable for tests that depend on specific shell script setup steps.
+     - Provides clear separation between test execution contexts.
+
+**3. Transaction Isolation Issue Resolution:**
+   - Identified and fixed a transaction isolation issue in `tests/test_integration_mysql_load.py`.
+   - Problem: The test was loading data with SQLAlchemy (which correctly committed transactions) but then using a separate `mysql.connector` connection for verification, which couldn't see the committed data.
+   - Solution: Added `autocommit=True` to the verification connection parameters to ensure it sees the latest committed data.
+   - This fixed the "Row count mismatch" error where the test reported 0 rows when checking tables that should have contained data.
+
+**4. Best Practices Established:**
+   - Always ensure database verification connections use `autocommit=True` when checking data loaded by separate connections.
+   - For complex tests with extensive setup requirements, prefer using individual `.sh` scripts.
+   - When running multiple tests sequentially, consider adding short pauses between them to ensure resources settle.
+   - For tests that interact with external services or databases, explicitly manage connection state to avoid isolation issues.
+
+**Next Steps for Testing Framework:**
+   - Continue the database engine refactoring to consistently pass engine parameters through all functions.
+   - Implement test fixtures that properly isolate test data from production data.
+   - Consider implementing more comprehensive cleanup procedures to ensure tests don't interfere with each other.

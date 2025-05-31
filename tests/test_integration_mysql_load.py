@@ -128,7 +128,10 @@ class TestMySQLLoadWithoutFixtures:
         
         try:
             import mysql.connector
-            connection = mysql.connector.connect(**test_db_config)
+            # Ensure autocommit is True for the verification connection
+            connection_params = test_db_config.copy()
+            connection_params['autocommit'] = True
+            connection = mysql.connector.connect(**connection_params)
             cursor = connection.cursor(dictionary=True)
             
             print("\n--- Verifying Table Data (Counts and Sample) ---")

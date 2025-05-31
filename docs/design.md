@@ -58,3 +58,5 @@ group by 1
 - I've setup a proper test env with a database. All the current integration tests I've been using for development hit the one database (which is sort of dev and prod at the same time atm). However all the functions have no way to swap out the db so I'll need to refactor the functions to swap in the test db config somehow.
 
 - I've finished refactoring the functions, had limited success with the agent here, so was a bit of pain. I've commenced testing each of the integration tests, (again limited success with the agent here, but its done the bulk of the work for me so far, so cant complain too much.)
+
+- I've setup a test_suite after reviewing all the integration tests (except for the llm ones). I'm running short on time so will push toward docker deployment and api setup. For some reason one of the tests keep failing when using pytest to run the suite, however when executing the tests one by one in order they all pass. Rather then get hung up on this I've opted to just create a shell script that just executes everything in order using it's allocated sh script rather then using pyest.

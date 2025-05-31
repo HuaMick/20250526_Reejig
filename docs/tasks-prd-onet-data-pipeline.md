@@ -235,21 +235,28 @@
 
 - [x] 6.0 **Phase 6: Automated Testing Suite**
   - [x] 6.1 Setup a test env with a mysql database, this can act as a clean room for our automated tests to run in.
-  - [ ] 6.2 Review and refactor integration tests for the automated testing suite:
+  - [x] 6.2 Review and refactor integration tests for the automated testing suite:
+    - [x] 6.2.1 `test_integration_get_skills_gap_by_lvl.py`
+    - [x] 6.2.2 `test_integration_get_skills_gap.py`
     - [x] 6.2.3 `test_integration_mysql_create_db.py` 
-    - [x] 6.2.3 `test_integration_mysql_init_tables.py` 
-    - [x] 6.2.4 `test_integration_mysql_connection.py`
-    - [x] 6.2.3 `test_integration_mysql_load.py` 
-    - [x] 6.2.3 `test_integration_transform.py` 
+    - [x] 6.2.4 `test_integration_mysql_init_tables.py` 
+    - [x] 6.2.5 `test_integration_mysql_load.py` 
+    - [x] 6.2.6 `test_integration_transform.py` 
+    - [x] 6.2.7 `test_integration_mysql_connection.py`
+    - [ ] 6.2.9 `test_integration_llm_skill_assessment_pipeline.py`
+    - [ ] 6.2.10 `test_integration_gemini_llm_prompt.py`
+    - [ ] 6.2.11 `test_integration_gemini_llm_request.py`
     - [x] 6.2.12 `test_integration_api_extract_load_skills.py` 
     - [x] 6.2.14 `test_integration_api_extract_load_occupations.py`
     - [x] 6.2.16 `test_integration_get_occupation_and_skills_api_fallback.py`
     - [x] 6.2.16 `test_integration_get_occupation_skills.py`
-    - [x] 6.2.2 `test_integration_get_skills_gap.py`
-    - [x] 6.2.1 `test_integration_get_skills_gap_by_lvl.py`
-    - [ ] 6.2.10 `test_integration_gemini_llm_prompt.py`
-    - [ ] 6.2.11 `test_integration_gemini_llm_request.py`
-    - [ ] 6.2.9 `test_integration_llm_skill_assessment_pipeline.py`
+  - [x] 6.3 Create automated test suite scripts:
+    - [ ] ~~6.3.1 Implement `tests/test_suite/run_test_suite.sh` to run all integration tests directly using pytest.~~
+    - [x] 6.3.2 Implement `tests/test_suite/run_test_suite_using_sh.sh` to run each test's individual `.sh` script sequentially.
+    - [x] 6.3.3 Add a pause between tests in the sequential script to ensure resources settle.
+  - [x] 6.4 Fix transaction isolation issues in database verification:
+    - [x] 6.4.1 Update `tests/test_integration_mysql_load.py` to use `autocommit=True` for the verification connection.
+    - [x] 6.4.2 Document best practices for database verification in tests.
 
 - [x] 7.0 **Phase 7: Containerization, Final Testing, and Documentation**
   - [x] 7.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).

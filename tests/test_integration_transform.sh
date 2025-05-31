@@ -18,8 +18,8 @@ export MYSQL_TEST_DATABASE=${MYSQL_TEST_DATABASE:-"onet_test_db"}
 echo "Using test database: $MYSQL_TEST_DATABASE"
 
 # Run the test with -s flag to show print statements and -v for verbose output
-echo "Running integration test for get_occupation_skills function..."
-python -m pytest tests/test_integration_get_occupation_skills.py -v -s
+echo "Running integration test for transform node..."
+python -m pytest tests/test_integration_transform.py -v -s
 
 # Capture the exit code
 exit_code=$?

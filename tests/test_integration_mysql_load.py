@@ -11,13 +11,11 @@ from src.functions.extract_onet_data import extract_onet_data
 from src.functions.mysql_connection import get_mysql_connection
 from src.config.schemas import get_sqlalchemy_engine, Onet_Occupations_Landing, Onet_Skills_Landing, Onet_Scales_Landing
 from src.functions.mysql_init_tables import initialize_database_tables
-
-# Mark all tests in this file as using the test database
-pytestmark = pytest.mark.usefixtures("use_test_db")
+from tests.fixtures.db_config import test_db_config
 
 class TestMySQLLoadWithoutFixtures:
 
-    def test_load_actual_data_end_to_end(self, test_db_engine):
+    def test_load_actual_data_end_to_end(self, test_db_config):
         """
         Test the entire ETL flow from data extraction to loading using the test database.
         
@@ -29,10 +27,15 @@ class TestMySQLLoadWithoutFixtures:
         5. Verifies the data was loaded correctly
         """
         print("\nRunning test_load_actual_data_end_to_end with test database...")
-        print(f"Using database: {os.environ.get('MYSQL_DATABASE')}")
+        print(f"Using database: {test_db_config['database']}")
 
-        # 1. Use the test_db_engine fixture instead of creating a new engine
-        engine = test_db_engine
+        engine = get_sqlalchemy_engine(
+            db_name=test_db_config['database'],
+            db_user=test_db_config['user'],
+            db_password=test_db_config['password'],
+            db_host=test_db_config['host'],
+            db_port=test_db_config['port']
+        )
         print("Using test database engine from fixture.")
 
         # 2. Initialize database tables with the test engine

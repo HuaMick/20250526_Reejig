@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e # Exit immediately if a command exits with a non-zero status.
 
-# This script is designed to be run from the project root directory.
+# Navigate to the project root directory
+cd "$(dirname "$0")/.."
 
 # Activate the virtual environment if it exists
 if [ -d ".venv" ]; then
@@ -9,7 +10,6 @@ if [ -d ".venv" ]; then
     source .venv/bin/activate
 else
     echo "Virtual environment .venv not found. Please ensure it is created and dependencies are installed."
-    # exit 1 # Optionally exit if venv is critical, or proceed if system python is acceptable for some cases.
 fi
 
 # Apply environment variables from env/env.env if it exists
@@ -20,9 +20,10 @@ else
     echo "Warning: Environment file env/env.env not found. API credentials might be missing."
 fi
 
-# Add project root to PYTHONPATH to ensure modules are found
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
-echo "PYTHONPATH set to: $PYTHONPATH"
+# Make sure we're using the test database
+echo "Setting up test database environment..."
+export MYSQL_TEST_DATABASE=${MYSQL_TEST_DATABASE:-"onet_test_db"}
+echo "Using test database: $MYSQL_TEST_DATABASE"
 
 # Define the test file and function
 TEST_FILE="tests/test_integration_api_extract_load_occupations.py"

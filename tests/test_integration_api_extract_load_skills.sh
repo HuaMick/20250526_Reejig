@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e # Exit immediately if a command exits with a non-zero status.
 
-# This script is designed to be run from the project root directory.
+# Navigate to the project root directory
+cd "$(dirname "$0")/.."
 
 # Activate the virtual environment if it exists
 if [ -d ".venv" ]; then
@@ -18,6 +19,11 @@ if [ -f "env/env.env" ]; then
 else
     echo "Warning: Environment file env/env.env not found. API credentials might be missing."
 fi
+
+# Make sure we're using the test database
+echo "Setting up test database environment..."
+export MYSQL_TEST_DATABASE=${MYSQL_TEST_DATABASE:-"onet_test_db"}
+echo "Using test database: $MYSQL_TEST_DATABASE"
 
 # Add project src to PYTHONPATH to ensure modules are found
 export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"

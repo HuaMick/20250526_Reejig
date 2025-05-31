@@ -1,18 +1,22 @@
 import os
 import logging
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
-import sys # Import sys to get stderr for the handler
+import sys
+import pytest
 
-from functions.onet_api_extract_occupation import onet_api_extract_occupation
+# Ensure imports use full paths from project root
+from src.functions.onet_api_extract_occupation import onet_api_extract_occupation
 from src.functions.mysql_load_table import load_data_from_dataframe
-import src.config.schemas as schemas # To access the model and Base
+import src.config.schemas as schemas
+
+from src.config.schemas import get_sqlalchemy_engine
+from tests.fixtures.db_config import test_db_config
 
 # Configure specific logger for this test module
-logger = logging.getLogger(__name__) # Using __name__ is good practice for module-specific logger
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-# Add a stream handler to output to stderr, which pytest -s will show
 if not logger.handlers:
     handler = logging.StreamHandler(sys.stderr)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(funcName)s - %(message)s')
@@ -23,13 +27,18 @@ if not logger.handlers:
 TEST_ONET_SOC_CODE = "15-1254.00"  # Web Developers
 EXPECTED_TITLE_CONTAINS = "Web Developers"
 
-def test_extract_and_load_filtered_api_occupation():
+def test_extract_and_load_filtered_api_occupation(test_db_config):
     """
     Integration test for extracting a single O*NET API occupation by onet_soc_code
-    and loading it into the Onet_Occupations_API_landing table.
-    Uses an in-memory SQLite database for testing.
+    and loading it into the Onet_Occupations_API_landing table in the MySQL test database.
+    
+    This test:
+    1. Extracts occupation data for Web Developers from the O*NET API
+    2. Loads the data into the Onet_Occupations_API_landing table in the test database
+    3. Verifies the loaded data with SQL queries
     """
     logger.info(f"Starting integration test for filtered occupation: {TEST_ONET_SOC_CODE}")
+    logger.info(f"Using test database: {test_db_config['database']}")
 
     onet_username = os.getenv("ONET_USERNAME")
     onet_password = os.getenv("ONET_PASSWORD")
@@ -71,36 +80,58 @@ def test_extract_and_load_filtered_api_occupation():
     else:
         assert False, "API extraction returned an unexpectedly empty DataFrame for a specific code."
 
-    logger.info("Setting up in-memory SQLite database and creating table...")
-    engine = create_engine("sqlite:///:memory:")
-    schemas.Base.metadata.create_all(engine)
-    logger.info(f"Table '{schemas.Onet_Occupations_API_landing.__tablename__}' created in in-memory SQLite database.")
+    # Create engine for test database
+    engine = get_sqlalchemy_engine(
+        db_name=test_db_config['database'],
+        db_user=test_db_config['user'],
+        db_password=test_db_config['password'],
+        db_host=test_db_config['host'],
+        db_port=test_db_config['port']
+    )
 
-    logger.info(f"Attempting to load DataFrame into '{schemas.Onet_Occupations_API_landing.__tablename__}' table...")
+    # Get the table name for logging clarity
+    table_name = schemas.Onet_Occupations_API_landing.__tablename__
+    logger.info(f"Attempting to load occupation DataFrame into '{table_name}' table in {test_db_config['database']}...")
     
+    # Optional: Clear existing data for this occupation code before loading
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    try:
+        clear_stmt = text(f"DELETE FROM {table_name} WHERE onet_soc_code = :code")
+        result = session.execute(clear_stmt, {"code": TEST_ONET_SOC_CODE})
+        session.commit()
+        logger.info(f"Cleared existing data for {TEST_ONET_SOC_CODE} from {table_name}")
+    except Exception as e:
+        logger.warning(f"Could not clear existing data: {str(e)}")
+        session.rollback()
+    finally:
+        session.close()
+    
+    # Load the data into the test database
     load_result = load_data_from_dataframe(
         df=occupations_df,
         model=schemas.Onet_Occupations_API_landing,
         engine=engine,
-        clear_existing=True 
+        clear_existing=False  # We already cleared specific data for this occupation
     )
 
     records_loaded = load_result.get("result", {}).get("records_loaded", 0)
-    logger.info(f"Load Data Result: Success={load_result['success']}, Message='{load_result['message']}', Records Loaded={records_loaded}")
-    assert load_result["success"], f"Failed to load data into database: {load_result['message']}"
+    logger.info(f"Load Occupation Data Result: Success={load_result['success']}, Message='{load_result['message']}', Records Loaded={records_loaded}")
+    assert load_result["success"], f"Failed to load occupation data into database: {load_result['message']}"
     assert records_loaded == 1, f"Expected 1 record to be loaded, but {records_loaded} were."
 
-    logger.info("Verifying data in the in-memory database...")
-    Session = sessionmaker(bind=engine)
+    # Verify the loaded data
+    logger.info(f"Verifying occupation data in {test_db_config['database']} database...")
     session = Session()
     try:
-        count_query = text(f"SELECT COUNT(*) FROM {schemas.Onet_Occupations_API_landing.__tablename__}")
-        record_count = session.execute(count_query).scalar_one()
-        logger.info(f"Found {record_count} records in '{schemas.Onet_Occupations_API_landing.__tablename__}' table after load.")
-        assert record_count == 1, f"Database record count ({record_count}) does not match expected (1) after load."
+        # Verify count of loaded occupation for the specific onet_soc_code
+        stmt_occ_count = text(f"SELECT COUNT(*) FROM {table_name} WHERE onet_soc_code = :code")
+        record_count = session.execute(stmt_occ_count, {"code": TEST_ONET_SOC_CODE}).scalar_one()
+        logger.info(f"Found {record_count} occupation record(s) in DB for {TEST_ONET_SOC_CODE}.")
+        assert record_count == 1, f"Database occupation record count ({record_count}) for {TEST_ONET_SOC_CODE} does not match expected (1)."
 
         # Using text() for parameterization in read_sql is safer
-        stmt = text(f"SELECT title FROM {schemas.Onet_Occupations_API_landing.__tablename__} WHERE onet_soc_code = :code")
+        stmt = text(f"SELECT title FROM {table_name} WHERE onet_soc_code = :code")
         first_row_df = pd.read_sql(stmt, engine, params={"code": TEST_ONET_SOC_CODE})
         logger.info(f"Row from database for {TEST_ONET_SOC_CODE}:\n{first_row_df.to_string()}")
         assert not first_row_df.empty, f"No record found in DB for {TEST_ONET_SOC_CODE}"
@@ -108,8 +139,13 @@ def test_extract_and_load_filtered_api_occupation():
         assert 'title' in first_row_df.columns, "'title' column not found in DataFrame loaded from DB."
         assert EXPECTED_TITLE_CONTAINS.lower() in first_row_df.iloc[0]['title'].lower(), f"Title in DB does not contain '{EXPECTED_TITLE_CONTAINS}'"
 
+        # Show table statistics
+        stmt_table_stats = text(f"SELECT COUNT(*) as total_records FROM {table_name}")
+        total_records = session.execute(stmt_table_stats).scalar_one()
+        logger.info(f"Total records in {table_name}: {total_records}")
+
     finally:
         session.close()
         
-    logger.info(f"SUMMARY: Successfully extracted and loaded 1 row for {TEST_ONET_SOC_CODE} ('{EXPECTED_TITLE_CONTAINS}') into '{schemas.Onet_Occupations_API_landing.__tablename__}'.")
+    logger.info(f"SUMMARY: Successfully extracted and loaded 1 occupation record for {TEST_ONET_SOC_CODE} ('{EXPECTED_TITLE_CONTAINS}') into '{table_name}' in {test_db_config['database']}.")
     logger.info("Integration test for filtered occupation finished successfully.") 

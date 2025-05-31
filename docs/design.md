@@ -54,3 +54,7 @@ group by 1
 - I've implemented both a skills gap and a skills gap by lvl feature. I also reflected on how we could use the LLM here, theres some interesting possibilities, however its probably more important to finish off the deployment and then loop back so I've added my ideas as a bonus implementation phase in the task list. 
 
 - I've reflected on the API pull feature for data, it would ideally have a pipeline for the data to move from the API landing tables into the normalized tables. However I don't think I should bother with this for this assessment as it doesn't really demonstrate any additional capability I havn't already shown, also ussually i would want to get more feedback from the product designer before implementing this, we already implemented and proved we can hit the api and collect data. I'll add it to the tasks list and mark it as optional future implementation.
+
+- I've setup a proper test env with a database. All the current integration tests I've been using for development hit the one database (which is sort of dev and prod at the same time atm). However all the functions have no way to swap out the db so I'll need to refactor the functions to swap in the test db config somehow.
+
+- I've finished refactoring the functions, had limited success with the agent here, so was a bit of pain. I've commenced testing each of the integration tests, (again limited success with the agent here, but its done the bulk of the work for me so far, so cant complain too much.)

@@ -45,7 +45,8 @@ class OnetMappings:
 
 class Onet_Occupations_API_landing(Base):
     __tablename__ = 'onet_occupations_api_landing'
-    onet_soc_code = Column(String(20), primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    onet_soc_code = Column(String(20), index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text)
     last_updated = Column(Date, nullable=False)
@@ -75,20 +76,6 @@ class Onet_Skills_API_landing(Base):
 
     # String columns for type handling
     string_columns = ['onetsoc_code', 'element_id', 'element_name', 'scale_id', 'scale_name', 'recommend_suppress', 'not_relevant', 'domain_source']
-
-    # __table_args__ can be added later if specific unique constraints are needed for combined keys
-    # e.g., UniqueConstraint('onetsoc_code', 'element_id', 'scale_id', name='uix_onet_skill_api')
-
-class Onet_Scales_API_landing(Base):
-    __tablename__ = 'onet_scales_api_landing'
-
-    scale_id = Column(String(10), primary_key=True, index=True)
-    scale_name = Column(String(255), nullable=False)
-    minimum = Column(Integer)
-    maximum = Column(Integer)
-
-    # String columns for type handling
-    string_columns = ['scale_id', 'scale_name']
 
     
 class Onet_Occupations_Landing(Base):
@@ -211,16 +198,35 @@ def get_sqlalchemy_engine(
     db_host: str = 'localhost',
     db_port: str = '3306'
 ):
-    db_host = os.getenv('MYSQL_HOST', db_host)
-    db_port = os.getenv('MYSQL_PORT', db_port)
-    db_user = os.getenv('MYSQL_USER', db_user)
-    db_password = os.getenv('MYSQL_PASSWORD', db_password)
-    db_name = os.getenv('MYSQL_DATABASE', db_name)
+    # Determine effective configuration, prioritizing explicitly passed non-default parameters
+    effective_host = db_host
+    if db_host == 'localhost':  # Default for db_host
+        effective_host = os.getenv('MYSQL_HOST', 'localhost')
 
-    if not all([db_user, db_password, db_name]):
-        raise ValueError("MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables are required for SQLAlchemy engine.")
+    effective_port = db_port
+    if db_port == '3306':  # Default for db_port
+        effective_port = os.getenv('MYSQL_PORT', '3306')
 
-    engine_url = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    effective_user = db_user
+    if db_user == 'mysql-user':  # Default for db_user
+        effective_user = os.getenv('MYSQL_USER', 'mysql-user')
+
+    effective_password = db_password
+    if db_password == '2222':  # Default for db_password
+        effective_password = os.getenv('MYSQL_PASSWORD', '2222')
+
+    effective_db_name = db_name
+    if db_name == 'onet_data':  # Default for db_name
+        effective_db_name = os.getenv('MYSQL_DATABASE', 'onet_data')
+
+    if not all([effective_user, effective_password, effective_db_name, effective_host, effective_port]):
+        # Added effective_host and effective_port to the check
+        raise ValueError(
+            "MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_HOST, and MYSQL_PORT "
+            "must all be effectively set (either by params or env vars) for SQLAlchemy engine."
+        )
+
+    engine_url = f"mysql+mysqlconnector://{effective_user}:{effective_password}@{effective_host}:{effective_port}/{effective_db_name}"
     engine = create_engine(engine_url)
     return engine
 

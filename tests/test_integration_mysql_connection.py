@@ -2,19 +2,18 @@
 import pytest
 import os
 from src.functions.mysql_connection import get_mysql_connection
-from tests.test_adapter import ensure_test_env
+from tests.fixtures.db_config import test_db_config
 
-# No need to define ensure_env_vars_loaded fixture since we're using ensure_test_env from test_adapter
-
-def test_actual_mysql_connection():
+def test_actual_mysql_connection(test_db_config):
     """
-    Integration test that attempts a real connection to the MySQL database,
+    Integration test that attempts a real connection to the MySQL test database,
     and executes a simple query to verify.
-    Relies on the MySQL service from docker-compose.yml being up and accessible,
-    and environment variables (MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE) being set.
+    Uses the test database configuration from conftest.py to ensure tests run in isolation.
     """
     print("\nAttempting MySQL connection for integration test...")
-    connection_result = get_mysql_connection()
+    
+    # Pass test database configuration to the connection function
+    connection_result = get_mysql_connection(connection_params=test_db_config)
 
     assert connection_result["success"], f"MySQL connection failed: {connection_result['message']}"
     assert connection_result["result"] is not None, "Connection object should not be None on success."
@@ -30,8 +29,9 @@ def test_actual_mysql_connection():
         current_db = cursor.fetchone()
         assert current_db is not None, "Failed to get current database."
         print(f"Connected to database: {current_db[0]}")
-        # Assert that we are connected to the expected database if MYSQL_DATABASE is set
-        expected_db = os.getenv("MYSQL_DATABASE", "onet_data")
+        
+        # Assert that we are connected to the test database
+        expected_db = test_db_config['database']
         assert current_db[0] == expected_db, f"Expected to connect to database '{expected_db}', but connected to '{current_db[0]}'"
 
         print("Executing 'SHOW TABLES;'...")
@@ -55,4 +55,4 @@ def test_actual_mysql_connection():
             cursor.close()
             connection.close()
             print("MySQL connection closed.")
-    print("MySQL connection integration test completed successfully!") 
+    print("MySQL connection integration test completed successfully!")

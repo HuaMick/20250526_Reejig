@@ -4,6 +4,7 @@ Function to retrieve and structure occupation and skills data for LLM prompt gen
 import os
 import logging
 from typing import Dict, Any, Optional, List
+from sqlalchemy.engine import Engine
 
 from src.functions.get_occupation import get_occupation
 from src.functions.get_occupation_skills import get_occupation_skills
@@ -16,6 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def get_occupation_and_skills(
     occupation_code: str,
+    engine: Optional[Engine] = None
 ) -> Dict[str, Any]:
     """
     Retrieves and structures occupation and skills data for a single occupation.
@@ -25,6 +27,8 @@ def get_occupation_and_skills(
 
     Args:
         occupation_code (str): The O*NET SOC code for the occupation.
+        engine (Optional[Engine]): SQLAlchemy engine to use for database operations,
+                                  or None to use the default engine
 
     Returns:
         Dict[str, Any]: Standard response format with keys:
@@ -33,12 +37,16 @@ def get_occupation_and_skills(
             - result (dict): When successful, contains:
                 - occupation_data (dict): Structured data for the occupation.
     """
+    # If no engine is provided, get the default one
+    if engine is None:
+        engine = get_sqlalchemy_engine()
+        
     occupation_details_result: Optional[Dict[str, Any]] = None
     skills_details_result: Optional[Dict[str, Any]] = None
     
     # Attempt to get occupation details from local DB
     logging.info(f"Attempting to fetch occupation details for {occupation_code} from local DB.")
-    occupation_details_local = get_occupation(occupation_code)
+    occupation_details_local = get_occupation(occupation_code, engine=engine)
     
     api_sourced_occupation = False
     api_sourced_skills = False
@@ -65,7 +73,6 @@ def get_occupation_and_skills(
                 occupation_df = occupation_df.head(1)
             
             try:
-                engine = get_sqlalchemy_engine()
                 load_api_occ = load_data_from_dataframe(
                     df=occupation_df, 
                     model=Onet_Occupations_API_landing, 
@@ -102,7 +109,7 @@ def get_occupation_and_skills(
 
     # Attempt to get skills details from local DB
     logging.info(f"Attempting to fetch skills for {occupation_code} from local DB.")
-    skills_details_local = get_occupation_skills(occupation_code)
+    skills_details_local = get_occupation_skills(occupation_code, engine=engine)
 
     # Check if skills list is empty, even if get_occupation_skills call was successful (e.g. occupation exists but no skills linked)
     if not skills_details_local["success"] or (skills_details_local["success"] and not skills_details_local.get("result", {}).get("skills")):
@@ -126,7 +133,6 @@ def get_occupation_and_skills(
         if api_skills_result["success"] and api_skills_result["result"]["skills_df"] is not None and not api_skills_result["result"]["skills_df"].empty:
             skills_df = api_skills_result["result"]["skills_df"]
             try:
-                engine = get_sqlalchemy_engine()
                 load_api_skills = load_data_from_dataframe(
                     df=skills_df, 
                     model=Onet_Skills_API_landing, 

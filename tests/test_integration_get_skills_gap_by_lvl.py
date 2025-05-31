@@ -6,20 +6,22 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.functions.get_skills_gap_by_lvl import get_skills_gap_by_lvl
+from src.config.schemas import get_sqlalchemy_engine
 
-@pytest.fixture(scope="module")
-def check_api_credentials():
-    """Fixture to check if O*NET API credentials are set"""
-    if not os.getenv("ONET_USERNAME") or not os.getenv("ONET_PASSWORD"):
-        pytest.skip("O*NET API credentials not set, skipping tests that require API fallback")
+# Mark all tests in this file as using the test database
+pytestmark = pytest.mark.usefixtures("use_test_db")
 
-def test_get_skills_gap_by_lvl_successful(check_api_credentials):
+def test_get_skills_gap_by_lvl_successful(check_api_credentials, test_db_engine):
     """Test the get_skills_gap_by_lvl function with valid occupation codes that should have skill gaps."""
     # Using occupation codes identified by the user as having different skills after filtering level=0
     from_occupation = "11-1011.00"  # Chief Executives (32 skills with level > 0)
     to_occupation = "11-2021.00"    # Marketing Managers (29 skills with level > 0)
     
-    result = get_skills_gap_by_lvl(from_occupation, to_occupation)
+    # Print database being used for debugging
+    print(f"\nUsing database: {os.environ.get('MYSQL_DATABASE')}")
+    
+    # Use the test database engine explicitly
+    result = get_skills_gap_by_lvl(from_occupation, to_occupation, engine=test_db_engine)
     
     # Print results for verification
     print("\nIntegration Test Results - Skills Gap Analysis with Proficiency Levels:")
@@ -47,13 +49,14 @@ def test_get_skills_gap_by_lvl_successful(check_api_credentials):
         assert "to_data_value" in gap, "Missing 'to_data_value' in skill gap"
         assert gap["to_data_value"] > gap["from_data_value"], f"Expected higher proficiency in target occupation for {gap['element_name']}"
 
-def test_get_skills_gap_by_lvl_reverse_direction(check_api_credentials):
+def test_get_skills_gap_by_lvl_reverse_direction(check_api_credentials, test_db_engine):
     """Test the get_skills_gap_by_lvl function in the reverse direction to verify different gaps are found."""
     # Using the same occupation codes but in reverse direction
     from_occupation = "11-2021.00"  # Marketing Managers
     to_occupation = "11-1011.00"    # Chief Executives
     
-    result = get_skills_gap_by_lvl(from_occupation, to_occupation)
+    # Use the test database engine explicitly
+    result = get_skills_gap_by_lvl(from_occupation, to_occupation, engine=test_db_engine)
     
     # Print results for verification
     print("\nIntegration Test Results - Reverse Direction with Proficiency Levels:")
@@ -70,11 +73,12 @@ def test_get_skills_gap_by_lvl_reverse_direction(check_api_credentials):
     # Assertions to verify the results
     assert result["success"], f"Function failed in reverse direction: {result['message']}"
 
-def test_get_skills_gap_by_lvl_same_occupation(check_api_credentials):
+def test_get_skills_gap_by_lvl_same_occupation(check_api_credentials, test_db_engine):
     """Test the get_skills_gap_by_lvl function with the same occupation code, which should result in no gaps."""
     occupation = "11-1011.00"  # Chief Executives
     
-    result = get_skills_gap_by_lvl(occupation, occupation)
+    # Use the test database engine explicitly
+    result = get_skills_gap_by_lvl(occupation, occupation, engine=test_db_engine)
     
     # Print results for verification
     print("\nIntegration Test Results - Same Occupation with Proficiency Levels:")
@@ -83,4 +87,4 @@ def test_get_skills_gap_by_lvl_same_occupation(check_api_credentials):
     
     # Assertions to verify the results
     assert result["success"], f"Function failed with same occupation: {result['message']}"
-    assert len(result["result"]["skill_gaps"]) == 0, "Expected no skill gaps when comparing an occupation to itself" 
+    assert len(result["result"]["skill_gaps"]) == 0, "Expected no skill gaps when comparing an occupation to itself"

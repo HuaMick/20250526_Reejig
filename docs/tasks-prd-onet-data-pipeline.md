@@ -3,6 +3,11 @@
 - `src/config/schemas.py` - Defines SQLAlchemy models for database tables (`Occupations`, `Skills`, `Scales`, `OnetApiOccupationData`, `OnetApiSkillsData`).
 - `src/functions/mysql_init_tables.py` - Initializes database tables using SQLAlchemy models.
 - `tests/test_integration_mysql_init_tables.py` - Integration tests for `mysql_init_tables.py`.
+- `src/functions/mysql_create_db.py` - **NEW:** Creates a MySQL database if it doesn't exist.
+- `tests/test_integration_mysql_create_db.py` - **NEW:** Integration tests for `mysql_create_db.py`.
+- `src/nodes/init_db.py` - **UPDATED:** Node that creates the database (if needed) and initializes all tables.
+- `tests/setup_test_env.sh` - **NEW:** Sets up a test environment with a dedicated MySQL database.
+- `tests/run_all_tests.sh` - **NEW:** Runs all integration tests in the test environment.
 - `src/functions/extract_onet_data.py` - Extracts data from O*NET `.txt` files into pandas DataFrames.
 - `tests/test_integration_extract_onet_data.py` - Integration tests for `extract_onet_data.py`.
 - `src/functions/mysql_load_dataframe.py` - Loads a single pandas DataFrame into a specified MySQL table.
@@ -228,14 +233,14 @@
   - [x] 5.13 Create integration test for `/skill-gap` API endpoint.
     - **IMPLEMENTATION NOTE:** Created comprehensive integration tests in `tests/test_api_skill_gap.py` that verify all functionality of the endpoint, including basic skill gap, proficiency-level skill gap, same occupation comparison, and error handling for invalid occupation codes.
 
-- [ ] 6.0 **Phase 6: Automated Testing Suite**
-  - [ ] 6.1 Setup a test env with a postgresql database, this can act as a clean room for our automated tests to run in.
+- [x] 6.0 **Phase 6: Automated Testing Suite**
+  - [x] 6.1 Setup a test env with a mysql database, this can act as a clean room for our automated tests to run in.
   - [ ] 6.2 Review existing integration tests and adapt them for the automated testing suite.
     - Review each test and determine if it should be included or moved to tests/archive folder
     - Update tests to work in isolation by leveraging existing functions to create mock assets
     - Ensure tests use consistent mock occupation data so they can be used for end-to-end testing
   - [ ] 6.3 Review functions and create any missing integration tests.
-  - [ ] 6.4 Test each integration test in isolation using the test env with the postgresql database.
+  - [ ] 6.4 Test each integration test in isolation using the test env with the mysql database.
   - [ ] 6.5 Review all functions and see if we can remove any redundancies and make the code simpler and shorter if possible. See if the config api_exception_handles can be used to remove unnecessary exception handling.
   - [ ] 6.6 Rerun all the integration functions.
   - [ ] 6.7 Create an end to end integration test, this test should chain database creation, table initiation, loading the data to generating the skill gaps. Will leave the llm component out for now as that has not been implemented yet.

@@ -6,10 +6,10 @@ import pandas as pd
 # Add project root to sys.path to allow importing from src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from functions.mysql_load_table import load_data_from_dataframe
+from src.functions.mysql_load_table import load_data_from_dataframe
 from src.functions.extract_onet_data import extract_onet_data
 from src.functions.mysql_connection import get_mysql_connection
-from src.config.schemas import get_sqlalchemy_engine # Base, Occupation, Skill, Scale not directly used here now
+from src.config.schemas import get_sqlalchemy_engine, Onet_Occupations_Landing, Onet_Skills_Landing, Onet_Scales_Landing
 from src.functions.mysql_init_tables import initialize_database_tables
 
 class TestMySQLLoadWithoutFixtures:
@@ -74,22 +74,25 @@ class TestMySQLLoadWithoutFixtures:
             missing_files = list(set(expected_tables_to_load_from) - set(found_files_to_load.keys()))
             print(f"Warning: Not all expected source files were found in extract_onet_data results: {missing_files}. Test might not be comprehensive.")
 
+        # Map filenames to SQLAlchemy model classes
+        model_map = {
+            'occupations.txt': Onet_Occupations_Landing,
+            'skills.txt': Onet_Skills_Landing,
+            'scales.txt': Onet_Scales_Landing
+        }
+
         for filename, df in found_files_to_load.items():
-            table_name_map = {
-                'occupations.txt': 'Occupations',
-                'skills.txt': 'Skills',
-                'scales.txt': 'Scales'
-            }
-            table_name = table_name_map.get(filename)
+            model_class = model_map.get(filename)
+            table_name = model_class.__tablename__ if model_class else None
             
-            if table_name:
+            if model_class:
                 print(f"--- Loading data from {filename} into {table_name} table ---")
                 if df.empty:
                     print(f"DataFrame for {filename} is empty. Skipping load for {table_name}. 0 records expected.")
                     loaded_counts[table_name] = 0
                     continue # Skip to next file if DataFrame is empty
                 
-                load_result = load_data_from_dataframe(df, table_name, engine) 
+                load_result = load_data_from_dataframe(df, model_class, engine) 
                 assert load_result["success"], f"Failed to load {table_name} from {filename}: {load_result['message']}"
                 records_loaded = load_result["result"].get("records_loaded", 0)
                 

@@ -203,14 +203,19 @@ class LLM_Skill_Proficiency_Replies(Base):
         {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_0900_ai_ci"}
     )
 
-# Example function to create an engine (can be used by other scripts)
-# This helps centralize engine creation if needed, though mysql_init_tables will create its own.
-def get_sqlalchemy_engine():
-    db_host = os.getenv('MYSQL_HOST', 'localhost')
-    db_port = os.getenv('MYSQL_PORT', '3306')
-    db_user = os.getenv('MYSQL_USER')
-    db_password = os.getenv('MYSQL_PASSWORD')
-    db_name = os.getenv('MYSQL_DATABASE', 'onet_data')
+# For testing use the test_env variables which can be found in the env/test_env.env file
+def get_sqlalchemy_engine(
+    db_name: str = 'onet_data',
+    db_user: str = 'mysql-user',
+    db_password: str = '2222',
+    db_host: str = 'localhost',
+    db_port: str = '3306'
+):
+    db_host = os.getenv('MYSQL_HOST', db_host)
+    db_port = os.getenv('MYSQL_PORT', db_port)
+    db_user = os.getenv('MYSQL_USER', db_user)
+    db_password = os.getenv('MYSQL_PASSWORD', db_password)
+    db_name = os.getenv('MYSQL_DATABASE', db_name)
 
     if not all([db_user, db_password, db_name]):
         raise ValueError("MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables are required for SQLAlchemy engine.")

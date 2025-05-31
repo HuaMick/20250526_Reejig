@@ -1,7 +1,10 @@
 import os
+from typing import Optional
+from sqlalchemy.engine import Engine
+from src.config.schemas import get_sqlalchemy_engine
 from src.functions.get_occupation_and_skills import get_occupation_and_skills
 
-def get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str):
+def get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str, engine: Optional[Engine] = None):
     """
     Identifies skills required by the target occupation that the source occupation either does not have 
     or where the proficiency level is lower than in the target occupation.
@@ -15,6 +18,8 @@ def get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str):
     Args:
         from_onet_soc_code (str): The O*NET-SOC code for the source occupation
         to_onet_soc_code (str): The O*NET-SOC code for the target occupation
+        engine (Optional[Engine]): SQLAlchemy engine to use for database operations, 
+                                   or None to use the default engine
     
     Returns:
         dict: {
@@ -37,9 +42,13 @@ def get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str):
         }
     """
     try:
+        # If no engine is provided, get the default one
+        if engine is None:
+            engine = get_sqlalchemy_engine()
+            
         # Retrieve detailed data for both occupations (with API fallback)
-        from_occupation_response = get_occupation_and_skills(from_onet_soc_code)
-        to_occupation_response = get_occupation_and_skills(to_onet_soc_code)
+        from_occupation_response = get_occupation_and_skills(from_onet_soc_code, engine=engine)
+        to_occupation_response = get_occupation_and_skills(to_onet_soc_code, engine=engine)
         
         # Check if both queries were successful
         if not from_occupation_response["success"]:
@@ -164,7 +173,7 @@ def identify_skill_gap(occupation1_data: dict, occupation2_data: dict):
         if not occ2_skills_list: # If target occupation has no skills, there's no gap *towards* it in terms of proficiency needs.
              # This condition also implies that if occ1_skills_list is empty, and occ2_skills_list is also empty, this will be the message.
             return {
-                "success": True, # Technically successful, no gap identified as target has no skills listed
+                "success": True, # Technically successful, no gap identified as target has no skills
                 "message": f"No 'LV' scale skills data provided for the 'to' occupation: {occ2_title}. Cannot identify skill gaps towards it.",
                 "result": {"skill_gaps": [], "from_occupation_title": occ1_title, "to_occupation_title": occ2_title}
             }
@@ -216,9 +225,12 @@ if __name__ == '__main__':
     from_occupation = "11-1011.00"  # Chief Executives
     to_occupation = "11-2021.00"    # Marketing Managers
     
-    # Call the function
+    # Get default engine for testing
+    default_engine = get_sqlalchemy_engine()
+    
+    # Call the function with default engine
     print(f"\n--- Identifying skill gap with proficiency levels from '{from_occupation}' to '{to_occupation}' ---")
-    result = get_skills_gap_by_lvl(from_occupation, to_occupation)
+    result = get_skills_gap_by_lvl(from_occupation, to_occupation, engine=default_engine)
     
     # Print the results
     print("\nFunction Call Result:")

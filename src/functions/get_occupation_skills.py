@@ -1,14 +1,17 @@
 from sqlalchemy.orm import sessionmaker
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from sqlalchemy.engine import Engine
 
 from src.config.schemas import get_sqlalchemy_engine, Onet_Occupations_Landing, Occupation_Skills, Skills
 
-def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
+def get_occupation_skills(occupation_code: str, engine: Optional[Engine] = None) -> Dict[str, Any]:
     """
     Retrieves skills data for a specific occupation code using the downstream tables.
     
     Args:
         occupation_code (str): The O*NET occupation code (e.g. "15-1252.00")
+        engine (Optional[Engine]): SQLAlchemy engine to use for database operations,
+                                  or None to use the default engine
         
     Returns:
         dict: {
@@ -20,7 +23,9 @@ def get_occupation_skills(occupation_code: str) -> Dict[str, Any]:
             }
         }
     """
-    engine = get_sqlalchemy_engine()
+    if engine is None:
+        engine = get_sqlalchemy_engine()
+        
     Session = sessionmaker(bind=engine)
     session = Session()
     

@@ -2,27 +2,9 @@
 import pytest
 import os
 from src.functions.mysql_connection import get_mysql_connection
+from tests.test_adapter import ensure_test_env
 
-@pytest.fixture(scope="module", autouse=True)
-def ensure_env_vars_loaded():
-    """
-    Fixture to simulate sourcing env.env for test environment.
-    This is a simplified approach for pytest. 
-    For more robust CI/CD, environment variables should be managed by the execution environment.
-    It assumes that running the test_integration_mysql_connection.sh script (which sources env.env)
-    will make these available to the pytest process.
-    This fixture primarily serves as a reminder and a place for potential future enhancements
-    if direct pytest execution (without the .sh script) is desired.
-    """
-    # Check if critical env vars are present, print a message if not
-    # The .sh script should handle the actual sourcing.
-    required_vars = ["MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DATABASE"]
-    for var in required_vars:
-        if not os.getenv(var):
-            print(f"\nWarning: Environment variable {var} not found. \nEnsure env/env.env is sourced before running tests, or that the test runner script handles this.")
-            # In a CI environment, you might want to `pytest.fail` here
-            # For local testing, we allow it to proceed, relying on the .sh script or manual sourcing.
-            break # Only print one warning
+# No need to define ensure_env_vars_loaded fixture since we're using ensure_test_env from test_adapter
 
 def test_actual_mysql_connection():
     """

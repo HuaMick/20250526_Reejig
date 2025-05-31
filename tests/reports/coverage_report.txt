@@ -1,0 +1,37 @@
+
+TEST COVERAGE REPORT
+Generated: 2025-05-31 12:26:46
+
+SUMMARY
+-------
+Total Functions: 20
+Tested Functions: 14
+Untested Functions: 6
+Coverage Rate: 70.00%
+
+DETAILS
+-------
+
+TESTED FUNCTIONS:
+- extract_onet_data (tested by: test_integration_mysql_load.py)
+- gemini_llm_prompt (tested by: test_integration_llm_skill_assessment_pipeline.py, test_integration_gemini_llm_prompt.py)
+- gemini_llm_request (tested by: test_integration_llm_skill_assessment_pipeline.py, test_integration_gemini_llm_request.py)
+- get_occupation_and_skills (tested by: test_integration_llm_skill_assessment_pipeline.py, test_integration_get_occupation_and_skills_with_api_fallback.py)
+- get_occupation_skills (tested by: test_integration_get_occupation_skills.py, test_integration_skill_gap_process.py)
+- get_skills_gap (tested by: test_integration_get_skills_gap.py)
+- get_skills_gap_by_lvl (tested by: test_integration_get_skills_gap_by_lvl.py)
+- mysql_connection (tested by: test_integration_mysql_load.py, test_integration_mysql_connection.py)
+- mysql_create_db (tested by: test_integration_mysql_create_db.py)
+- mysql_init_tables (tested by: test_integration_mysql_load.py)
+- mysql_load_llm_skill_proficiencies (tested by: test_integration_llm_skill_assessment_pipeline.py)
+- mysql_load_table (tested by: test_integration_mysql_load.py, test_integration_api_extract_load_skills.py, test_integration_api_extract_load_occupations.py)
+- mysql_query (tested by: test_integration_mysql_query.py, test_integration_get_occupation_skills.py)
+- onet_api_extract_skills (tested by: test_integration_api_extract_load_skills.py)
+
+UNTESTED FUNCTIONS:
+- example_function
+- get_occupation
+- onet_api_extract_occupation
+- populate_occupation_skills
+- populate_skills_reference
+- textfile_to_dataframe

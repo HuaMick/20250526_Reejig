@@ -5,16 +5,18 @@ from typing import Dict, Any
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
+from src.functions.mysql_create_db import mysql_create_db
 from src.functions.mysql_connection import get_mysql_connection
 from src.functions.mysql_init_tables import initialize_database_tables
 
 def init_db_mysql() -> Dict[str, Any]:
     """
-    Node that initializes all database tables.
+    Node that initializes the database and all database tables.
     
     This function:
-    1. Establishes a connection to the MySQL database
-    2. Initializes all tables defined in the SQLAlchemy models
+    1. Creates the MySQL database if it doesn't exist
+    2. Establishes a connection to the MySQL database
+    3. Initializes all tables defined in the SQLAlchemy models
     
     Returns:
         Dict[str, Any]: A dictionary with keys:
@@ -24,7 +26,19 @@ def init_db_mysql() -> Dict[str, Any]:
     """
     print("=== Starting database initialization node ===")
     
-    # Step 1: Establish database connection
+    # Step 1: Create database if it doesn't exist
+    print("Ensuring database exists...")
+    db_create_result = mysql_create_db()
+    
+    if not db_create_result["success"]:
+        # If we couldn't create the database, let's see if we can connect to it anyway
+        # It might already exist, but the user might not have CREATE privileges
+        print(f"Warning: {db_create_result['message']}")
+        print("Attempting to continue with database connection...")
+    else:
+        print(db_create_result["message"])
+    
+    # Step 2: Establish database connection
     print("Establishing database connection...")
     connection_result = get_mysql_connection()
     
@@ -41,7 +55,7 @@ def init_db_mysql() -> Dict[str, Any]:
     if connection_result["result"] and connection_result["result"].is_connected():
         connection_result["result"].close()
     
-    # Step 2: Initialize all database tables
+    # Step 3: Initialize all database tables
     print("Initializing database tables...")
     init_result = initialize_database_tables()
     

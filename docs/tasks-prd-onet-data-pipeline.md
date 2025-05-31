@@ -235,15 +235,36 @@
 
 - [x] 6.0 **Phase 6: Automated Testing Suite**
   - [x] 6.1 Setup a test env with a mysql database, this can act as a clean room for our automated tests to run in.
-  - [ ] 6.2 Review existing integration tests and adapt them for the automated testing suite.
-    - Review each test and determine if it should be included or moved to tests/archive folder
-    - Update tests to work in isolation by leveraging existing functions to create mock assets
-    - Ensure tests use consistent mock occupation data so they can be used for end-to-end testing
-  - [ ] 6.3 Review functions and create any missing integration tests.
-  - [ ] 6.4 Test each integration test in isolation using the test env with the mysql database.
-  - [ ] 6.5 Review all functions and see if we can remove any redundancies and make the code simpler and shorter if possible. See if the config api_exception_handles can be used to remove unnecessary exception handling.
-  - [ ] 6.6 Rerun all the integration functions.
-  - [ ] 6.7 Create an end to end integration test, this test should chain database creation, table initiation, loading the data to generating the skill gaps. Will leave the llm component out for now as that has not been implemented yet.
+  - [ ] 6.2 Review and refactor integration tests for the automated testing suite:
+    - [x] 6.2.1 Refactor `test_integration_get_skills_gap_by_lvl.py` - KEEP: Core skill gap analysis test with proficiency levels, updated to use test database engine.
+    - [x] 6.2.2 Refactor `test_integration_get_skills_gap.py` - KEEP: Basic skill gap analysis test, updated to use test database engine.
+    - [x] 6.2.3 Review `test_integration_mysql_load.py` - KEEP: Essential for verifying data loading functionality, updated to use test database engine and improved test documentation.
+    - [ ] 6.2.4 Review `test_integration_mysql_connection.py` - KEEP: Fundamental test for database connectivity, should remain in suite. Updated to accept connection_params parameter for testing.
+    - [ ] 6.2.5 Review `test_integration_mysql_create_db.py` - KEEP: Required for database initialization, should be run early in test suite. Updated to accept connection_params parameter for testing.
+    - [ ] 6.2.6 Review `test_api_skill_gap.py` - KEEP: Tests API endpoints, critical for verifying end-user functionality.
+    - [ ] 6.2.7 Review `test_integration_skill_gap_process.py` - EVALUATE: May have overlap with other skill gap tests, review for unique functionality.
+    - [ ] 6.2.8 Review `test_integration_get_occupation_and_skills_with_api_fallback.py` - KEEP: Tests critical API fallback functionality.
+    - [ ] 6.2.9 Review `test_integration_llm_skill_assessment_pipeline.py` - KEEP: Tests LLM integration, important for advanced features.
+    - [ ] 6.2.10 Review `test_integration_gemini_llm_prompt.py` - KEEP: Tests LLM prompt generation, part of LLM feature set.
+    - [ ] 6.2.11 Review `test_integration_gemini_llm_request.py` - KEEP: Tests LLM API communication, required for LLM features.
+    - [ ] 6.2.12 Review `test_integration_api_extract_load_skills.py` - KEEP: Tests critical ETL functionality for skills data.
+    - [ ] 6.2.13 Review `test_integration_extract_load_api.py` - KEEP: Tests main API data extraction and loading.
+    - [ ] 6.2.14 Review `test_integration_api_extract_load_occupations.py` - KEEP: Tests occupation data ETL, core for application.
+    - [ ] 6.2.15 Review `test_integration_mysql_query.py` - EVALUATE: Consider whether this overlaps with more specific tests.
+    - [ ] 6.2.16 Review `test_integration_get_occupation_skills.py` - KEEP: Tests fundamental data retrieval function.
+  - [ ] 6.3 Update all tests to:
+    - [x] 6.3.1 Explicitly use test database engine - Added engine parameter to all database-related functions (populate_occupation_skills, populate_skills_reference, mysql_init_tables, mysql_create_db, mysql_query, mysql_connection) for test integration
+    - [ ] 6.3.3 Properly clean up after themselves (if they modify test data)
+    - [ ] 6.3.4 Follow consistent naming and documentation conventions
+  - [ ] 6.4 Create any missing integration tests for core functionality.
+  - [ ] 6.5 Test each integration test in isolation using the test env with the mysql database.
+  - [ ] 6.6 Review all functions and refactor where needed to:
+  - [ ] 6.7 Run all integration tests to verify they work together.
+  - [ ] 6.8 Create an end-to-end integration test covering:
+    - [ ] 6.8.1 Database creation and initialization
+    - [ ] 6.8.2 Data loading from source files 
+    - [ ] 6.8.3 Data transformation and normalization
+    - [ ] 6.8.4 API endpoint functionality for skill gap analysis
 
 - [x] 7.0 **Phase 7: Containerization, Final Testing, and Documentation**
   - [x] 7.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).

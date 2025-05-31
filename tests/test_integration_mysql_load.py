@@ -12,23 +12,31 @@ from src.functions.mysql_connection import get_mysql_connection
 from src.config.schemas import get_sqlalchemy_engine, Onet_Occupations_Landing, Onet_Skills_Landing, Onet_Scales_Landing
 from src.functions.mysql_init_tables import initialize_database_tables
 
+# Mark all tests in this file as using the test database
+pytestmark = pytest.mark.usefixtures("use_test_db")
+
 class TestMySQLLoadWithoutFixtures:
 
-    def test_load_actual_data_end_to_end(self):
-        print("\nRunning test_load_actual_data_end_to_end (no fixtures)...")
+    def test_load_actual_data_end_to_end(self, test_db_engine):
+        """
+        Test the entire ETL flow from data extraction to loading using the test database.
+        
+        This test:
+        1. Uses the test database engine from conftest.py
+        2. Initializes database tables
+        3. Extracts O*NET data from text files
+        4. Loads the data into tables
+        5. Verifies the data was loaded correctly
+        """
+        print("\nRunning test_load_actual_data_end_to_end with test database...")
+        print(f"Using database: {os.environ.get('MYSQL_DATABASE')}")
 
-        # 1. Get SQLAlchemy engine
-        engine = None
-        try:
-            engine = get_sqlalchemy_engine()
-            print("SQLAlchemy engine created successfully.")
-        except Exception as e:
-            pytest.fail(f"Failed to create SQLAlchemy engine: {e}")
+        # 1. Use the test_db_engine fixture instead of creating a new engine
+        engine = test_db_engine
+        print("Using test database engine from fixture.")
 
-        # 2. Initialize database tables
-        # initialize_database_tables uses its own engine creation logic based on env vars.
-        # This is fine as it ensures a fresh setup.
-        init_result = initialize_database_tables()
+        # 2. Initialize database tables with the test engine
+        init_result = initialize_database_tables(engine=engine)
         if not init_result["success"]:
             pytest.fail(f"Failed to initialize database tables: {init_result['message']}")
         print("Database tables initialized successfully.")
@@ -102,48 +110,60 @@ class TestMySQLLoadWithoutFixtures:
                 loaded_counts[table_name] = records_loaded
             # No else needed as we pre-filtered found_files_to_load
 
-        # 5. Verification
+        # 5. Verification - Using test database connection
         if not loaded_counts or all(count == 0 for count in loaded_counts.values()):
             pytest.skip("No data was loaded into any target tables (possibly due to empty source files or filters). Skipping DB verification.")
 
-        conn_details = get_mysql_connection()
-        assert conn_details["success"], f"Failed to connect to MySQL for verification: {conn_details['message']}"
-        connection = conn_details["result"]
-        cursor = connection.cursor(dictionary=True)
-
-        print("\n--- Verifying Table Data (Counts and Sample) ---")
-        for table_name, expected_db_count in loaded_counts.items():
-            if expected_db_count == 0:
-                print(f"Skipping DB verification for {table_name} as 0 records were loaded.")
-                # Optionally, verify table is indeed empty
-                cursor.execute(f"SELECT COUNT(*) AS count FROM {table_name}")
-                db_empty_check = cursor.fetchone()
-                assert db_empty_check['count'] == 0, f"Table {table_name} expected to be empty but has {db_empty_check['count']} rows."
-                continue
-
-            print(f"Verifying table: {table_name}")
-            cursor.execute(f"SELECT COUNT(*) AS count FROM {table_name}")
-            db_count_result = cursor.fetchone()
-            db_count = db_count_result['count'] if db_count_result else 0
+        # Use the test database connection configuration
+        test_db_config = {
+            'host': os.getenv('MYSQL_HOST', 'localhost'),
+            'port': os.getenv('MYSQL_PORT', '3306'),
+            'user': os.getenv('MYSQL_USER'),
+            'password': os.getenv('MYSQL_PASSWORD'),
+            'database': os.getenv('MYSQL_DATABASE', 'onet_test_data')
+        }
+        
+        try:
+            import mysql.connector
+            connection = mysql.connector.connect(**test_db_config)
+            cursor = connection.cursor(dictionary=True)
             
-            assert db_count == expected_db_count, \
-                f"Row count mismatch for table {table_name}. Loaded {expected_db_count}, found in DB {db_count}."
-            print(f"Table '{table_name}' has {db_count} rows (matches loaded count).")
+            print("\n--- Verifying Table Data (Counts and Sample) ---")
+            for table_name, expected_db_count in loaded_counts.items():
+                if expected_db_count == 0:
+                    print(f"Skipping DB verification for {table_name} as 0 records were loaded.")
+                    # Optionally, verify table is indeed empty
+                    cursor.execute(f"SELECT COUNT(*) AS count FROM {table_name}")
+                    db_empty_check = cursor.fetchone()
+                    assert db_empty_check['count'] == 0, f"Table {table_name} expected to be empty but has {db_empty_check['count']} rows."
+                    continue
 
-            if db_count > 0:
-                cursor.execute(f"SELECT * FROM {table_name} LIMIT 2")
-                rows = cursor.fetchall()
-                if rows:
-                    column_names = list(rows[0].keys())
-                    print(f"First {min(2, len(rows))} rows from '{table_name}':")
-                    print(", ".join(column_names))
-                    for row in rows:
-                        print(row)
-                assert len(rows) > 0, f"No rows sampled from {table_name} when count was > 0."
-            print("---")
+                print(f"Verifying table: {table_name}")
+                cursor.execute(f"SELECT COUNT(*) AS count FROM {table_name}")
+                db_count_result = cursor.fetchone()
+                db_count = db_count_result['count'] if db_count_result else 0
+                
+                assert db_count == expected_db_count, \
+                    f"Row count mismatch for table {table_name}. Loaded {expected_db_count}, found in DB {db_count}."
+                print(f"Table '{table_name}' has {db_count} rows (matches loaded count).")
 
-        cursor.close()
-        connection.close()
+                if db_count > 0:
+                    cursor.execute(f"SELECT * FROM {table_name} LIMIT 2")
+                    rows = cursor.fetchall()
+                    if rows:
+                        column_names = list(rows[0].keys())
+                        print(f"First {min(2, len(rows))} rows from '{table_name}':")
+                        print(", ".join(column_names))
+                        for row in rows:
+                            print(row)
+                    assert len(rows) > 0, f"No rows sampled from {table_name} when count was > 0."
+                print("---")
+
+            cursor.close()
+            connection.close()
+        except Exception as e:
+            pytest.fail(f"Error during database verification: {str(e)}")
+            
         print("test_load_actual_data_end_to_end completed.")
 
 # For direct execution

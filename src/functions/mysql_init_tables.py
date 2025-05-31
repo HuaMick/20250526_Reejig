@@ -1,15 +1,20 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
+from sqlalchemy.engine import Engine
+from typing import Dict, Any, Optional
 from src.config.schemas import Base # Import your Base and models
 
-def initialize_database_tables():
+def initialize_database_tables(engine: Optional[Engine] = None) -> Dict[str, Any]:
     """
     Initializes the database tables using SQLAlchemy models.
     Drops all known tables first, then creates them based on the model definitions.
-    Relies on environment variables for database connection.
+    
+    Args:
+        engine (Optional[Engine]): SQLAlchemy engine to use for database operations,
+                                  or None to use a new engine from environment variables
 
-    Environment Variables Needed:
+    Environment Variables Needed (used only if engine is None):
         MYSQL_HOST: Hostname of the MySQL server (defaults to 'localhost')
         MYSQL_PORT: Port of the MySQL server (defaults to 3306)
         MYSQL_USER: Username for MySQL connection
@@ -17,26 +22,28 @@ def initialize_database_tables():
         MYSQL_DATABASE: Database name to connect to
 
     Returns:
-        dict: A dictionary with keys 'success' (bool) and 'message' (str).
+        dict: A dictionary with keys 'success' (bool), 'message' (str) and 'result' (dict).
     """
     try:
-        db_host = os.getenv('MYSQL_HOST', 'localhost')
-        db_port = os.getenv('MYSQL_PORT', '3306')
-        db_user = os.getenv('MYSQL_USER')
-        db_password = os.getenv('MYSQL_PASSWORD')
-        db_name = os.getenv('MYSQL_DATABASE', 'onet_data')
+        # If no engine is provided, create one from environment variables
+        if engine is None:
+            db_host = os.getenv('MYSQL_HOST', 'localhost')
+            db_port = os.getenv('MYSQL_PORT', '3306')
+            db_user = os.getenv('MYSQL_USER')
+            db_password = os.getenv('MYSQL_PASSWORD')
+            db_name = os.getenv('MYSQL_DATABASE', 'onet_data')
 
-        if not all([db_user, db_password, db_name]):
-            return {
-                "success": False,
-                "message": "MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables are required.",
-                "result": {}
-            }
+            if not all([db_user, db_password, db_name]):
+                return {
+                    "success": False,
+                    "message": "MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables are required.",
+                    "result": {}
+                }
 
-        # Construct the database URL for SQLAlchemy
-        # Ensure you have 'mysql-connector-python' installed for this dialect
-        engine_url = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-        engine = create_engine(engine_url)
+            # Construct the database URL for SQLAlchemy
+            # Ensure you have 'mysql-connector-python' installed for this dialect
+            engine_url = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+            engine = create_engine(engine_url)
 
         with engine.connect() as connection:
             # Temporarily disable foreign key checks to allow dropping tables in any order
@@ -69,7 +76,7 @@ if __name__ == '__main__':
     print("This example assumes MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_HOST, and MYSQL_PORT environment variables are correctly set.")
     print("It will attempt to drop and recreate tables based on src/config/schemas.py.")
 
-    # 1. Call the function
+    # 1. Call the function (using default engine creation)
     result = initialize_database_tables()
     
     # 2. Print the raw result from the function

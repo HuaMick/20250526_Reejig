@@ -1,12 +1,18 @@
 import os
 import mysql.connector
 from mysql.connector import Error
+from typing import Dict, Any, Optional
 
-def get_mysql_connection():
+def get_mysql_connection(connection_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
-    Establishes a connection to the MySQL database using environment variables.
+    Establishes a connection to the MySQL database using provided parameters or environment variables.
 
-    Environment Variables Needed:
+    Args:
+        connection_params (Optional[Dict[str, Any]]): Dictionary containing connection parameters
+                                                     (host, port, user, password, database).
+                                                     If None, uses environment variables.
+
+    Environment Variables (used only if connection_params is None):
         MYSQL_HOST: Hostname of the MySQL server (defaults to 'localhost')
         MYSQL_PORT: Port of the MySQL server (defaults to 3306)
         MYSQL_USER: Username for MySQL connection
@@ -17,16 +23,23 @@ def get_mysql_connection():
         dict: A dictionary with keys 'success' (bool), 'message' (str), 
               and 'result' (mysql.connector.connection_cext.CMySQLConnection or None).
     """
-    db_host = os.getenv('MYSQL_HOST', 'localhost')
-    db_port = os.getenv('MYSQL_PORT', '3306')
-    db_user = os.getenv('MYSQL_USER')
-    db_password = os.getenv('MYSQL_PASSWORD')
-    db_name = os.getenv('MYSQL_DATABASE', 'onet_data') # Default from docker-compose
+    if connection_params:
+        db_host = connection_params.get('host', 'localhost')
+        db_port = connection_params.get('port', '3306')
+        db_user = connection_params.get('user')
+        db_password = connection_params.get('password')
+        db_name = connection_params.get('database', 'onet_data')
+    else:
+        db_host = os.getenv('MYSQL_HOST', 'localhost')
+        db_port = os.getenv('MYSQL_PORT', '3306')
+        db_user = os.getenv('MYSQL_USER')
+        db_password = os.getenv('MYSQL_PASSWORD')
+        db_name = os.getenv('MYSQL_DATABASE', 'onet_data') # Default from docker-compose
 
     if not all([db_user, db_password]):
         return {
             "success": False,
-            "message": "MYSQL_USER and MYSQL_PASSWORD environment variables are required.",
+            "message": "User and password are required for database connection.",
             "result": None
         }
 
@@ -61,7 +74,7 @@ if __name__ == '__main__':
     print("Minimalistic happy path example for get_mysql_connection:")
     print("This example assumes MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_HOST, and MYSQL_PORT environment variables are correctly set.")
 
-    # 1. Call the function
+    # 1. Call the function with default connection parameters
     connection_details = get_mysql_connection()
 
     # 2. Print the raw result from the function

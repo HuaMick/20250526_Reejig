@@ -1,8 +1,10 @@
 import os
 import mysql.connector
 from mysql.connector import Error
+from typing import Dict, Any, Optional
+from sqlalchemy.engine import Engine
 
-def mysql_create_db(db_name=None):
+def mysql_create_db(db_name=None, connection_params=None):
     """
     Creates a MySQL database if it doesn't already exist.
     If the user doesn't have CREATE DATABASE privileges, 
@@ -11,6 +13,9 @@ def mysql_create_db(db_name=None):
     Args:
         db_name (str, optional): Name of the database to create. 
                                 If None, uses MYSQL_DATABASE environment variable.
+        connection_params (dict, optional): Dictionary containing connection parameters
+                                          (host, port, user, password).
+                                          If None, uses environment variables.
     
     Returns:
         dict: A dictionary with keys:
@@ -18,11 +23,17 @@ def mysql_create_db(db_name=None):
             - 'message' (str): A message describing the result
             - 'result' (dict): Empty dict or error details
     """
-    # Get database connection parameters from environment variables
-    db_host = os.getenv('MYSQL_HOST', 'localhost')
-    db_port = os.getenv('MYSQL_PORT', '3306')
-    db_user = os.getenv('MYSQL_USER')
-    db_password = os.getenv('MYSQL_PASSWORD')
+    # Get database connection parameters from environment variables or connection_params
+    if connection_params:
+        db_host = connection_params.get('host', 'localhost')
+        db_port = connection_params.get('port', '3306')
+        db_user = connection_params.get('user')
+        db_password = connection_params.get('password')
+    else:
+        db_host = os.getenv('MYSQL_HOST', 'localhost')
+        db_port = os.getenv('MYSQL_PORT', '3306')
+        db_user = os.getenv('MYSQL_USER')
+        db_password = os.getenv('MYSQL_PASSWORD')
     
     # If db_name wasn't provided, get it from environment variable
     if db_name is None:
@@ -32,7 +43,7 @@ def mysql_create_db(db_name=None):
     if not all([db_user, db_password]):
         return {
             "success": False,
-            "message": "MYSQL_USER and MYSQL_PASSWORD environment variables are required.",
+            "message": "User and password are required for database connection.",
             "result": {}
         }
     
@@ -129,7 +140,7 @@ if __name__ == '__main__':
     print("Minimalistic happy path example for mysql_create_db:")
     print("This example assumes MYSQL_USER and MYSQL_PASSWORD environment variables are correctly set.")
     
-    # 1. Call the function
+    # 1. Call the function with default parameters
     result = mysql_create_db()
     
     # 2. Print the raw result from the function

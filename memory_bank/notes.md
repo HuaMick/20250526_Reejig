@@ -440,3 +440,69 @@ Memory bank notes work as the working memory of agents.
    - Ensure all integration tests pass in the Docker environment
    - Complete the README.md with comprehensive setup and usage instructions
    - Add comprehensive error handling and logging across all components
+
+**13. Testing Framework Improvements (as of 2025-06-10):**
+   - Refactored core functions to accept SQLAlchemy engine parameter:
+     - Updated `get_skills_gap_by_lvl` to accept an optional engine parameter
+     - Implemented engine parameter passing through the entire function chain:
+       - `get_occupation_and_skills`
+       - `get_occupation`
+       - `get_occupation_skills`
+     - This allows functions to use different database connections for testing
+   - Enhanced integration tests to use test database explicitly:
+     - Modified `test_integration_get_skills_gap_by_lvl.py` to use the test_db_engine fixture
+     - Tests now run against isolated test database instead of production
+     - Maintains test/production environment separation
+   - Benefits of this approach:
+     - Tests run against isolated test database
+     - No risk of corrupting production data
+     - Clear separation of test and production environments
+
+**14. Next Steps:**
+   - Apply similar refactoring to other integration tests
+   - Ensure consistent use of test database across all tests
+   - Review and enhance test fixtures for better test isolation
+
+**15. Testing Framework Refactoring Progress (as of 2025-06-10):**
+   - Completed refactoring of two core skill gap functions to accept SQLAlchemy engine parameter:
+     - `get_skills_gap_by_lvl.py` - Refactored to pass engine to child functions
+     - `get_skills_gap.py` - Refactored following the same pattern
+   - Updated corresponding integration tests to explicitly use test database:
+     - `test_integration_get_skills_gap_by_lvl.py` - Now uses test_db_engine fixture
+     - `test_integration_get_skills_gap.py` - Now uses test_db_engine fixture
+   - Next candidates for refactoring:
+     - Additional integration tests that interact with the database
+     - API endpoint tests that require database access
+   - Testing benefits already observed:
+     - Tests run against isolated test database
+     - No risk of corrupting production data
+     - Clear separation of test and production environments
+
+**16. Database Engine Refactoring Plan (as of 2025-06-11):**
+   - We've identified a need to refactor all database-interacting functions to accept an optional engine parameter:
+     - Started with `get_skills_gap_by_lvl.py` and `get_skills_gap.py` successfully
+     - Attempted to refactor `test_integration_mysql_load.py` but encountered an issue with `initialize_database_tables()`
+   - Comprehensive refactoring plan:
+     1. Create a prioritized list of all functions requiring the engine parameter
+     2. Add engine parameter to core infrastructure functions first:
+        - `initialize_database_tables()`
+        - `mysql_load_table.load_data_from_dataframe()`
+        - Other database utility functions
+     3. Then refactor data processing functions:
+        - All ETL functions
+        - Data transformation functions
+        - API backend functions
+     4. Update all tests to use the test_db_engine fixture
+   - Expected benefits:
+     - Consistent interface across all database-interacting functions
+     - Better testability with dependency injection pattern
+     - Clear separation of test and production environments
+     - Reduced risk of data corruption during testing
+     - Easier maintenance and extension of the codebase
+   - Implementation approach:
+     - Focus on one function at a time, with corresponding tests
+     - Ensure backward compatibility through optional parameters with reasonable defaults
+     - Add comprehensive type annotations and documentation
+     - Verify each change with integration tests against the test database
+
+The next session will focus on implementing this refactoring plan systematically, starting with the core infrastructure functions.

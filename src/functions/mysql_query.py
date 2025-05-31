@@ -1,13 +1,16 @@
 import os
 import mysql.connector
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
-def mysql_query(query: str) -> Dict[str, Any]:
+def mysql_query(query: str, connection_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Execute a MySQL query and return results in a standardized format.
     
     Args:
         query (str): The SQL query to execute
+        connection_params (Optional[Dict[str, Any]]): Dictionary containing connection parameters
+                                                     (host, port, user, password, database).
+                                                     If None, uses environment variables.
         
     Returns:
         dict: {
@@ -20,20 +23,23 @@ def mysql_query(query: str) -> Dict[str, Any]:
         }
     """
     try:
-        # Get database connection details from environment variables
-        db_config = {
-            'host': os.getenv('MYSQL_HOST', 'localhost'),
-            'port': os.getenv('MYSQL_PORT', '3306'),
-            'user': os.getenv('MYSQL_USER'),
-            'password': os.getenv('MYSQL_PASSWORD'),
-            'database': os.getenv('MYSQL_DATABASE'),
-        }
+        # Get database connection details from environment variables or connection_params
+        if connection_params:
+            db_config = connection_params
+        else:
+            db_config = {
+                'host': os.getenv('MYSQL_HOST', 'localhost'),
+                'port': os.getenv('MYSQL_PORT', '3306'),
+                'user': os.getenv('MYSQL_USER'),
+                'password': os.getenv('MYSQL_PASSWORD'),
+                'database': os.getenv('MYSQL_DATABASE'),
+            }
         
-        # Validate required environment variables
-        if not all([db_config['user'], db_config['password'], db_config['database']]):
+        # Validate required parameters
+        if not all([db_config.get('user'), db_config.get('password'), db_config.get('database')]):
             return {
                 "success": False,
-                "message": "Missing required database environment variables",
+                "message": "Missing required database connection parameters",
                 "result": {}
             }
             
@@ -80,7 +86,7 @@ if __name__ == "__main__":
     # This query should successfully execute if the database and table exist.
     test_query = "SELECT onet_soc_code, title FROM Occupations LIMIT 2;"
 
-    # 2. Call the function
+    # 2. Call the function with default connection parameters
     print(f"\nExecuting query: \"{test_query}\"...")
     query_result = mysql_query(test_query)
     

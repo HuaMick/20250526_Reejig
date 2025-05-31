@@ -1,6 +1,9 @@
+from typing import Optional
+from sqlalchemy.engine import Engine
+from src.config.schemas import get_sqlalchemy_engine
 from src.functions.get_occupation_and_skills import get_occupation_and_skills
 
-def get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str):
+def get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str, engine: Optional[Engine] = None):
     """
     Identifies skills that are present in the target occupation but not in the source occupation.
     
@@ -13,6 +16,8 @@ def get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str):
     Args:
         from_onet_soc_code (str): The O*NET-SOC code for the source occupation
         to_onet_soc_code (str): The O*NET-SOC code for the target occupation
+        engine (Optional[Engine]): SQLAlchemy engine to use for database operations,
+                                  or None to use the default engine
     
     Returns:
         dict: {
@@ -26,9 +31,13 @@ def get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str):
         }
     """
     try:
+        # If no engine is provided, get the default one
+        if engine is None:
+            engine = get_sqlalchemy_engine()
+            
         # Retrieve skills data for both occupations (with API fallback)
-        from_occupation_response = get_occupation_and_skills(from_onet_soc_code)
-        to_occupation_response = get_occupation_and_skills(to_onet_soc_code)
+        from_occupation_response = get_occupation_and_skills(from_onet_soc_code, engine=engine)
+        to_occupation_response = get_occupation_and_skills(to_onet_soc_code, engine=engine)
         
         # Check if both queries were successful
         if not from_occupation_response["success"]:
@@ -102,11 +111,14 @@ if __name__ == "__main__":
     from_occupation = "11-1011.00"  # Chief Executives (32 skills with level > 0)
     to_occupation = "11-2021.00"    # Marketing Managers (29 skills with level > 0)
     
-    # 2. Call the function
-    print(f"\n--- Identifying skills in {to_occupation} not present in {from_occupation} ---")
-    result = get_skills_gap(from_occupation, to_occupation)
+    # Get default engine for testing
+    default_engine = get_sqlalchemy_engine()
     
-    # 3. Print the result
+    # Call the function with the default engine
+    print(f"\n--- Identifying skills in {to_occupation} not present in {from_occupation} ---")
+    result = get_skills_gap(from_occupation, to_occupation, engine=default_engine)
+    
+    # Print the result
     print(f"\nFunction Call Result:")
     print(f"  Success: {result['success']}")
     print(f"  Message: {result['message']}")

@@ -2,11 +2,12 @@ import os
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from sqlalchemy.engine import Engine
 
 from src.config.schemas import get_sqlalchemy_engine, Onet_Skills_Landing, Skills
 
-def populate_skills_reference(source: str = 'text_file') -> Dict[str, Any]:
+def populate_skills_reference(source: str = 'text_file', engine: Optional[Engine] = None) -> Dict[str, Any]:
     """
     Populates the SkillsReference table from the raw Skills table.
     
@@ -17,6 +18,8 @@ def populate_skills_reference(source: str = 'text_file') -> Dict[str, Any]:
     Args:
         source (str): Source of the data. Default is 'text_file'.
                      Other possible values: 'api', 'merged'
+        engine (Optional[Engine]): SQLAlchemy engine to use for database operations,
+                                  or None to use the default engine
     
     Returns:
         Dict[str, Any]: A dictionary with keys:
@@ -25,7 +28,10 @@ def populate_skills_reference(source: str = 'text_file') -> Dict[str, Any]:
             - 'result' (Dict): Statistics about the operation
     """
     try:
-        engine = get_sqlalchemy_engine()
+        # If no engine is provided, get the default one
+        if engine is None:
+            engine = get_sqlalchemy_engine()
+            
         Session = sessionmaker(bind=engine)
         session = Session()
         
@@ -83,8 +89,11 @@ if __name__ == "__main__":
     print("Minimalistic happy path example for populate_skills_reference:")
     print("This example assumes a populated database with O*NET raw data.")
     
+    # Get default engine for testing
+    default_engine = get_sqlalchemy_engine()
+    
     # Call the function
-    result = populate_skills_reference()
+    result = populate_skills_reference(engine=default_engine)
     
     # Print the result
     print("\nFunction Call Result:")

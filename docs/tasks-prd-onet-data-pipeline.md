@@ -167,6 +167,7 @@ returns: """
     - [x] 4.3 Create function get_occupation_and_skills for getting and structuring the data that needs to be passed to 4.2 (generating the prompt for the llm).    
     - [x] 4.4 Update the @Schema @mysql_init_tables and @mysql_load_tables to initialize tables in the database to store the LLM responses.
     - [x] 4.5 Create function mysql_load_llm_skill_proficiencies to load LLM assessment results into the database.
+      - **IMPLEMENTATION NOTE:** This should store the full LLM response JSON in the `LlmSkillAssessments` table while extracting the specific proficiency levels (from `llm_assigned_proficiency_level` field) to update the corresponding records in the `Occupation_Skills` table for the 'LV' scale.
     - [x] 4.6 Create integration tests for the LLM skill proficiency assessment pipeline.
     - [x] 4.7 Align documentation with the implemented LLM response schema.
     - [x] 4.8 Create node `llm_skill_proficiency_request.py` to orchestrate the pipeline for a single occupation.
@@ -176,6 +177,7 @@ returns: """
   - [x] 5.1 Check and Update if needed that function `get_occupation` returns a fail status if it cant find the `onet_soc_code`.
   - [x] 5.2 Check and Update if needed that function `get_occupation_skills` returns a empty list if it cant find any skills for the `onet_soc_code`.
   - [x] 5.3 Update the `get_occupation_and_skills` to leverage the  onet_api_extract_occupation and onet_api_extract_skills functions if either get_occupation fails to find a onet_soc_code or if get_occupation_skills returns an empty list. 
+    - **IMPLEMENTATION NOTE:** This implements the on-demand API fetching with caching strategy discussed in the PRD. The system first looks for data in local tables; if not found, it fetches from the API, uses it for the immediate request, and also stores it for future use.
   - [x] 5.4 Create an integration test that tests 5.1-5.3. We should only need to execute get_occupation_and_skills for onet_soc_code='11-2021.00'. Assume the below sql has been executed for the purposes of this test.
 
 ```sql
@@ -184,17 +186,17 @@ returns: """
 -- DELETE FROM onet_data.occupation_skills 
 -- WHERE onet_soc_code='11-2021.00';
 ```
-  - [ ] 5.5 Create function `get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str)`:
-    - **IMPLEMENTATION NOTE:** This is to meet the requirements as per the requirements spec.
+  - [x] 5.5 Create function `get_skills_gap(from_onet_soc_code: str, to_onet_soc_code: str)`:
+    - **IMPLEMENTATION NOTE:** Successfully implemented to identify skills present in target occupation but missing in source occupation. Function filters out skills with proficiency level 0 to ensure meaningful comparisons. Integration tests verify functionality with different occupation combinations.
     ```python
     # parameters: from_onet_soc_code, to_onet_soc_code
     # returns: [skill_name,...] # list of skills required by the second occupation that are not present in the first
     ```
-  - [ ] 5.6 Refactor function `get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str)` to ensure it works with the latest schema:
-    - **IMPLEMENTATION NOTE:** Felt this was way more valuable than just a list of missing skills and made more sense so I implemented this as well.
+  - [x] 5.6 Implement function `get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str)` to ensure it works with the latest schema:
+    - **IMPLEMENTATION NOTE:** Successfully implemented to identify both missing skills and skills with higher proficiency requirements in the target occupation. Function utilizes get_occupation_and_skills with API fallback capability and the identify_skill_gap function for detailed analysis. Comprehensive integration tests verify all functionality.
     ```python
     # parameters: from_onet_soc_code, to_onet_soc_code
-    # returns: [{element_id:..., skill_name:..., proficiency_level:...},{}] # list of skills required by the second occupation that the first occupation either does not have or the level is lower then the second occupation.
+    # returns: [{element_id:..., skill_name:..., from_proficiency_level:..., to_proficiency_level:...},{}] # list of skills required by the second occupation that the first occupation either does not have or where the proficiency level is lower than in the second occupation.
     ```
   - [ ] 5.7 Set up FastAPI framework in `src/api/main.py`.
   - [ ] 5.8 Update function `get_occupation_skills(onet_soc_code: str, scale_id_filter: str, engine)` to:
@@ -203,7 +205,9 @@ returns: """
   - [ ] 5.9 Create integration test for the updated `get_occupation_skills`.
   - [ ] 5.10 Review `identify_skill_gap.py` (or alternative files for `get_skills_gap` / `get_skills_gap_by_lvl`) and ensure it properly processes the output from the relevant skill fetching/comparison functions.
   - [ ] 5.11 Create/Update integration test for `identify_skill_gap` (or the new gap functions).
-  - [ ] 5.12 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py`. This endpoint should utilize the functions from 5.3 and/or 5.4.
+  - [ ] 5.12 Implement `GET /skill-gap` endpoint in `src/api/routers/skill_gap.py`. This endpoint should:
+    - Utilize the functions from 5.5 and/or 5.6, preferably the more comprehensive `get_skills_gap_by_lvl` function.
+    - Transform the internal skill gap data structure to match exactly the API response format specified in the PRD's FR4.3.
   - [ ] 5.13 Create integration test for `/skill-gap` API endpoint.
 
 - [ ] 6.0 **Phase 6: Containerization, Final Testing, and Documentation**
@@ -212,4 +216,18 @@ returns: """
   - [ ] 6.3 Finalize `requirements.txt`.
   - [ ] 6.4 Ensure all integration tests pass in Docker environment.
   - [ ] 6.5 Update `README.md` (full setup, schema, data flow, API examples, design decisions).
+    - **IMPLEMENTATION NOTE:** The README should reflect the on-demand API fetching strategy, the LLM integration for skill proficiency assessment, and how these enhance the core skill gap analysis feature.
   - [ ] 6.6 Implement comprehensive error handling and logging across all components. 
+
+- [ ] 7.0 **Phase 7: LLM-Enhanced Skill Gap Analysis (OPTIONAL)**
+  - [ ] 7.1 Create a new function `get_skills_gap_with_llm_descriptions` that:
+    - Uses the existing LLM skill assessment to get proficiency data for both occupations
+    - Compares LLM-assigned proficiency levels to identify gaps
+    - Generates detailed descriptions for each gap via additional LLM calls
+  - [ ] 7.2 Enhance the API endpoint to optionally include LLM-generated gap descriptions
+    - Add a query parameter (e.g., `?include_llm_descriptions=true`) to request the enhanced output
+    - Implement a fallback to standard gap analysis if LLM processing fails
+  - [ ] 7.3 Update documentation to include this advanced feature
+    - Add examples of both standard and LLM-enhanced API responses
+    - Document performance and cost considerations
+  - [ ] 7.4 Create integration tests for the LLM-enhanced skill gap analysis 

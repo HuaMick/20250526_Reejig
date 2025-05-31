@@ -29,7 +29,7 @@ This document outlines the requirements for an end-to-end data pipeline and REST
 ## 4. Functional Requirements
 
 ### 4.1. Data Extraction
-*   **FR1.1:** The system must download or use local copies of `Occupation Data (Occupation.txt)`, `Skills (Skills.txt)`, and `Scales (Scales.txt)` from the O*NET website/provided files.
+*   **FR1.1:** The system must download or use local copies of `Occupation Data (Occupation.txt)`, `Skills (Skills.txt)`, and `Scales (Scales.txt)` from the O*NET website/provided files as the primary source for initial data population. The public O*NET API will be utilized as a supplementary source, primarily for on-demand fetching of occupation or skill data if it's not found in the local database (e.g., when requested via the `/skill-gap` API). A caching mechanism should be considered for data retrieved via the API to optimize performance and reduce redundant calls.
 *   **FR1.2:** All fields from these files must be parsed and made available for transformation and loading.
 
 ### 4.2. Database
@@ -37,8 +37,9 @@ This document outlines the requirements for an end-to-end data pipeline and REST
 *   **FR2.2:** The schema must include at least the following tables:
     *   `Occupations`: Stores O*NET-SOC Code, Title, Description, and other relevant fields from `Occupation.txt`.
     *   `Skills`: Stores Element ID, Element Name, and other relevant fields from `Skills.txt`, representing unique skills.
-    *   `Scales`: Stores Scale ID, Scale Name, Minimum, Maximum from `Scales.txt`.
-    *   `Occupation_Skills`: A join table storing the relationship between occupations and skills, including `O*NET-SOC Code`, `Element ID`, `Scale ID`, and `Data Value` (proficiency level).
+    *   `Scales`: Stores Scale ID, Scale Name, Minimum, Maximum from `Scales.txt`. This table serves as a reference for scale definitions, with the 'LV' (Level) scale being of primary importance for skill gap analysis.
+    *   `Occupation_Skills`: A join table storing the relationship between occupations and skills, including `O*NET-SOC Code`, `Element ID`, `Scale ID`, and `Data Value` (proficiency level). The `Data Value` for 'LV' scale skills will be populated/updated by the LLM proficiency assessment.
+    *   `LlmSkillAssessments` (Optional but Recommended): To store the full JSON response from the LLM for each assessed occupation-skill for auditing and future analysis. The specific LLM-derived `Data Value` (e.g., `llm_assigned_proficiency_level` for the 'LV' scale) would then be used to update the `Occupation_Skills` table.
 *   **FR2.3:** Primary keys, foreign keys, and appropriate indexes must be defined to ensure data integrity and query performance.
 
 ### 4.3. ETL Pipeline
@@ -46,18 +47,18 @@ This document outlines the requirements for an end-to-end data pipeline and REST
 *   **FR3.2:** The ETL script must populate the `Occupation_Skills` table by associating occupations with all their listed skills from `Skills.txt`.
 *   **FR3.3:** **LLM Integration for Skill Proficiency:**
     *   For each occupation-skill pair, and specifically for skills measured on the 'LV' (Level) scale, an LLM must be used to analyze the skill in the context of the occupation.
-    *   The LLM will output a `Data Value` (proficiency level, 0-7 for 'LV' scale) for the skill in that occupation.
-    *   This LLM-derived `Data Value` must be stored in the `Occupation_Skills` table for the corresponding `O*NET-SOC Code`, `Element ID`, and `Scale ID` ('LV').
+    *   The LLM will output a structured response (e.g., JSON) including a `Data Value` (proficiency level, 0-7 for 'LV' scale) for the skill in that occupation and a justification.
+    *   This LLM-derived `Data Value` (specifically the proficiency level for the 'LV' scale) must be stored/updated in the `Occupation_Skills` table for the corresponding `O*NET-SOC Code`, `Element ID`, and `Scale ID` ('LV'). The full LLM response may be stored in a separate table (e.g., `LlmSkillAssessments`) for detailed record-keeping.
 *   **FR3.4:** The ETL process should be runnable as a script and clear existing data (for these tables) before loading new data to ensure idempotency for development/testing.
 
 ### 4.4. REST API
 *   **FR4.1:** Implement `GET /skill-gap` endpoint.
     *   Parameters: `from` (O*NET-SOC Code of source occupation), `to` (O*NET-SOC Code of target occupation).
-*   **FR4.2:** The endpoint must use the `identify_skill_gap` logic (or similar, based on `src/functions/identify_skill_gap.py`):
-    *   Retrieve 'LV' scale skill proficiency data for both occupations from the `Occupation_Skills` table (populated by ETL, including LLM refinement).
+*   **FR4.2:** The endpoint must use logic similar to `identify_skill_gap` or `get_skills_gap_by_lvl` to:
+    *   Retrieve 'LV' scale skill proficiency data for both occupations. This data should primarily come from the `Occupation_Skills` table (which includes LLM-refined proficiency levels). If data for an occupation is not locally available, an on-demand fetch via the O*NET API may be triggered.
     *   A skill gap exists if:
         1.  A skill (Element ID) with `Scale ID` 'LV' is associated with the `to` occupation but not the `from` occupation.
-        2.  A skill (Element ID) with `Scale ID` 'LV' is associated with both, but the `Data Value` for the `to` occupation is higher than for the `from` occupation.
+        2.  A skill (Element ID) with `Scale ID` 'LV' is associated with both, but the `Data Value` (LLM-refined proficiency) for the `to` occupation is higher than for the `from` occupation.
 *   **FR4.3:** API Response (Success - 200 OK):
     ```json
     {
@@ -79,6 +80,7 @@ This document outlines the requirements for an end-to-end data pipeline and REST
       }
     }
     ```
+    *Note: The internal skill gap analysis functions may produce a slightly different data structure; the API layer is responsible for transforming this into the specified response format.*
 *   **FR4.4:** API Error Handling:
     *   `404 Not Found`: If `from` or `to` occupation code is not found in the database. Response: `{"success": false, "message": "Error: Occupation code [code] not found.", "result": {"skill_gaps": [], ...}}`
     *   `400 Bad Request`: If `from` or `to` parameters are missing. Response: `{"success": false, "message": "Error: Missing 'from' or 'to' occupation code parameter.", "result": {"skill_gaps": [], ...}}`
@@ -99,10 +101,11 @@ This document outlines the requirements for an end-to-end data pipeline and REST
 
 ## 6. Design Considerations (Optional)
 
-*   The existing `src/functions/identify_skill_gap.py` provides a strong foundation for the core logic.
+*   The existing `src/functions/identify_skill_gap.py` (or a more comprehensive function like `get_skills_gap_by_lvl`) provides a strong foundation for the core logic.
 *   The API should be stateless.
 *   Consider using a lightweight Python web framework for the API (e.g., FastAPI, Flask).
 *   Logging should be implemented for both the ETL process and API requests/responses.
+*   Implement an on-demand API fetching strategy with local caching for O*NET data to improve performance and ensure data availability for the `/skill-gap` endpoint.
 
 ## 7. Technical Considerations (Optional)
 

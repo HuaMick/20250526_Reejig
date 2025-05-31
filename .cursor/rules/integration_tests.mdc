@@ -15,8 +15,8 @@ Rules:
 - Have a pytest implementation in `./tests/test_integration_<test_name>.py`
 - Have a shell script in `./tests/test_integration_<test_name>.sh` that sets up the environment and executes the test
 - Do not use mocking in integration tests, test real world assets, if need be you can spin up a local sqlite database for testing.
-- Do not manufacture datasets for loading into a database (this is the same as mocking)
 - Decouple test implementation from test execution by using shell scripts for environment setup
+- Do not test for cases where we expect failure/error unless we have encountered these issues and need to debug
 
 ## Always
 - [ ] `grep_search` for related pytest files and fixtures.

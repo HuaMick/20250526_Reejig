@@ -21,7 +21,7 @@
 
 - I've implemented a downstream normalization for skills table, this will allow me to land my data, and then have the normalized tables downstream.
 
-- I've refactored the landing tables and loading to be more modular this should help when I start to pull data from the API, I've yet to recieve my API credentials yet so will wait for that.
+- I've refactored the landing tables and loading to be more modular this should help when I start to pull data from the API, I've yet to recieve my API credentials yet so will wait for that. I don't really know what I'm going to get from the API so it would be good to implement this so I can maximise my understanding of all the data I can get from the different sources. 
 
 - I've successfully extracted the occupations data using the API. I'll need to update schema and refactor the load pipeline. Once I've established I can successfully load I'll create the other functions to extract the other datasets via the API. 
 
@@ -31,73 +31,22 @@
 
 - I've implemented the API calls just to verify my assumptions around their behaviour. Makes sense for the api to scan the database and then leverage the api if it cant find the code. We want the api calls to return the data directly to the analysis so we can respond to the user as fast as possible, then we can store the data in the database for future requests.
 
+- I've started looking at the LLM functionality. I'm not sure how the LLM will repond to this so would be good to implement this in some way so I can understand if it can reliably fit in with the skills gap analysis.
+
 - I've successfully been able to use the onet data to generate a prompt to gemini and have it return a structured json. 
 
-## Project Plan
+- Further analysis of the skills dataset is showing that all occupations have the same skills unless a LV filter is applied excluding lvl 0. Confirms my suspicion that we need to use the LVL in some way here, otherwise there is no value add. Will still proceed with a implementation that adheres to requirements (will just strictly exclude 0) as well as a implementation for what I think would be more value add. The agent should be able to assist me with implementing both so it wont cost much. Given its the weekend, it would be better do just go both directions and note this in the readme then reaching out for clarification.
 
-### 1. Project Setup
-- Initialize project structure with Python virtual environment
-- Create requirements.txt with necessary dependencies
-- Set up Docker and Docker Compose configuration
-- Create basic project documentation
+```sql
+select onet_soc_code, count(distinct element_id )
+from onet_data.onet_skills_landing
+group by 1 -- all records showing 35 skills
+```
 
-### 2. Database Design & Implementation
-- Design MySQL schema for:
-  - Occupations table (O*NET occupation data)
-  - Skills table (O*NET skills data)
-  - Occupation-Skills relationship table
-- Create database initialization scripts
-- Set up database migrations
-
-### 3. ETL Pipeline Development
-- Create data download module for O*NET datasets
-- Implement data extraction scripts for:
-  - Occupation.txt
-  - Skills.txt
-- Develop data transformation logic
-- Create data loading scripts into MySQL
-- Add error handling and logging
-- Implement data validation checks
-
-### 4. REST API Development
-- Set up FastAPI/Flask application structure
-- Implement database connection layer
-- Create API endpoints:
-  - GET /skill-gap endpoint with query parameters
-  - Health check endpoint
-- Add input validation
-- Implement error handling
-- Add API documentation (Swagger/OpenAPI)
-
-### 5. Docker Configuration
-- Create Dockerfile for API service
-- Create Dockerfile for ETL service
-- Configure Docker Compose for:
-  - MySQL database
-  - API service
-  - ETL service
-- Set up networking between containers
-- Configure volume mounts for data persistence
-
-### 6. Testing
-- Write unit tests for:
-  - ETL pipeline
-  - API endpoints
-  - Database operations
-- Create integration tests
-- Set up CI pipeline (optional)
-
-### 7. Documentation
-- Create detailed README.md with:
-  - Setup instructions
-  - API documentation
-  - Database schema documentation
-  - Sample API requests
-- Document assumptions and design decisions
-- Add inline code documentation
-
-### 8. Final Steps
-- Code review and cleanup
-- Performance optimization
-- Security review
-- Final testing in local environment
+```sql
+select onet_soc_code, count(distinct element_id )
+from onet_data.onet_skills_landing
+where scale_id = "LV"
+and data_value != 0
+group by 1
+```

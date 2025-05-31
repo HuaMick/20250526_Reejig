@@ -1,4 +1,122 @@
 import os
+from src.functions.get_occupation_and_skills import get_occupation_and_skills
+
+def get_skills_gap_by_lvl(from_onet_soc_code: str, to_onet_soc_code: str):
+    """
+    Identifies skills required by the target occupation that the source occupation either does not have 
+    or where the proficiency level is lower than in the target occupation.
+    
+    This function:
+    1. Retrieves detailed skills data for both occupations using get_occupation_and_skills (with API fallback)
+    2. Transforms the data to match the structure expected by identify_skill_gap
+    3. Uses identify_skill_gap to analyze the skill gap between the occupations
+    4. Returns a comprehensive assessment of skill gaps with proficiency level details
+    
+    Args:
+        from_onet_soc_code (str): The O*NET-SOC code for the source occupation
+        to_onet_soc_code (str): The O*NET-SOC code for the target occupation
+    
+    Returns:
+        dict: {
+            "success": bool,
+            "message": str,
+            "result": {
+                "from_occupation_title": str,
+                "to_occupation_title": str,
+                "skill_gaps": [
+                    {
+                        "element_id": str,
+                        "element_name": str,
+                        "scale_id": "LV",
+                        "from_data_value": float/int,
+                        "to_data_value": float/int
+                    },
+                    ...
+                ]
+            }
+        }
+    """
+    try:
+        # Retrieve detailed data for both occupations (with API fallback)
+        from_occupation_response = get_occupation_and_skills(from_onet_soc_code)
+        to_occupation_response = get_occupation_and_skills(to_onet_soc_code)
+        
+        # Check if both queries were successful
+        if not from_occupation_response["success"]:
+            return {
+                "success": False,
+                "message": f"Error retrieving source occupation data: {from_occupation_response['message']}",
+                "result": {
+                    "from_occupation_title": "Unknown",
+                    "to_occupation_title": "Unknown",
+                    "skill_gaps": []
+                }
+            }
+            
+        if not to_occupation_response["success"]:
+            return {
+                "success": False,
+                "message": f"Error retrieving target occupation data: {to_occupation_response['message']}",
+                "result": {
+                    "from_occupation_title": from_occupation_response["result"]["occupation_data"]["name"],
+                    "to_occupation_title": "Unknown",
+                    "skill_gaps": []
+                }
+            }
+        
+        # Extract occupation titles
+        from_occupation_title = from_occupation_response["result"]["occupation_data"]["name"]
+        to_occupation_title = to_occupation_response["result"]["occupation_data"]["name"]
+        
+        # Transform data to match the structure expected by identify_skill_gap
+        from_occupation_data = {
+            "occupation_title": from_occupation_title,
+            "skills": []
+        }
+        
+        to_occupation_data = {
+            "occupation_title": to_occupation_title,
+            "skills": []
+        }
+        
+        # Transform skills data for source occupation
+        for skill in from_occupation_response["result"]["occupation_data"]["skills"]:
+            from_occupation_data["skills"].append({
+                "element_id": skill["skill_element_id"],
+                "element_name": skill["skill_name"],
+                "scale_id": "LV",
+                "data_value": float(skill["proficiency_level"]) if skill["proficiency_level"] is not None else 0
+            })
+        
+        # Transform skills data for target occupation
+        for skill in to_occupation_response["result"]["occupation_data"]["skills"]:
+            to_occupation_data["skills"].append({
+                "element_id": skill["skill_element_id"],
+                "element_name": skill["skill_name"],
+                "scale_id": "LV",
+                "data_value": float(skill["proficiency_level"]) if skill["proficiency_level"] is not None else 0
+            })
+        
+        # Filter out skills with proficiency level 0 from both sets
+        from_occupation_data["skills"] = [skill for skill in from_occupation_data["skills"] if skill["data_value"] > 0]
+        to_occupation_data["skills"] = [skill for skill in to_occupation_data["skills"] if skill["data_value"] > 0]
+        
+        # Call identify_skill_gap to analyze the skill gap
+        skill_gap_result = identify_skill_gap(from_occupation_data, to_occupation_data)
+        
+        # Return the result
+        return skill_gap_result
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Error identifying skill gap by level: {str(e)}",
+            "result": {
+                "from_occupation_title": "Error",
+                "to_occupation_title": "Error",
+                "skill_gaps": []
+            }
+        }
 
 # No direct DB imports needed here anymore (Occupation, Skill, OccupationSkill, get_sqlalchemy_engine)
 # We will import the new get_occupation_skills function for the __main__ example
@@ -91,41 +209,31 @@ def identify_skill_gap(occupation1_data: dict, occupation2_data: dict):
         return {"success": False, "message": f"Error identifying skill gap from '{occ1_title_err}' to '{occ2_title_err}': {str(e)}", "result": {"skill_gaps": [], "from_occupation_title": occ1_title_err, "to_occupation_title": occ2_title_err}}
 
 if __name__ == '__main__':
-    print("Minimalistic happy path example for identify_skill_gap:")
-    print("Compares two sample occupation skill sets to find gaps.")
-
-    # 1. Define sample input data for two occupations
-    # Assumes skills data is pre-fetched and structured as expected by the function.
-    occupation1_skill_data = {
-        "occupation_title": "Junior Role",
-        "skills": [
-            {"element_id": "S001", "element_name": "Basic Task", "scale_id": "LV", "data_value": 2},
-            {"element_id": "S002", "element_name": "Common Skill", "scale_id": "LV", "data_value": 3}
-        ]
-    }
-    occupation2_skill_data = {
-        "occupation_title": "Senior Role",
-        "skills": [
-            {"element_id": "S001", "element_name": "Basic Task", "scale_id": "LV", "data_value": 4},      # Gap: Higher proficiency
-            {"element_id": "S002", "element_name": "Common Skill", "scale_id": "LV", "data_value": 3},      # No gap: Same proficiency
-            {"element_id": "S003", "element_name": "Advanced Skill", "scale_id": "LV", "data_value": 3} # Gap: New skill
-        ]
-    }
-
-    # 2. Call the function
-    print(f"\n--- Identifying skill gap from '{occupation1_skill_data["occupation_title"]}' to '{occupation2_skill_data["occupation_title"]}' ---")
-    gap_analysis_result = identify_skill_gap(occupation1_skill_data, occupation2_skill_data)
+    print("Testing get_skills_gap_by_lvl function with real occupation codes:")
+    print("This example assumes either a populated database with O*NET data or valid O*NET API credentials.")
     
-    # 3. Print the raw result from the function
+    # Using the occupation codes identified as having different skills (after filtering level=0)
+    from_occupation = "11-1011.00"  # Chief Executives
+    to_occupation = "11-2021.00"    # Marketing Managers
+    
+    # Call the function
+    print(f"\n--- Identifying skill gap with proficiency levels from '{from_occupation}' to '{to_occupation}' ---")
+    result = get_skills_gap_by_lvl(from_occupation, to_occupation)
+    
+    # Print the results
     print("\nFunction Call Result:")
-    print(gap_analysis_result) # Prints the full success/message/result dictionary
-
-    # Optionally, print a summary of gaps if successful
-    if gap_analysis_result['success'] and gap_analysis_result['result']['skill_gaps']:
-        print("  Identified Skill Gaps Summary:")
-        for gap in gap_analysis_result['result']['skill_gaps']:
-            print(f"    - Skill: {gap['element_name']} (ID: {gap['element_id']}), From Level: {gap['from_data_value']}, To Level: {gap['to_data_value']}")
-    elif gap_analysis_result['success']:
-        print("  No skill gaps were identified in this example.")
+    print(f"  Success: {result['success']}")
+    print(f"  Message: {result['message']}")
+    
+    if result['success']:
+        print(f"\n  From: {result['result']['from_occupation_title']} ({from_occupation})")
+        print(f"  To: {result['result']['to_occupation_title']} ({to_occupation})")
+        print(f"  Number of skill gaps identified: {len(result['result']['skill_gaps'])}")
         
+        if result['result']['skill_gaps']:
+            print("\n  Skill Gaps with Proficiency Levels:")
+            for gap in result['result']['skill_gaps']:
+                print(f"    - Skill: {gap['element_name']} (ID: {gap['element_id']})")
+                print(f"      From Level: {gap['from_data_value']}, To Level: {gap['to_data_value']}")
+    
     print("\nExample finished.") 

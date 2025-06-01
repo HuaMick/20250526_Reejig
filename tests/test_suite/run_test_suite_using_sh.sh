@@ -33,7 +33,9 @@ PYTHON_TEST_FILES=(
     "test_integration_get_occupation_skills.py"
     "test_integration_get_skills_gap.py"
     "test_integration_get_skills_gap_by_lvl.py"
-    # Add "test_integration_llm_skill_assessment_pipeline.py" etc. when ready
+    "test_integration_gemini_llm_prompt.py"
+    "test_integration_gemini_llm_request.py"
+    "test_integration_get_skills_gap_by_lvl_llm.py"
 )
 
 # The script should already be in the project root (/app by default in Dockerfile.test_runner)

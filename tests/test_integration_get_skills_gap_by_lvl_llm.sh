@@ -26,14 +26,6 @@ fi
 echo "Running LLM-enhanced skill gap analysis integration tests..."
 python -m pytest tests/test_integration_get_skills_gap_by_lvl_llm.py::test_get_skills_gap_by_lvl_llm_successful -v -s
 
-echo ""
-echo "Running error handling tests..."
-python -m pytest tests/test_integration_get_skills_gap_by_lvl_llm.py::test_get_skills_gap_by_lvl_llm_invalid_occupation -v -s
-
-echo ""
-echo "Running same occupation tests..."
-python -m pytest tests/test_integration_get_skills_gap_by_lvl_llm.py::test_get_skills_gap_by_lvl_llm_same_occupation -v -s
-
 # Deactivate virtual environment if it was activated
 if [ -n "$VIRTUAL_ENV" ]; then
     deactivate

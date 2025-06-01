@@ -6,7 +6,8 @@ from typing import Optional
 from sqlalchemy.engine import Engine
 from src.config.schemas import get_sqlalchemy_engine
 from src.functions.get_occupation_and_skills import get_occupation_and_skills
-from src.functions.gemini_llm_prompt import gemini_llm_prompt
+from src.functions.generate_skill_proficiency_prompt import generate_skill_proficiency_prompt
+from src.functions.generate_skill_gap_analysis_prompt import generate_skill_gap_analysis_prompt
 from src.functions.gemini_llm_request import gemini_llm_request
 
 def get_skills_gap_by_lvl_llm(from_onet_soc_code: str, to_onet_soc_code: str, engine: Optional[Engine] = None):
@@ -71,9 +72,8 @@ def get_skills_gap_by_lvl_llm(from_onet_soc_code: str, to_onet_soc_code: str, en
         to_occupation_data = to_occupation_response["result"]["occupation_data"]
         
         # Step 1: Generate LLM proficiency assessments for source occupation
-        from_prompt_result = gemini_llm_prompt(
+        from_prompt_result = generate_skill_proficiency_prompt(
             occupation_data=from_occupation_data,
-            prompt_type="skill_proficiency"
         )
         
         if not from_prompt_result["success"]:
@@ -108,9 +108,8 @@ def get_skills_gap_by_lvl_llm(from_onet_soc_code: str, to_onet_soc_code: str, en
             }
         
         # Step 2: Generate LLM proficiency assessments for target occupation
-        to_prompt_result = gemini_llm_prompt(
+        to_prompt_result = generate_skill_proficiency_prompt(
             occupation_data=to_occupation_data,
-            prompt_type="skill_proficiency"
         )
         
         if not to_prompt_result["success"]:
@@ -192,10 +191,9 @@ def get_skills_gap_by_lvl_llm(from_onet_soc_code: str, to_onet_soc_code: str, en
             })
         
         # Step 5: Generate skill gap analysis prompt with LLM-assessed proficiencies
-        gap_prompt_result = gemini_llm_prompt(
-            occupation_data=enhanced_to_data,
+        gap_prompt_result = generate_skill_gap_analysis_prompt(
+            to_occupation_data=enhanced_to_data,
             from_occupation_data=enhanced_from_data,
-            prompt_type="skill_gap_analysis"
         )
         
         if not gap_prompt_result["success"]:

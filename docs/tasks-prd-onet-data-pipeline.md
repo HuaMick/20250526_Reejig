@@ -282,10 +282,9 @@
     - Add examples of both standard and LLM-enhanced API responses
     - Document performance and cost considerations
   - [x] 8.4 Add integration tests for the LLM-enhanced skill gap analysis
-    - [x] 8.4.1 `test_integration_llm_skill_assessment_pipeline.py` (Verified and updated as necessary for compatibility)
-    - [x] 8.4.2 `test_integration_gemini_llm_prompt.py` (Verified and updated for new prompt types)
-    - [x] 8.4.3 `test_integration_gemini_llm_request.py` (Verified for compatibility with new response types)
-    - [x] 8.4.4 `test_integration_get_skills_gap_by_lvl_llm.py` (New test created for the core LLM-enhanced function)
+    - [x] 8.4.2 `test_integration_gemini_llm_prompt.py` 
+    - [x] 8.4.3 `test_integration_gemini_llm_request.py` 
+    - [x] 8.4.4 `test_integration_get_skills_gap_by_lvl_llm.py`
 
 - [ ] 9.0 **Phase 9: Cloud Deployment (OPTIONAL)**
   - [ ] 9.1 Create cloud deployment configuration for GCP Cloud Run

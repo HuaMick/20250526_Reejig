@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, text # Added text for direct queries
 from sqlalchemy.orm import sessionmaker # Added sessionmaker
 
 from src.functions.get_occupation_and_skills import get_occupation_and_skills
-from src.functions.gemini_llm_prompt import gemini_llm_prompt
+from functions.generate_skill_gap_analysis_prompt import gemini_llm_prompt
 from src.functions.gemini_llm_request import gemini_llm_request # Import gemini_llm_request
 from src.functions.mysql_load_llm_skill_proficiencies import mysql_load_llm_skill_proficiencies # Added
 import src.config.schemas as schemas # Added

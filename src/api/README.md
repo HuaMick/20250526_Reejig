@@ -131,6 +131,43 @@ Defined in `src/api/routers/skill_gap.py`.
         ```
     -   **Response (Error):** Similar to `/skill-gap`, with appropriate error messages and status codes (e.g., 404, 500).
 
+3.  `GET /skill-gap-llm`:
+    -   **Purpose:** Analyzes detailed skill gaps with LLM-generated descriptions. It identifies skills where the target occupation requires a higher proficiency level than the source occupation, or skills entirely missing from the source, and provides an LLM-generated narrative for each gap.
+    -   **Query Parameters:**
+        -   `from_occupation` (string, required): Source O*NET-SOC code.
+        -   `to_occupation` (string, required): Target O*NET-SOC code.
+    -   **Response (Success):**
+        ```json
+        {
+            "from_occupation": {
+                "code": "11-1011.00",
+                "title": "Chief Executives"
+            },
+            "to_occupation": {
+                "code": "11-2021.00",
+                "title": "Marketing Managers"
+            },
+            "skill_gaps": [
+                {
+                    "skill_name": "Complex Problem Solving",
+                    "element_id": "2.B.1.a",
+                    "from_proficiency": 3.5,
+                    "to_proficiency": 4.0,
+                    "llm_gap_description": "The target role of Marketing Manager requires a higher proficiency in Complex Problem Solving (4.0/7) compared to a Chief Executive (3.5/7). This involves identifying complex problems and reviewing related information to develop and evaluate options and implement solutions. To bridge this gap, one might focus on strategic case studies, advanced problem-solving workshops, and leading complex projects with multiple stakeholders."
+                },
+                {
+                    "skill_name": "Market Research Analysis",
+                    "element_id": "2.C.3.b",
+                    "from_proficiency": 0,
+                    "to_proficiency": 3.0,
+                    "llm_gap_description": "Market Research Analysis is a key skill for Marketing Managers (required at 3.0/7 proficiency) that may not be as developed for Chief Executives (0/7). This skill involves understanding market conditions to examine potential sales of a product or service. Development could include courses on market research, hands-on experience with data analysis tools, and shadowing experienced market analysts."
+                }
+                // ... other skill gaps
+            ]
+        }
+        ```
+    -   **Response (Error):** Similar to `/skill-gap`, with appropriate error messages and status codes (e.g., 404, 500). This endpoint may also take longer to respond due to multiple LLM calls.
+
 ## Running the API
 
 ### Locally
@@ -254,6 +291,7 @@ When interacting with this API:
 **Example Agent Task:** "Find the skill gaps between a 'Software Developer' (15-1252.00) and a 'Data Scientist' (15-2051.00)."
 -   **Action:** Send a `GET` request to `/api/v1/skill-gap?from_occupation=15-1252.00&to_occupation=15-2051.00`.
 -   **Action (Detailed):** Send a `GET` request to `/api/v1/skill-gap-by-lvl?from_occupation=15-1252.00&to_occupation=15-2051.00`.
+-   **Action (LLM Enhanced):** Send a `GET` request to `/api/v1/skill-gap-llm?from_occupation=15-1252.00&to_occupation=15-2051.00`.
 
 ## Contribution Guidelines
 

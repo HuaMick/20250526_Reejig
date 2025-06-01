@@ -263,8 +263,8 @@
     - [x] 7.1.1 `Dockerfile.api`
     - [x] 7.1.2 `Dockerfile.test_runner`
 
-- [ ] 8.0 **Phase 8: LLM-Enhanced Skill Gap Analysis (OPTIONAL)**
-  - [ ] 8.1 Create a new function `get_skills_gap_by_lvl_llm.py`:
+- [x] 8.0 **Phase 8: LLM-Enhanced Skill Gap Analysis (OPTIONAL BUT IMPLEMENTED)**
+  - [x] 8.1 Create a new function `get_skills_gap_by_lvl_llm.py`:
     - should work similar to `get_skills_gap_by_lvl.py`
     - leverages `get_occupation_and_skills.py` to get occupation skills for from and to
     - leverages `gemini_llm_prompt` and `gemini_llm_request` to generate llm proficiency levels and descriptions for from and to
@@ -276,15 +276,16 @@
     # returns: [{element_id:..., skill_name:..., from_proficiency_level:..., to_proficiency_level:..., llm_gap_description:...},{}] # list of skills required by the second occupation that the first occupation either does not have or where the proficiency level is lower than in the second occupation.
     ```
 
-  - [ ] 8.2 Create a new API endpoint for LLM-enhanced gap descriptions
-    - Implement a separate endpoint (e.g., `/skill-gap-with-descriptions`) that returns the enhanced output with LLM-generated descriptions
-  - [ ] 8.3 Update documentation to include this advanced feature
+  - [x] 8.2 Create a new API endpoint for LLM-enhanced gap descriptions
+    - Implement a separate endpoint (e.g., `/skill-gap-llm`) that returns the enhanced output with LLM-generated descriptions
+  - [x] 8.3 Update documentation to include this advanced feature
     - Add examples of both standard and LLM-enhanced API responses
     - Document performance and cost considerations
-  - [ ] 8.4 Add integration tests for the LLM-enhanced skill gap analysis
-    - [ ] 8.4.1 `test_integration_llm_skill_assessment_pipeline.py`
-    - [ ] 8.4.2 `test_integration_gemini_llm_prompt.py`
-    - [ ] 8.4.3 `test_integration_gemini_llm_request.py`
+  - [x] 8.4 Add integration tests for the LLM-enhanced skill gap analysis
+    - [x] 8.4.1 `test_integration_llm_skill_assessment_pipeline.py` (Verified and updated as necessary for compatibility)
+    - [x] 8.4.2 `test_integration_gemini_llm_prompt.py` (Verified and updated for new prompt types)
+    - [x] 8.4.3 `test_integration_gemini_llm_request.py` (Verified for compatibility with new response types)
+    - [x] 8.4.4 `test_integration_get_skills_gap_by_lvl_llm.py` (New test created for the core LLM-enhanced function)
 
 - [ ] 9.0 **Phase 9: Cloud Deployment (OPTIONAL)**
   - [ ] 9.1 Create cloud deployment configuration for GCP Cloud Run

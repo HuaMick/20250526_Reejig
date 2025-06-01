@@ -544,3 +544,48 @@ The next session will focus on implementing this refactoring plan systematically
    - Continue the database engine refactoring to consistently pass engine parameters through all functions.
    - Implement test fixtures that properly isolate test data from production data.
    - Consider implementing more comprehensive cleanup procedures to ensure tests don't interfere with each other.
+
+### LLM-Enhanced Skill Gap Analysis (Phase 8 - as of 2025-06-13)
+
+**1. Core Functionality:**
+   - Implemented `get_skills_gap_by_lvl_llm` function in `src/functions/get_skills_gap_by_lvl_llm.py`.
+   - This function leverages existing capabilities (`get_occupation_and_skills`, `gemini_llm_prompt`, `gemini_llm_request`) to provide a more detailed skill gap analysis.
+   - **Workflow:**
+     1. Fetches data for source and target occupations.
+     2. Calls the LLM (via `gemini_llm_request` with `expected_response_type="skill_proficiency"`) to assess skill proficiency levels for *both* source and target occupations individually.
+     3. Uses these LLM-assessed proficiency levels to prepare data for a second LLM call.
+     4. Calls the LLM again (via `gemini_llm_request` with `expected_response_type="skill_gap_analysis"` and a new prompt type in `gemini_llm_prompt`) to generate narrative descriptions for each identified skill gap.
+   - The `gemini_llm_prompt.py` function was enhanced to include a `prompt_type="skill_gap_analysis"` that takes into account the LLM-assessed proficiencies of both occupations to ask for a comparative analysis and gap descriptions.
+   - The `gemini_llm_request.py` function was significantly refactored:
+     - Added `expected_response_type` parameter to handle different JSON structures from the LLM (for skill proficiency vs. skill gap analysis).
+     - Implemented more robust JSON parsing logic (`_parse_llm_json_response`) with multiple cleaning strategies to handle common LLM output issues (e.g., markdown fences, unterminated strings, unescaped quotes).
+     - Added helper functions (`_process_skill_proficiency_response`, `_process_skill_gap_analysis_response`) to structure the `reply_data` based on the `expected_response_type`.
+     - Included a mechanism to save raw LLM responses to `src/functions/llm_debug_responses/` for easier debugging of parsing issues. (User must create this directory).
+     - Increased `max_tokens` from 1024 to 3024 to prevent truncation of longer JSON responses.
+
+**2. API Endpoint:**
+   - Added a new endpoint `GET /api/v1/skill-gap-llm` in `src/api/routers/skill_gap.py`.
+   - This endpoint utilizes the `get_skills_gap_by_lvl_llm` function.
+   - Returns a JSON response including the standard skill gap details (skill name, element_id, from/to proficiency) plus an `llm_gap_description` for each skill gap.
+   - API documentation in `src/api/README.md` was updated to include this new endpoint with examples.
+
+**3. Integration Testing:**
+   - Created `tests/test_integration_get_skills_gap_by_lvl_llm.py` and its corresponding shell script `tests/test_integration_get_skills_gap_by_lvl_llm.sh`.
+   - Tests cover successful LLM-enhanced gap analysis, error handling for invalid occupations, and same-occupation comparisons.
+   - Debugging involved analyzing saved raw LLM responses to identify and fix JSON parsing issues by improving cleaning logic and increasing token limits.
+
+**4. Key Challenges & Resolutions:**
+   - **LLM JSON Truncation/Malformed JSON:** Initially, tests failed due to the LLM returning incomplete or malformed JSON. This was addressed by:
+     - Increasing `max_tokens` in `gemini_llm_request`.
+     - Implementing more robust JSON cleaning and parsing strategies in `_parse_llm_json_response`.
+     - Adding the raw response saving feature for easier diagnosis.
+   - **Handling Different LLM Response Structures:** The LLM is used for two distinct tasks (proficiency assessment and gap description), which have different expected JSON outputs. This was handled by adding the `expected_response_type` parameter to `gemini_llm_request` and conditional processing logic.
+
+**5. Status:**
+   - Phase 8.1 (core function), 8.2 (API endpoint), and 8.4 (integration tests for new function) are largely complete.
+   - The system now provides LLM-generated narrative descriptions for skill gaps.
+
+**Next Steps:**
+   - Final review of documentation (Phase 8.3).
+   - Consider any further refinements to prompt engineering for even better LLM descriptions.
+   - Proceed to Phase 9 (Cloud Deployment) or any other outstanding tasks.

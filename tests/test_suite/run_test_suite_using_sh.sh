@@ -1,22 +1,26 @@
 #!/bin/bash
 set -e # Exit immediately if a command exits with a non-zero status.
 
-echo "Starting integration test suite by running individual .sh scripts..."
+echo "Starting integration test suite within Docker container..."
 
-# Activate the virtual environment
-echo "Activating virtual environment..."
-source .venv/bin/activate
+# Environment variables should be injected by Docker Compose.
+# If env/env.env is copied into the image and needed explicitly by this script:
+# ENV_FILE="env/env.env"
+# if [ -f "$ENV_FILE" ]; then
+#   echo "Sourcing environment variables from $ENV_FILE..."
+#   source "$ENV_FILE"
+# else
+#   echo "Warning: Environment file $ENV_FILE not found inside the container."
+# fi
 
-# Apply environment variables
-echo "Sourcing environment variables..."
-source env/env.env
+# The Python environment is managed by the Docker container, so venv activation is not needed.
+# # Activate the virtual environment
+# echo "Activating virtual environment..."
+# source .venv/bin/activate
 
 # Define the base directory for test scripts
-# Assuming .sh scripts are in the same directory as .py test files, e.g. tests/
-TEST_SCRIPT_DIR="tests" # Modify if .sh scripts are elsewhere, e.g., "tests/scripts"
+TEST_SCRIPT_DIR="tests" 
 
-# List of Python test files (derived from run_test_suite.sh)
-# The script will derive the .sh script name from these
 PYTHON_TEST_FILES=(
     "test_integration_mysql_create_db.py"
     "test_integration_mysql_init_tables.py"
@@ -29,33 +33,35 @@ PYTHON_TEST_FILES=(
     "test_integration_get_occupation_skills.py"
     "test_integration_get_skills_gap.py"
     "test_integration_get_skills_gap_by_lvl.py"
+    # Add "test_integration_llm_skill_assessment_pipeline.py" etc. when ready
 )
 
-# Get the project root directory to ensure scripts are called from there
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-echo "Changing to project root: $PROJECT_ROOT"
-cd "$PROJECT_ROOT"
+# The script should already be in the project root (/app by default in Dockerfile.test_runner)
+# PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# echo "Changing to project root: $PROJECT_ROOT"
+# cd "$PROJECT_ROOT"
 
 echo "Executing test scripts..."
 for py_test_file in "${PYTHON_TEST_FILES[@]}"; do
-    sh_test_file="${py_test_file%.py}.sh" # Replace .py with .sh
+    sh_test_file="${py_test_file%.py}.sh" 
     full_sh_path="$TEST_SCRIPT_DIR/$sh_test_file"
 
     if [ -f "$full_sh_path" ]; then
         echo "----------------------------------------------------------------------"
         echo "Executing: $full_sh_path"
         echo "----------------------------------------------------------------------"
-        # Ensure the .sh script itself is executable if it's not already
-        # chmod +x "$full_sh_path" # Uncomment if you're sure you want to do this here
-        
-        # Execute the shell script.
-        # If the scripts already handle venv and env vars, those parts above are redundant for each script
-        # but keeping them for the overall suite script is good practice.
-        "$full_sh_path"
+        # Ensure the individual .sh test scripts are executable (Dockerfile.test_runner helps with the main one)
+        # If these are not executable, they might need `bash $full_sh_path` or `chmod +x` in Dockerfile
+        # For now, assuming they are executable or will be run with bash/sh explicitly if needed.
+        if [ -x "$full_sh_path" ]; then
+            "$full_sh_path"
+        else
+            bash "$full_sh_path"
+        fi
         echo "----------------------------------------------------------------------"
         echo "Finished: $full_sh_path"
         echo "----------------------------------------------------------------------"
-        echo # Add a blank line for readability
+        echo 
 
         echo "Waiting for 2 seconds..."
         sleep 2
@@ -68,10 +74,10 @@ done
 
 echo "All specified integration test scripts have been attempted."
 
-# Deactivate virtual environment if it was activated
-if [ -n "$VIRTUAL_ENV" ]; then
-    echo "Deactivating virtual environment..."
-    deactivate
-fi
+# Deactivation of venv is not needed in Docker.
+# if [ -n "$VIRTUAL_ENV" ]; then
+#     echo "Deactivating virtual environment..."
+#     deactivate
+# fi
 
-echo "Integration test suite (using individual .sh scripts) completed."
+echo "Integration test suite (using individual .sh scripts) completed within Docker."

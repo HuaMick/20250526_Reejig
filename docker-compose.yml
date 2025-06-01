@@ -9,6 +9,8 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-onet_data} # Uses env var or defaults
       MYSQL_USER: ${MYSQL_USER} # Must be set in environment
       MYSQL_PASSWORD: ${MYSQL_PASSWORD} # Must be set in environment
+    env_file:
+      - ./env/env.env # Load environment variables from this file
     volumes:
       - mysql_data:/var/lib/mysql # Persist data
     healthcheck:
@@ -64,6 +66,44 @@ services:
       - API_HOST=0.0.0.0
       - API_PORT=8000
     restart: unless-stopped
+    networks:
+      - onet-network
+
+  test_runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test_runner
+    container_name: onet_test_runner
+    depends_on:
+      db:
+        condition: service_healthy
+      # If your tests directly hit the API, add:
+      # api:
+      #   condition: service_started # Or service_healthy if API has a health check Docker uses
+    volumes:
+      - .:/app # Mount the entire project directory for access to all files
+      # If tests generate reports you want to access on the host:
+      # - ./tests/reports:/app/tests/reports 
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1 # Good for seeing logs in real-time
+      - PYTHONDONTWRITEBYTECODE=1
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-onet_test_db} # Consider using a separate test database
+      - MYSQL_TEST_USER=${MYSQL_USER}
+      - MYSQL_TEST_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_TEST_ROOT_USER=${MYSQL_TEST_ROOT_USER}
+      - MYSQL_TEST_ROOT_PASSWORD=${MYSQL_TEST_ROOT_PASSWORD} # Needed if mysql_create_db.py runs as root
+      - ONET_USERNAME=${ONET_USERNAME}
+      - ONET_PASSWORD=${ONET_PASSWORD}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # Add any other environment variables your tests or application code running under test needs
+    env_file:
+      - ./env/env.env # Load environment variables from this file
+    # The command to run the test suite.
+    # This overrides any CMD or ENTRYPOINT in the Dockerfile.test_runner.
+    command: ["./tests/test_suite/run_test_suite_using_sh.sh"]
     networks:
       - onet-network
 

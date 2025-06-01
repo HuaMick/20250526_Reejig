@@ -24,7 +24,7 @@ def test_db_config():
     return {
         'host': os.getenv('MYSQL_HOST', 'localhost'),
         'port': os.getenv('MYSQL_PORT', '3306'),
-        'user': os.getenv('MYSQL_TEST_USER', os.getenv('MYSQL_USER')),
-        'password': os.getenv('MYSQL_TEST_PASSWORD', os.getenv('MYSQL_PASSWORD')),
+        'user': os.getenv('MYSQL_TEST_ROOT_USER', os.getenv('MYSQL_TEST_ROOT_USER')),
+        'password': os.getenv('MYSQL_TEST_ROOT_PASSWORD', os.getenv('MYSQL_TEST_ROOT_PASSWORD')),
         'database': os.getenv('MYSQL_TEST_DATABASE', 'onet_test_db')
     }

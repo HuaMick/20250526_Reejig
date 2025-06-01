@@ -116,15 +116,6 @@ class TestMySQLLoadWithoutFixtures:
         # 5. Verification - Using test database connection
         if not loaded_counts or all(count == 0 for count in loaded_counts.values()):
             pytest.skip("No data was loaded into any target tables (possibly due to empty source files or filters). Skipping DB verification.")
-
-        # Use the test database connection configuration
-        test_db_config = {
-            'host': os.getenv('MYSQL_HOST', 'localhost'),
-            'port': os.getenv('MYSQL_PORT', '3306'),
-            'user': os.getenv('MYSQL_USER'),
-            'password': os.getenv('MYSQL_PASSWORD'),
-            'database': os.getenv('MYSQL_DATABASE', 'onet_test_data')
-        }
         
         try:
             import mysql.connector

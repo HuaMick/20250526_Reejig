@@ -6,7 +6,7 @@ import logging # For direct logger use
 import sys # ensure sys is imported
 
 # Ensure imports use full paths from project root
-from src.nodes.extract_load_api import run_extract_load_api_data
+from nodes.archived.extract_load_api import run_extract_load_api_data
 from src.config.schemas import Onet_Occupations_API_landing, Onet_Skills_API_landing # Removed Onet_Scales_API_landing
 from tests.fixtures.db_setup_api_load import in_memory_sqlite_engine # Import the engine fixture directly
 

@@ -6,36 +6,30 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install git
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy the entire codebase
 COPY . .
 
-# Set environment variables
+# Set run time environment variables
 ENV PYTHONPATH=/app
+ENV MYSQL_HOST=$MYSQL_HOST
+ENV MYSQL_PORT=$MYSQL_PORT
+ENV MYSQL_ROOT_USER=$MYSQL_ROOT_USER
+ENV MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+ENV MYSQL_USER=$MYSQL_USER
+ENV MYSQL_PASSWORD=$MYSQL_PASSWORD
+ENV MYSQL_DATABASE=$MYSQL_DATABASE
 
-# Create a shell script to run the ETL pipeline
-RUN echo '#!/bin/bash\n\
-echo "Starting ETL pipeline..."\n\
-\n\
-# Initialize database tables\n\
-python -m src.nodes.extract_load_text_files\n\
-\n\
-# Extract and load data from API if needed\n\
-python -m src.nodes.extract_load_api\n\
-\n\
-# Transform data for consumption\n\
-python -m src.nodes.transform\n\
-\n\
-echo "ETL pipeline completed."\n\
-' > /app/run_etl.sh \
-&& chmod +x /app/run_etl.sh
+# Make scripts needed by CMD executable
+RUN chmod +x /app/src/scripts/init_db.sh
+RUN chmod +x /app/src/scripts/execute_etl_pipeline.sh
 
-# Command to run the ETL pipeline
-CMD ["/app/run_etl.sh"]
-
-# Create a directory for entrypoint scripts
-RUN mkdir -p /app/docker-entrypoint-scripts
-COPY docker-entrypoint-etl.sh /app/docker-entrypoint-scripts/
-RUN chmod +x /app/docker-entrypoint-scripts/docker-entrypoint-etl.sh
-
-# Entrypoint will be the script that runs the ETL pipeline
+# CMD to run when the container starts.
+# This is where database initialization and ETL pipeline execution will happen.
+# Scripts will use runtime environment variables provided by docker-compose.
+CMD ["sh", "-c", "/app/src/scripts/init_db.sh && /app/src/scripts/execute_etl_pipeline.sh"]
  

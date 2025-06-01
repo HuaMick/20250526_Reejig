@@ -265,10 +265,10 @@
   - [x] 7.2 Create/Update `Dockerfile.api`, `Dockerfile.etl`.
     - **IMPLEMENTATION NOTE:** Created Dockerfile.api for the REST API service using a Python 3.12 slim image, with appropriate environment variable configuration and uvicorn server setup. Created Dockerfile.etl for the ETL pipeline with a shell script that runs the full data processing sequence (extract_load_text_files, extract_load_api, transform) and exits when complete.
   
-  - [x] 7.3 Ensure all integration tests pass in Docker environment.
-  
-  - [ ] 7.4 Test the API when deployed locally.
+  - [ ] 7.3 Test the API when deployed locally.
     - **NOTE TO DEVELOPER:** Deploy the application locally using Docker and manually test the API endpoints to ensure they're working correctly with real data.
+
+  - [ ] 7.4 Add the test suite execution to the docker deployment. Ensure all integration tests pass in Docker environment.
 
   - [ ] 7.5 Update `README.md` (full setup, schema, data flow, API examples, design decisions).
 

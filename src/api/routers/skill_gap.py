@@ -1,13 +1,15 @@
 """
 Router for skill gap analysis endpoints.
 """
-import logging
+import logging, os
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Query, HTTPException, status
 
 from src.functions.get_skills_gap import get_skills_gap
 from src.functions.get_skills_gap_by_lvl import get_skills_gap_by_lvl
 from src.config.api_exception_handles import handle_exception, handle_custom_error
+from src.config.schemas import get_sqlalchemy_engine
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -47,10 +49,22 @@ async def get_occupation_skill_gap(
         }
     """
     try:
+        engine = get_sqlalchemy_engine(
+            db_name=os.getenv("MYSQL_DATABASE"),
+            db_user=os.getenv("MYSQL_USER"),
+            db_password=os.getenv("MYSQL_PASSWORD"),
+            db_host=os.getenv("MYSQL_HOST"),
+            db_port=os.getenv("MYSQL_PORT")
+        )
+    except Exception as e:
+        logger.error(f"Error connecting to database: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error connecting to database: {e}")
+
+    try:
         logger.info(f"Processing basic skill gap request: from={from_occupation}, to={to_occupation}")
         
         # Use the basic function without proficiency levels
-        result = get_skills_gap(from_occupation, to_occupation)
+        result = get_skills_gap(from_occupation, to_occupation, engine=engine)
         
         if not result["success"]:
             logger.error(f"Error in get_skills_gap: {result['message']}")
@@ -121,11 +135,24 @@ async def get_occupation_skill_gap_by_level(
             ]
         }
     """
+
+    try:
+        engine = get_sqlalchemy_engine(
+            db_name=os.getenv("MYSQL_DATABASE"),
+            db_user=os.getenv("MYSQL_USER"),
+            db_password=os.getenv("MYSQL_PASSWORD"),
+            db_host=os.getenv("MYSQL_HOST"),
+            db_port=os.getenv("MYSQL_PORT")
+        )
+    except Exception as e:
+        logger.error(f"Error connecting to database: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error connecting to database: {e}")
+
     try:
         logger.info(f"Processing detailed skill gap request: from={from_occupation}, to={to_occupation}")
         
         # Use the enhanced function with proficiency levels
-        result = get_skills_gap_by_lvl(from_occupation, to_occupation)
+        result = get_skills_gap_by_lvl(from_occupation, to_occupation, engine=engine)
         
         if not result["success"]:
             logger.error(f"Error in get_skills_gap_by_lvl: {result['message']}")

@@ -9,7 +9,14 @@ from src.functions.mysql_create_db import mysql_create_db
 from src.functions.mysql_connection import get_mysql_connection
 from src.functions.mysql_init_tables import initialize_database_tables
 
-def init_db_mysql() -> Dict[str, Any]:
+connection_params = {
+    "host": os.getenv("MYSQL_HOST"),
+    "port": os.getenv("MYSQL_PORT"),
+    "user": os.getenv("MYSQL_USER"),
+    "password": os.getenv("MYSQL_PASSWORD"),
+}
+
+def init_db_mysql(connection_params=connection_params) -> Dict[str, Any]:
     """
     Node that initializes the database and all database tables.
     
@@ -28,7 +35,7 @@ def init_db_mysql() -> Dict[str, Any]:
     
     # Step 1: Create database if it doesn't exist
     print("Ensuring database exists...")
-    db_create_result = mysql_create_db()
+    db_create_result = mysql_create_db(connection_params=connection_params)
     
     if not db_create_result["success"]:
         # If we couldn't create the database, let's see if we can connect to it anyway
@@ -40,7 +47,7 @@ def init_db_mysql() -> Dict[str, Any]:
     
     # Step 2: Establish database connection
     print("Establishing database connection...")
-    connection_result = get_mysql_connection()
+    connection_result = get_mysql_connection(connection_params=connection_params)
     
     if not connection_result["success"]:
         return {

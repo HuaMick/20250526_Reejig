@@ -33,7 +33,7 @@ PYTHON_TEST_FILES=(
     "test_integration_get_occupation_skills.py"
     "test_integration_get_skills_gap.py"
     "test_integration_get_skills_gap_by_lvl.py"
-    "test_integration_gemini_llm_prompt.py"
+    "test_integration_generate_skill_proficiency_prompt.py"
     "test_integration_gemini_llm_request.py"
     "test_integration_get_skills_gap_by_lvl_llm.py"
 )

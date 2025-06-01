@@ -1,0 +1,1 @@
+--- PROMPT SENT TO LLM (skill_proficiency for 11-1011.00) ---\nExplain what generative AI is in one sentence.\n\n--- RAW LLM RESPONSE ---\nGenerative AI is a type of artificial intelligence that can create new content, such as text, images, audio, or video, based on patterns learned from existing data.

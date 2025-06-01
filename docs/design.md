@@ -60,3 +60,7 @@ group by 1
 - I've finished refactoring the functions, had limited success with the agent here, so was a bit of pain. I've commenced testing each of the integration tests, (again limited success with the agent here, but its done the bulk of the work for me so far, so cant complain too much.)
 
 - I've setup a test_suite after reviewing all the integration tests (except for the llm ones). I'm running short on time so will push toward docker deployment and api setup. For some reason one of the tests keep failing when using pytest to run the suite, however when executing the tests one by one in order they all pass. Rather then get hung up on this I've opted to just create a shell script that just executes everything in order using it's allocated sh script rather then using pyest.
+
+- I've setup all the docker services, hit a few small snags as was a little rusty with docker compose. Also setup all the endpoints. I've tested each one via a python notebook. 
+
+- I've integrated the LLM, felt we could do more than just derive the competency level, so I've fed the llm compentency levels back in to derive gap descriptions. I've build separate endpoints for each type of skill gap analysis (ussing llm and not using llm) so as to make sure I have all the requirements covered.

@@ -18,50 +18,10 @@ def test_gemini_llm_request(test_prompt, expected_success_structure):
     print(f"Using prompt: \"{test_prompt}\"")
     
     # Execute the function
-    result = gemini_llm_request(test_prompt)
-    
-    # Print results for verification
-    print("\nIntegration Test Results:")
-    print(f"Success: {result['success']}")
-    print(f"Message: {result['message']}")
-    
-    if result['success']:
-        print(f"Model used: {result['result']['model']}")
-        print(f"Response text: {result['result']['text']}")
-    
-    # Assertions to verify the results
-    assert result["success"] == True, f"API call failed: {result.get('message')}"
-    assert "message" in result, "Response should contain a message field"
-    
-    # Verify response structure
-    assert "result" in result, "Response should contain a result dictionary"
-    assert "text" in result["result"], "Result should contain the generated text"
-    assert "model" in result["result"], "Result should contain the model name"
-    assert "usage" in result["result"], "Result should contain usage information"
-    
-    # Verify response content
-    assert len(result["result"]["text"]) > 0, "Generated text should not be empty"
-    print("\nIntegration test completed successfully!")
-
-def test_gemini_llm_request_with_params(test_prompt):
-    """
-    Integration test for gemini_llm_request function with custom parameters.
-    Tests the temperature and max_tokens parameters.
-    """
-    # Make sure we have the API key set
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("\nSkipping test: GEMINI_API_KEY not found in environment variables")
-        return
-    
-    print("\nIntegration Test - Gemini LLM Request with Custom Parameters:")
-    print(f"Using prompt: \"{test_prompt}\" with temperature=0.1 and max_tokens=50")
-    
-    # Execute the function with custom parameters
     result = gemini_llm_request(
-        prompt=test_prompt,
-        temperature=0.1,
-        max_tokens=50
+        test_prompt, 
+        request_onet_soc_code="11-1011.00",
+        prompt_skills_data=[{"skill_element_id": "2.A.1.f", "skill_name": "Science"}],
     )
     
     # Print results for verification
@@ -70,14 +30,19 @@ def test_gemini_llm_request_with_params(test_prompt):
     print(f"Message: {result['message']}")
     
     if result['success']:
-        print(f"Model used: {result['result']['model']}")
-        print(f"Response text: {result['result']['text']}")
+        print(f"Model used: {result['result']['request_data'][0]['request_model']}")
+        print(f"Response text: {result['result']['raw_response']}")
     
     # Assertions to verify the results
     assert result["success"] == True, f"API call failed: {result.get('message')}"
+    assert "message" in result, "Response should contain a message field"
     
-    # Verify response structure and content
+    # Verify response structure
     assert "result" in result, "Response should contain a result dictionary"
-    assert len(result["result"]["text"]) > 0, "Generated text should not be empty"
+    assert "request_data" in result["result"], "Result should contain the request data"
+    assert "reply_data" in result["result"], "Result should contain the reply data"
+    assert "raw_response" in result["result"], "Result should contain the raw LLM response"
     
-    print("\nIntegration test with custom parameters completed successfully!") 
+    # Verify response content
+    assert len(result["result"]["raw_response"]) > 0, "Generated text should not be empty"
+    print("\nIntegration test completed successfully!")

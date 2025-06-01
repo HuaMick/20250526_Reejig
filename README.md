@@ -1,149 +1,66 @@
 # O*NET Data Pipeline & Skill Gap API
 
-## 1. Project Overview
+## Setup and Run Instructions
 
-This project implements an end-to-end data pipeline and RESTful API as outlined in the [Product Requirements Document](docs/prd-onet-data-pipeline.md). The system extracts occupational data from the public O*NET dataset (text files and supplementary API calls), processes and stores relevant information in a MySQL relational database, enriches skill data with AI-driven proficiency levels, and exposes a "skill gap" analysis feature via an API. This API allows a comparison of two occupations to identify skills present in a target occupation that are missing or at a lower proficiency level in a source occupation.
+From project root execute in shell: 
+  1. `source env/env.env` Set env variables, see env.example
+  2. `docker compose up`  Build and execute docker containers
 
-The primary goal is to provide a robust and scalable tool for HR software, career planning, employee development, and talent management.
+docker compose has 4 services:
+db: the mysql database
+etl: loads the O*NET data then transforms the data into normalized tables
+test_runner: executes an automated test suite
+api: serves the api endpoints
 
-## 2. Meeting the Requirements
+Note: this project uses shell scripts, depending on your OS you may need to grant permissions to execute each shell script before your able to execute it. e.g. `chmod +x tests/test_suite/setup_test_db.sh` for Linux/macOS systems.
 
-This project directly addresses the criteria outlined in the [Take Home Assignment Requirements](docs/requirements.md):
+## Execute automated tests:
+
+From project root: 
+1. `tests/test_suite/setup_test_db.sh`
+2. `tests/test_suite/run_test_suite.sh`
+
+## Project Overview
+
+API that uses the public O*NET dataset to identify skills gap between two occupations (from_occupation, to_occupation).
+
+For local deployment base_url = http://localhost:8000
+
+API Endpoints:
+<base_url>/health: api health check
+<base_url>/api/v1/skill-gap: provide skills in to_occupation that are proficency level 0 in from_occupation 
+<base_url>/api/v1/skill-gap-by-lvl: provide skills in to_occupation that are proficency level > from_occupation
+<base_url>/api/v1/skill-gap-llm: uses a large language model to determine proficiency levels, skills in to_occupation that are proficency level > from_occupation are then passed to the large language model again to provide a description/analysis of the skill gap.
+
+## Meeting the Requirements
+Requirements can be found here [Take Home Assignment Requirements](docs/requirements.md)
 
 ### 2.1. Database Design
 *   **Requirement:** Design a relational schema using MySQL.
-*   **Implementation:** A normalized relational database schema has been designed and implemented in MySQL. Key tables include `Occupations`, `Skills`, `Scales`, and `Occupation_Skills` to store O*NET data. An additional table, `LlmSkillAssessments`, is designed to store detailed outputs from the LLM skill proficiency analysis. SQLAlchemy is used for schema definition and management, allowing for easier migrations and modifications.
+*   **Implementation:** Full schema details can be found: src/config/schemas.py
 
-### 2.2. ETL Pipeline
-*   **Requirement:** Implement a script to populate the database via an ETL pipeline.
-*   **Implementation:** A Python-based ETL pipeline has been developed.
-    *   **Extraction:** Data is extracted from provided O*NET text files (`Occupation.txt`, `Skills.txt`, `Scales.txt`). The O*NET API is also used on-demand to supplement data not found in the local database, particularly for the `/skill-gap` API functionality.
-    *   **Transformation:** Data is cleaned, and relationships are established. A significant transformation step involves using a Large Language Model (LLM) to assess and assign proficiency levels to skills for specific occupations, focusing on the 'LV' (Level) scale.
-    *   **Loading:** Transformed data is loaded into the MySQL database. The ETL process is designed to be runnable via scripts and aims for idempotency for development and testing.
+Landing tables for the Onet data include `Occupations_Landing`, `Onet_Skills_Landing`, `Onet_Scales_Landing`. etl normalizes the data from the landing tables to `Occupation_Skills` and `Skills`, `Occupations_Landing` was already normalized has no downstream tables.
+There are also `..._API_landing` landing tables for storing data when an api request is made to Onet and LLM landing tables to store request and reply data from the llm.
 
-### 2.3. REST API Implementation
-*   **Requirement:** Implement a REST endpoint `GET /skill-gap?from={occupation_code1}&to={occupation_code2}` that compares two occupations and returns the skills required by the second occupation that are not present in the first (or are at a lower proficiency).
-*   **Implementation:** A RESTful API endpoint `GET /skill-gap` has been implemented using Python (e.g., FastAPI/Flask).
-    *   It accepts `from` and `to` O*NET-SOC occupation codes as query parameters.
-    *   It retrieves skill data (including LLM-refined proficiency levels for the 'LV' scale) for both occupations.
-    *   It identifies skill gaps based on:
-        1.  Skills present in the target occupation but not the source.
-        2.  Skills present in both, but where the proficiency level in the target occupation is higher.
-    *   The API returns a structured JSON response detailing these gaps, as specified in the PRD.
+## 3. Design Decisions & Project Evolution
 
-### 2.4. Technical Requirements
-*   **Python:** The ETL pipeline and API are developed in Python.
-*   **Docker:** All services (MySQL database, ETL scripts, API service) are containerized using Docker.
-*   **Docker Compose:** Docker Compose is used to orchestrate the services, allowing the entire stack to be run with a single `docker-compose up` command.
+This project was build using AI-assisted agentic programing techniques. Core to this is the docs/prd-onet-data-pipeline.md and the docs/tasks-prd-onet-data-pipeline.md which was used to inform the AI models as well as prebuild .cursor/rules which were adapted from other projects.
 
-## 3. Key Design Decisions & Project Evolution
+The project evolved through several key design decisions:
+*   **Initial Setup & ETL:** Opted for a standard Python virtual environment and `requirements.txt` over Nix. Data from O*NET text files was initially loaded into a Dockerized MySQL database using SQLAlchemy for schema management. This established the foundational ETL pipeline.
+*   **API Integration & Data Strategy:** Encountering limitations with bulk API data (20 records/page), the strategy shifted from bulk extraction to an on-demand "pull" mechanism. If data isn't in the local database, it's fetched via the O*NET API, served to the user, and then cached locally. This balances API usage with responsiveness.
+*   **Normalization & Data Modeling:** Downstream tables (`Skills`, `Occupation_Skills`) were created to normalize raw data, improving data integrity and query efficiency for skill gap analysis.
+*   **Skill Gap Logic:** Analysis revealed that skill proficiency levels (LV scale) are crucial for meaningful skill gap identification, as many occupations share the same base skills. The API offers endpoints for both a basic skill gap (skills present in target, absent in source) and a more nuanced gap by proficiency level.
+*   **LLM Integration:** To meet bonus requirements, Google's Gemini LLM was integrated to assess skill proficiencies and provide descriptive analysis of skill gaps, offering richer insights.
+*   **Testing:** A dedicated test environment and a suite of integration tests were established. Due to issues with `pytest` running the full suite, a shell script executing individual test scripts sequentially was implemented.
 
-The project evolved through several stages, with key design decisions made along the way (reflecting insights from `docs/design.md`):
+For a detailed log of design decisions, please see [docs/design.md](docs/design.md).
+You may also find insights in project tasks, see implementation notes, refer to [docs/tasks-prd-onet-data-pipeline.md](docs/tasks-prd-onet-data-pipeline.md).
 
-*   **Initial Setup:** Opted for a standard Python virtual environment and `requirements.txt` over Nix for broader compatibility. Initial data sources were local O*NET `.txt` files.
-*   **Database:**
-    *   MySQL was chosen as the RDBMS, running within a Docker container for ease of setup and consistency.
-    *   SQLAlchemy was adopted for schema definition and management, providing flexibility for schema evolution.
-*   **ETL Development:**
-    *   Started with basic extraction and loading, then refactored into modular functions and nodes (e.g., `extract_load_text_files.py`, `transform.py`) for better organization and reusability.
-    *   Recognized the importance of 'scales' (like 'Level') in differentiating skill requirements for occupations that might share skill names.
-    *   Handled data edge cases, such as occupations with no initial skill records.
-*   **O*NET API Integration Strategy:**
-    *   Initially explored bulk data fetching from the O*NET API but encountered challenges with pagination and the volume of calls required.
-    *   Shifted to an **on-demand pull strategy**: The system primarily relies on the locally stored data (from text files and previous API pulls). If the `/skill-gap` API requests data for an occupation not present or fully detailed in the local database, it then queries the O*NET API in real-time. This approach balances data comprehensiveness with API usage efficiency. Fetched API data can be cached/stored for future requests.
-*   **LLM Integration for Skill Proficiency:**
-    *   Integrated a Large Language Model (Gemini) to analyze skills within the context of specific occupations and assign proficiency levels (0-7 for the 'LV' scale).
-    *   This involved designing prompts to elicit structured JSON output from the LLM, detailing the skill, assigned proficiency, and justification. This significantly enriches the dataset beyond raw O*NET values.
-*   **Testing:** Implemented integration tests throughout the development process to ensure reliability of individual components and the overall pipeline.
+### Out of Scope / Future Considerations
 
-## 4. Database Schema Overview
+While the core requirements were met, the following areas were identified as out of scope for the current implementation or earmarked for future development if time permitted:
 
-The core database schema includes:
+*   **Cloud Deployment (Phase 9 - Optional):** Full deployment to a cloud environment (e.g., GCP Cloud Run) including CI/CD pipeline setup, monitoring, and alerting was considered optional and not implemented.
+*   **API Data Normalization Pipeline (Phase 10 - Out of Scope):** A dedicated ETL pipeline to normalize data fetched on-demand from the O*NET API into the core database tables was marked as out of scope. Currently, API-fetched data is cached in landing tables but not fully integrated into the normalized schema through an automated pipeline. This was deferred as the on-demand fetching with caching met immediate needs, and further product design input would be beneficial for a full normalization pipeline.
 
-*   **`Occupations`**: Stores O*NET-SOC Code, Title, Description from `Occupation.txt`.
-*   **`Skills`**: Stores Element ID, Element Name from `Skills.txt`.
-*   **`Scales`**: Stores Scale ID, Scale Name, Min/Max from `Scales.txt`.
-*   **`Occupation_Skills`**: A join table linking occupations to skills, including `Scale ID` and `Data Value` (proficiency). The `Data Value` for 'LV' scale skills is notably enriched by the LLM.
-*   **`LlmSkillAssessments` (Recommended)**: A table to store the complete JSON response from the LLM for each skill proficiency assessment, useful for auditing and deeper analysis.
-
-*(Refer to `src/config/schemas.py` for detailed SQLAlchemy models)*
-
-## 5. API Endpoint: `GET /skill-gap`
-
-*   **Endpoint:** `GET /skill-gap`
-*   **Parameters:**
-    *   `from` (string, required): O*NET-SOC Code of the source occupation.
-    *   `to` (string, required): O*NET-SOC Code of the target occupation.
-*   **Description:** Compares two occupations based on their 'LV' (Level) scale skills (with LLM-refined proficiency) and returns a list of skills that represent a gap.
-*   **Success Response (200 OK Example from PRD):**
-    ```json
-    {
-      "success": true,
-      "message": "Successfully identified skill gap from '[From Occupation Title]' to '[To Occupation Title]' based on 'LV' scale.",
-      "result": {
-        "from_occupation_title": "[From Occupation Title]",
-        "to_occupation_title": "[To Occupation Title]",
-        "skill_gaps": [
-          {
-            "element_id": "string",
-            "element_name": "string",
-            "scale_id": "LV",
-            "from_data_value": "decimal (0.0 - 7.0, or 0 if not in 'from' occupation)",
-            "to_data_value": "decimal (0.0 - 7.0)"
-          }
-          // ... more skills
-        ]
-      }
-    }
-    ```
-*   **Error Handling:** Includes `404 Not Found` for invalid occupation codes and `400 Bad Request` for missing parameters, as detailed in the PRD.
-
-## 6. Setup and Execution
-
-1.  **Prerequisites:**
-    *   Docker
-    *   Docker Compose
-2.  **Environment Variables:**
-    *   Ensure an `env/env.env` file is configured with necessary variables (e.g., database credentials, API keys for O*NET if rate limits are a concern for extensive use, LLM API key). Example:
-        ```env
-        MYSQL_USER=youruser
-        MYSQL_PASSWORD=yourpassword
-        MYSQL_DATABASE=onet_data
-        MYSQL_HOST=mysql_db
-        # Add other necessary API keys if any
-        GEMINI_API_KEY=your_gemini_api_key
-        ```
-3.  **Build and Run:**
-    *   Navigate to the project root directory.
-    *   Execute: `docker-compose up --build`
-    *   This command will:
-        *   Build the Docker images for the API service and any ETL/worker services.
-        *   Start the MySQL database container.
-        *   Start the API service.
-        *   Run any initial ETL scripts defined as services in `docker-compose.yml`.
-4.  **Initial Data Load (if applicable as a separate step):**
-    *   If the main ETL process is a separate script/node, it might be run via:
-        `docker-compose run etl_service_name` (replace `etl_service_name` with the actual service name in `docker-compose.yml`).
-5.  **Accessing the API:**
-    *   Once services are running, the API should be accessible (e.g., `http://localhost:8000/skill-gap?from=...&to=...` - port may vary based on `docker-compose.yml` configuration).
-
-## 7. Assumptions Made
-
-*   The provided O*NET text files (`Occupation.txt`, `Skills.txt`, `Scales.txt`) are available and form the baseline dataset.
-*   The O*NET API is accessible for supplementary data fetching.
-*   An API key for the chosen LLM (e.g., Google Gemini) is available and configured for skill proficiency assessment.
-*   The primary focus for skill gap analysis is the 'LV' (Level) scale.
-
-## 8. Meeting Evaluation Criteria & Bonus Points
-
-*   **Clean, Modular, Maintainable Code:** Efforts were made to structure the code into functions and nodes, promoting modularity. Python best practices were followed.
-*   **Well-Structured, Normalized Schema:** The database schema is designed with normalization in mind, using SQLAlchemy for clear definitions and relationships.
-*   **API Returns Accurate Skill Gap Results:** The API logic is designed to accurately identify skill gaps based on presence and proficiency levels, enhanced by LLM insights.
-*   **Ease of Setup and Clear Instructions:** This README and Docker Compose aim to provide straightforward setup.
-*   **Error Handling and Logging:** Basic error handling is implemented in the API, and logging considerations are noted in the PRD (though full implementation depth may vary).
-
-*   **Bonus Point: Automated Tests:** Integration tests have been developed for key components of the ETL pipeline and potentially for API endpoints, ensuring reliability.
-*   **Bonus Point: LLM to Extract Skill Proficiency:** A core feature of this project is the integration of an LLM to determine and refine skill proficiency levels, adding significant value to the skill gap analysis.
-
----
-This project aims to deliver a functional and robust solution to the take-home assignment, demonstrating skills in data engineering, API development, and modern AI integration.

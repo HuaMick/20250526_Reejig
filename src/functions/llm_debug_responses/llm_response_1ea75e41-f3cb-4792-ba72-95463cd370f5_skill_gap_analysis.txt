@@ -1,0 +1,155 @@
+--- PROMPT SENT TO LLM (skill_gap_analysis for 11-1011.00) ---\nYou are an expert in career transitions and skill gap analysis.
+
+I need you to analyze the skill gaps between two occupations and provide detailed descriptions of what skills need development.
+
+# Source Occupation (Current)
+- O*NET ID: 11-1011.00
+- Occupation Name: Chief Executives
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 7/7
+  - Active Listening: 7/7
+  - Writing: 6/7
+  - Speaking: 7/7
+  - Mathematics: 6/7
+  - Science: 4/7
+  - Critical Thinking: 7/7
+  - Active Learning: 7/7
+  - Learning Strategies: 6/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 7/7
+  - Coordination: 6/7
+  - Persuasion: 7/7
+  - Negotiation: 7/7
+  - Instructing: 4/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 7/7
+  - Operations Analysis: 6/7
+  - Technology Design: 3/7
+  - Equipment Selection: 2/7
+  - Installation: 1/7
+  - Programming: 1/7
+  - Operations Monitoring: 4/7
+  - Operation and Control: 1/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 2/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 4/7
+  - Judgment and Decision Making: 7/7
+  - Systems Analysis: 6/7
+  - Systems Evaluation: 6/7
+  - Time Management: 7/7
+  - Management of Financial Resources: 7/7
+  - Management of Material Resources: 6/7
+  - Management of Personnel Resources: 7/7
+
+
+# Target Occupation (Desired)
+- O*NET ID: 11-1011.00
+- Occupation Name: Chief Executives
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 7/7
+  - Active Listening: 7/7
+  - Writing: 6/7
+  - Speaking: 7/7
+  - Mathematics: 6/7
+  - Science: 4/7
+  - Critical Thinking: 7/7
+  - Active Learning: 7/7
+  - Learning Strategies: 6/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 7/7
+  - Coordination: 6/7
+  - Persuasion: 7/7
+  - Negotiation: 7/7
+  - Instructing: 6/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 7/7
+  - Operations Analysis: 6/7
+  - Technology Design: 4/7
+  - Equipment Selection: 3/7
+  - Installation: 1/7
+  - Programming: 1/7
+  - Operations Monitoring: 4/7
+  - Operation and Control: 3/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 3/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 4/7
+  - Judgment and Decision Making: 7/7
+  - Systems Analysis: 6/7
+  - Systems Evaluation: 6/7
+  - Time Management: 7/7
+  - Management of Financial Resources: 7/7
+  - Management of Material Resources: 6/7
+  - Management of Personnel Resources: 7/7
+
+
+# Your Task:
+1. Compare the skills and proficiency levels between the source and target occupations.
+2. Identify skills where there is a gap (target requires higher proficiency than source has, or skills missing from source).
+3. For each skill gap identified, provide:
+   - A clear description of what development is needed
+   - Specific recommendations for bridging the gap
+   - Context about why this skill is important for the target occupation
+4. Focus on actionable insights that would help someone transition from the source to target occupation.
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "string (Source occupation name)",
+    "to_occupation": "string (Target occupation name)",
+    "skill_gaps": [
+      {
+        "skill_name": "string (Name of the skill with a gap)",
+        "from_proficiency_level": number (Current proficiency level, 0 if skill is missing),
+        "to_proficiency_level": number (Required proficiency level for target occupation),
+        "gap_description": "string (Detailed description of what development is needed and why this skill matters for the target occupation)"
+      }
+      // One object for each skill gap identified
+    ]
+  }
+}
+```
+
+Ensure your response is properly formatted as valid JSON and includes all required fields.\n\n--- RAW LLM RESPONSE ---\n```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "Chief Executives",
+    "to_occupation": "Chief Executives",
+    "skill_gaps": [
+      {
+        "skill_name": "Instructing",
+        "from_proficiency_level": 4,
+        "to_proficiency_level": 6,
+        "gap_description": "Development is needed in the ability to effectively teach and train others. This involves not only conveying information clearly but also adapting teaching methods to different learning styles and providing constructive feedback. For Chief Executives, this skill is crucial for developing future leaders within the organization, ensuring consistent performance across teams, and effectively communicating strategic initiatives to employees at all levels. A higher proficiency allows the executive to mentor and guide employees, fostering a culture of continuous learning and improvement."
+      },
+      {
+        "skill_name": "Technology Design",
+        "from_proficiency_level": 3,
+        "to_proficiency_level": 4,
+        "gap_description": "Development is needed in understanding and applying principles of technology design to meet organizational needs. This includes understanding current technological trends, evaluating the feasibility of new technologies, and contributing to the design of technology solutions that improve efficiency and effectiveness. For Chief Executives, this skill is vital for making informed decisions about technology investments, driving innovation within the company, and ensuring that the organization remains competitive in a rapidly evolving technological landscape. Even a slight increase in proficiency here can significantly impact strategic technology-related decisions."
+      },
+      {
+        "skill_name": "Equipment Selection",
+        "from_proficiency_level": 2,
+        "to_proficiency_level": 3,
+        "gap_description": "Development is needed in the ability to assess and select appropriate equipment based on organizational needs and budget constraints. This involves understanding the technical specifications of different equipment options, evaluating their suitability for specific tasks, and considering factors such as cost, reliability, and maintenance requirements. For Chief Executives, this skill is important for making sound decisions about capital investments, ensuring that the organization has the necessary tools to operate efficiently, and minimizing downtime due to equipment failures. While not a primary function, a better understanding allows for more informed delegation and oversight."
+      },
+      {
+        "skill_name": "Operation and Control",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 3,
+        "gap_description": "Development is needed in understanding how to control equipment or systems. While a Chief Executive may not directly operate machinery, understanding the principles of operation and control is crucial for overseeing operations, making informed decisions about process improvements, and ensuring that safety protocols are followed. This also helps in communicating effectively with operational teams and understanding the challenges they face. Development should focus on high-level understanding of process control systems and operational safety."
+      },
+      {
+        "skill_name": "Troubleshooting",
+        "from_proficiency_level": 2,
+        "to_proficiency_level": 3,
+        "gap_description": "Development is needed in diagnosing and resolving operational problems. While the Chief Executive won't be fixing equipment directly, a better understanding of troubleshooting principles allows for more effective problem-solving and decision-making when operational issues arise. This includes understanding the root causes of problems, identifying potential solutions, and evaluating the effectiveness of different approaches. It also facilitates better communication with technical staff and a more informed assessment of proposed solutions. This improvement enables the executive to ask more pointed questions and ensure resources are allocated effectively to address problems."
+      }
+    ]
+  }
+}
+```

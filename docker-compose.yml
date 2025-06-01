@@ -13,6 +13,8 @@ services:
       - ./env/env.env # Load environment variables from this file
     volumes:
       - mysql_data:/var/lib/mysql # Persist data
+    command: # 'sha256_password' is deprecated
+      - --default-authentication-plugin=caching_sha2_password
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "$${MYSQL_USER}", "-p$${MYSQL_PASSWORD}"]
       interval: 10s

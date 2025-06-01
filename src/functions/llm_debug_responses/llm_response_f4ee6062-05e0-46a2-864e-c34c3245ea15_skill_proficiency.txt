@@ -1,0 +1,294 @@
+--- PROMPT SENT TO LLM (skill_proficiency for 11-2021.00) ---\nYou are an expert in career transitions and occupational skill assessment.
+
+I need you to analyze skills for a job and determine proficiency levels based on the information provided.
+
+# Occupation Information
+- O*NET ID: 11-2021.00
+- Occupation Name: Marketing Managers
+- Skills Required:
+  - Reading Comprehension
+  - Active Listening
+  - Writing
+  - Speaking
+  - Mathematics
+  - Science
+  - Critical Thinking
+  - Active Learning
+  - Learning Strategies
+  - Monitoring
+  - Social Perceptiveness
+  - Coordination
+  - Persuasion
+  - Negotiation
+  - Instructing
+  - Service Orientation
+  - Complex Problem Solving
+  - Operations Analysis
+  - Technology Design
+  - Equipment Selection
+  - Installation
+  - Programming
+  - Operations Monitoring
+  - Operation and Control
+  - Equipment Maintenance
+  - Troubleshooting
+  - Repairing
+  - Quality Control Analysis
+  - Judgment and Decision Making
+  - Systems Analysis
+  - Systems Evaluation
+  - Time Management
+  - Management of Financial Resources
+  - Management of Material Resources
+  - Management of Personnel Resources
+
+
+# Your Task:
+1. Analyze the skills of the Occupation provided.
+2. For each skill listed in the Occupation, determine a proficiency level.
+   - Use a scale of 1-7 where 1 is Novice and 7 is Expert
+   - Consider what level of proficiency would be typical/expected for someone in this occupation
+3. Provide a detailed justification/explanation for each assigned proficiency level.
+   - Your explanation should be in the context of the Occupation's typical duties and responsibilities.
+
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_proficiency_assessment": {
+    "llm_onet_soc_code": "string (O*NET code of the Occupation)",
+    "llm_occupation_name": "string (Name of the Occupation)",
+    "assessed_skills": [
+      {
+        "llm_skill_name": "string (Name of the skill)",
+        "llm_assigned_proficiency_description": "string (e.g., 'Intermediate', 'Advanced', 'Expert')",
+        "llm_assigned_proficiency_level": number (e.g., 3.5 on the 1-7 scale),
+        "llm_explanation": "string (Your detailed reasoning for the assigned proficiency)"
+      }
+      // One object for each skill in the Occupation
+    ]
+  }
+}
+```
+
+Ensure your response is properly formatted as valid JSON and includes all required fields.\n\n--- RAW LLM RESPONSE ---\n```json
+{
+  "skill_proficiency_assessment": {
+    "llm_onet_soc_code": "11-2021.00",
+    "llm_occupation_name": "Marketing Managers",
+    "assessed_skills": [
+      {
+        "llm_skill_name": "Reading Comprehension",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers must understand complex market research reports, analyze competitor strategies, and interpret legal and regulatory documents related to advertising and promotions. They need to quickly and accurately extract key information from various sources to make informed decisions."
+      },
+      {
+        "llm_skill_name": "Active Listening",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers need to actively listen to customers, team members, stakeholders, and senior management to understand their needs, concerns, and feedback. This is crucial for developing effective marketing strategies and resolving issues."
+      },
+      {
+        "llm_skill_name": "Writing",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Marketing managers are responsible for creating compelling marketing content, including advertising copy, website content, social media posts, email campaigns, and reports. Exceptional writing skills are vital for communicating effectively with target audiences and stakeholders."
+      },
+      {
+        "llm_skill_name": "Speaking",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Marketing managers frequently present marketing plans, campaign results, and strategic recommendations to senior management, clients, and team members. They must be articulate, persuasive, and confident speakers to effectively communicate their ideas and influence decisions."
+      },
+      {
+        "llm_skill_name": "Mathematics",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Marketing managers use mathematical skills to analyze marketing data, track campaign performance, calculate ROI, and manage budgets. While they don't need to be mathematicians, a solid understanding of basic statistical concepts and financial calculations is necessary."
+      },
+      {
+        "llm_skill_name": "Science",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "While not typically a core requirement, understanding basic scientific principles may be useful in specific industries (e.g., pharmaceuticals, technology). However, in most marketing roles, direct application of scientific knowledge is limited."
+      },
+      {
+        "llm_skill_name": "Critical Thinking",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Marketing managers must critically analyze market trends, competitor activities, and campaign performance data to identify opportunities and solve problems. They need to evaluate different marketing strategies and make sound judgments based on available information."
+      },
+      {
+        "llm_skill_name": "Active Learning",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "The marketing landscape is constantly evolving, so marketing managers must be proactive learners. They need to stay up-to-date on the latest marketing trends, technologies, and best practices to remain competitive."
+      },
+      {
+        "llm_skill_name": "Learning Strategies",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers need to efficiently learn new information and adapt to changing market conditions. This involves identifying effective learning methods, setting learning goals, and tracking progress."
+      },
+      {
+        "llm_skill_name": "Monitoring",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers must monitor campaign performance, market trends, and competitor activities to identify opportunities and threats. They need to track key metrics and analyze data to make informed decisions."
+      },
+      {
+        "llm_skill_name": "Social Perceptiveness",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers must understand the motivations, behaviors, and emotions of customers and stakeholders. This is crucial for developing effective marketing strategies and building strong relationships."
+      },
+      {
+        "llm_skill_name": "Coordination",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers often work with cross-functional teams, including sales, product development, and customer service. They need to coordinate activities and ensure that everyone is working towards the same goals."
+      },
+      {
+        "llm_skill_name": "Persuasion",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Marketing managers need to persuade customers to buy products or services, convince stakeholders to support marketing initiatives, and motivate team members to achieve goals. They must be skilled at building rapport, presenting compelling arguments, and overcoming objections."
+      },
+      {
+        "llm_skill_name": "Negotiation",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers often negotiate contracts with vendors, negotiate budgets with senior management, and negotiate pricing with customers. They need to be skilled at finding mutually beneficial solutions."
+      },
+      {
+        "llm_skill_name": "Instructing",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Marketing managers may need to train and mentor junior team members, provide guidance on marketing best practices, and explain marketing strategies to stakeholders. While not their primary function, the ability to instruct is valuable."
+      },
+      {
+        "llm_skill_name": "Service Orientation",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers must be customer-focused and committed to providing excellent service. They need to understand customer needs and develop marketing strategies that meet those needs."
+      },
+      {
+        "llm_skill_name": "Complex Problem Solving",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers face complex problems, such as declining sales, increasing competition, and changing market conditions. They need to be able to analyze these problems, identify solutions, and implement effective strategies."
+      },
+      {
+        "llm_skill_name": "Operations Analysis",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Marketing managers may need to analyze marketing operations to identify areas for improvement. This could involve evaluating the efficiency of marketing processes, the effectiveness of marketing technologies, and the performance of marketing teams."
+      },
+      {
+        "llm_skill_name": "Technology Design",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "While marketing managers need to understand marketing technologies, they typically don't need to design them. This is usually the responsibility of IT or software development teams. Their input on requirements is valuable, but hands-on design is not typically required."
+      },
+      {
+        "llm_skill_name": "Equipment Selection",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Marketing managers rarely, if ever, need to select physical equipment. This skill is not relevant to the role."
+      },
+      {
+        "llm_skill_name": "Installation",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Marketing managers rarely, if ever, need to install equipment. This skill is not relevant to the role."
+      },
+      {
+        "llm_skill_name": "Programming",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "While a basic understanding of HTML or other web technologies might be helpful, marketing managers are not typically required to be proficient programmers. They may work with developers, but coding is not a core skill."
+      },
+      {
+        "llm_skill_name": "Operations Monitoring",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Marketing managers do monitor campaign performance (see 'Monitoring' skill), but 'Operations Monitoring' typically refers to monitoring the functioning of equipment or machinery, which is not relevant to this role."
+      },
+      {
+        "llm_skill_name": "Operation and Control",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "This skill typically refers to operating and controlling machinery or equipment, which is not relevant to a Marketing Manager role."
+      },
+      {
+        "llm_skill_name": "Equipment Maintenance",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Marketing managers are not responsible for equipment maintenance. This skill is not relevant to the role."
+      },
+      {
+        "llm_skill_name": "Troubleshooting",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Marketing managers are not responsible for troubleshooting equipment. This skill is not relevant to the role."
+      },
+      {
+        "llm_skill_name": "Repairing",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Marketing managers are not responsible for repairing equipment. This skill is not relevant to the role."
+      },
+      {
+        "llm_skill_name": "Quality Control Analysis",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Marketing managers need to ensure the quality of marketing materials and campaigns. This involves reviewing content, checking for errors, and ensuring that it meets brand standards. They need to understand basic quality control principles."
+      },
+      {
+        "llm_skill_name": "Judgment and Decision Making",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Marketing managers make critical decisions about marketing strategies, budgets, and resource allocation. They must weigh different options, assess risks, and make sound judgments based on available information."
+      },
+      {
+        "llm_skill_name": "Systems Analysis",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Marketing managers may need to analyze marketing systems, such as CRM systems or marketing automation platforms, to identify areas for improvement. They need to understand how these systems work and how they can be used to improve marketing performance."
+      },
+      {
+        "llm_skill_name": "Systems Evaluation",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Similar to systems analysis, marketing managers need to evaluate the effectiveness of existing marketing systems and technologies. This involves assessing their performance, identifying areas for improvement, and recommending changes."
+      },
+      {
+        "llm_skill_name": "Time Management",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers juggle multiple projects and deadlines. Effective time management is crucial for prioritizing tasks, meeting deadlines, and managing workload."
+      },
+      {
+        "llm_skill_name": "Management of Financial Resources",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers are responsible for managing marketing budgets. This involves planning expenditures, tracking spending, and ensuring that resources are used effectively."
+      },
+      {
+        "llm_skill_name": "Management of Material Resources",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Marketing managers may need to manage material resources, such as marketing collateral, promotional items, and office supplies. The extent of this responsibility varies depending on the size and structure of the organization."
+      },
+      {
+        "llm_skill_name": "Management of Personnel Resources",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing managers are often responsible for managing marketing teams. This involves hiring, training, and supervising employees, as well as providing performance feedback and development opportunities."
+      }
+    ]
+  }
+}
+```

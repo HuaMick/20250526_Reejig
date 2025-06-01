@@ -129,7 +129,7 @@
     - [x] 3.7.3 Update integration test for `get_occupation()` and `get_occupation_skills()`.
   - [x] 3.8 Document simplified data model showing flow from raw to downstream tables.
 
-- [x] 4.0 **Phase 4: LLM Integration for Skill Proficiency (Bonus Points)**
+- [x] 4.0 **Phase 4: LLM Integration Skill Proficiency**
   - [x] 4.1 Create function gemini_llm_request, it should take a prompt and return the llm response.
   - [x] 4.2 Create function generate_llm_skill_proficiency_prompt for generating the prompt for the llm.         
         
@@ -232,26 +232,25 @@
   
   - [x] 5.13 Create integration test for `/skill-gap` API endpoint.
     - **IMPLEMENTATION NOTE:** Created comprehensive integration tests in `tests/test_api_skill_gap.py` that verify all functionality of the endpoint, including basic skill gap, proficiency-level skill gap, same occupation comparison, and error handling for invalid occupation codes.
+  - [x] 5.14 API README documentation
 
 - [x] 6.0 **Phase 6: Automated Testing Suite**
   - [x] 6.1 Setup a test env with a mysql database, this can act as a clean room for our automated tests to run in.
   - [x] 6.2 Review and refactor integration tests for the automated testing suite:
     - [x] 6.2.1 `test_integration_get_skills_gap_by_lvl.py`
     - [x] 6.2.2 `test_integration_get_skills_gap.py`
-    - [x] 6.2.3 `test_integration_mysql_create_db.py` 
-    - [x] 6.2.4 `test_integration_mysql_init_tables.py` 
-    - [x] 6.2.5 `test_integration_mysql_load.py` 
-    - [x] 6.2.6 `test_integration_transform.py` 
+    - [x] 6.2.3 `test_integration_mysql_create_db.py`
+    - [x] 6.2.4 `test_integration_mysql_init_tables.py`
+    - [x] 6.2.5 `test_integration_mysql_load.py`
+    - [x] 6.2.6 `test_integration_transform.py`
     - [x] 6.2.7 `test_integration_mysql_connection.py`
-    - [ ] 6.2.9 `test_integration_llm_skill_assessment_pipeline.py`
-    - [ ] 6.2.10 `test_integration_gemini_llm_prompt.py`
-    - [ ] 6.2.11 `test_integration_gemini_llm_request.py`
     - [x] 6.2.12 `test_integration_api_extract_load_skills.py` 
     - [x] 6.2.14 `test_integration_api_extract_load_occupations.py`
     - [x] 6.2.16 `test_integration_get_occupation_and_skills_api_fallback.py`
     - [x] 6.2.16 `test_integration_get_occupation_skills.py`
   - [x] 6.3 Create automated test suite scripts:
     - [ ] ~~6.3.1 Implement `tests/test_suite/run_test_suite.sh` to run all integration tests directly using pytest.~~
+    - **IMPLEMENTATION NOTE:** For some reason pytest wasn't able to run all the tests succeessfully. Decided this wasn't important enough to dwell on so opted to use the shell scripts instead.
     - [x] 6.3.2 Implement `tests/test_suite/run_test_suite_using_sh.sh` to run each test's individual `.sh` script sequentially.
     - [x] 6.3.3 Add a pause between tests in the sequential script to ensure resources settle.
   - [x] 6.4 Fix transaction isolation issues in database verification:
@@ -259,45 +258,47 @@
     - [x] 6.4.2 Document best practices for database verification in tests.
 
 - [x] 7.0 **Phase 7: Containerization, Final Testing, and Documentation**
-  - [x] 7.1 Update `docker-compose.yml` for all services (DB, API, ETL nodes as services/jobs).
-    - **IMPLEMENTATION NOTE:** Enhanced the existing Docker Compose file to include API and ETL services alongside the MySQL database. Added proper dependency configuration to ensure services start in the correct order, with the ETL pipeline running after the database is healthy, and the API server dependent on the database. Set up appropriate networking, environment variables, and volume mounts.
-  
-  - [x] 7.2 Create/Update `Dockerfile.api`, `Dockerfile.etl`.
-    - **IMPLEMENTATION NOTE:** Created Dockerfile.api for the REST API service using a Python 3.12 slim image, with appropriate environment variable configuration and uvicorn server setup. Created Dockerfile.etl for the ETL pipeline with a shell script that runs the full data processing sequence (extract_load_text_files, extract_load_api, transform) and exits when complete.
-  
-  - [ ] 7.3 Test the API when deployed locally.
-    - **NOTE TO DEVELOPER:** Deploy the application locally using Docker and manually test the API endpoints to ensure they're working correctly with real data.
+  - [x] 7.1 `Docker-compose.yml`
+    - [x] 7.1.0 `Dockerfile.etl`
+    - [x] 7.1.1 `Dockerfile.api`
+    - [x] 7.1.2 `Dockerfile.test_runner`
 
-  - [ ] 7.4 Add the test suite execution to the docker deployment. Ensure all integration tests pass in Docker environment.
+- [ ] 8.0 **Phase 8: LLM-Enhanced Skill Gap Analysis (OPTIONAL)**
+  - [ ] 8.1 Create a new function `get_skills_gap_by_lvl_llm.py`:
+    - should work similar to `get_skills_gap_by_lvl.py`
+    - leverages `get_occupation_and_skills.py` to get occupation skills for from and to
+    - leverages `gemini_llm_prompt` and `gemini_llm_request` to generate llm proficiency levels and descriptions for from and to
+    - leverages `gemini_llm_prompt` and `gemini_llm_request` to generate a skills gap analysis using the llm generated proficiency levels and descriptions, this will also have descriptions of the gap against each of the skills
+    - `gemini_llm_prompt` will need to be updated with an additional prompt. 
 
-  - [ ] 7.5 Update `README.md` (full setup, schema, data flow, API examples, design decisions).
+    ```python
+    # parameters: from_onet_soc_code, to_onet_soc_code, engine
+    # returns: [{element_id:..., skill_name:..., from_proficiency_level:..., to_proficiency_level:..., llm_gap_description:...},{}] # list of skills required by the second occupation that the first occupation either does not have or where the proficiency level is lower than in the second occupation.
+    ```
 
-- [ ] 8.0 **Phase 8: Cloud Deployment (OPTIONAL)**
-  - [ ] 8.1 Create cloud deployment configuration for GCP Cloud Run
+  - [ ] 8.2 Create a new API endpoint for LLM-enhanced gap descriptions
+    - Implement a separate endpoint (e.g., `/skill-gap-with-descriptions`) that returns the enhanced output with LLM-generated descriptions
+  - [ ] 8.3 Update documentation to include this advanced feature
+    - Add examples of both standard and LLM-enhanced API responses
+    - Document performance and cost considerations
+  - [ ] 8.4 Add integration tests for the LLM-enhanced skill gap analysis
+    - [ ] 8.4.1 `test_integration_llm_skill_assessment_pipeline.py`
+    - [ ] 8.4.2 `test_integration_gemini_llm_prompt.py`
+    - [ ] 8.4.3 `test_integration_gemini_llm_request.py`
+
+- [ ] 9.0 **Phase 9: Cloud Deployment (OPTIONAL)**
+  - [ ] 9.1 Create cloud deployment configuration for GCP Cloud Run
     - [ ] Prepare production-ready Docker image with proper security hardening
     - [ ] Set up environment variables for GCP Cloud Run deployment
     - [ ] Configure proper networking and security settings
-  - [ ] 8.2 Set up CI/CD pipeline for automated deployment
+  - [ ] 9.2 Set up CI/CD pipeline for automated deployment
     - [ ] Configure GitHub Actions or Cloud Build workflow
     - [ ] Implement testing as part of the deployment pipeline
     - [ ] Set up monitoring and alerting
-  - [ ] 8.3 Document cloud deployment process and maintenance procedures
+  - [ ] 9.3 Document cloud deployment process and maintenance procedures
     - [ ] Create deployment runbook
     - [ ] Document rollback procedures
     - [ ] Add monitoring dashboard setup instructions
-
-- [ ] 9.0 **Phase 9: LLM-Enhanced Skill Gap Analysis (OPTIONAL)**
-  - [ ] 9.1 Create a new function `get_skills_gap_with_llm_descriptions` that:
-    - Uses the existing LLM skill assessment to get proficiency data for both occupations
-    - Compares LLM-assigned proficiency levels to identify gaps
-    - Generates detailed descriptions for each gap via additional LLM calls
-  - [ ] 9.2 Enhance the API endpoint to optionally include LLM-generated gap descriptions
-    - Add a query parameter (e.g., `?include_llm_descriptions=true`) to request the enhanced output
-    - Implement a fallback to standard gap analysis if LLM processing fails
-  - [ ] 9.3 Update documentation to include this advanced feature
-    - Add examples of both standard and LLM-enhanced API responses
-    - Document performance and cost considerations
-  - [ ] 9.4 Create integration tests for the LLM-enhanced skill gap analysis 
 
 - [ ] 10.0 **Phase 10: API Data Normalization Pipeline (OUT OF SCOPE)**
   - [ ] 10.1 Design and implement an ETL pipeline for API data

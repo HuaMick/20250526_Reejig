@@ -5,9 +5,11 @@ from typing import Dict, List, Any, Optional
 
 def gemini_llm_prompt(
     occupation_data: Dict[str, Any],
+    from_occupation_data: Optional[Dict[str, Any]] = None,
+    prompt_type: str = "skill_proficiency"
 ) -> Dict[str, Any]:
     """
-    Generate a prompt for the LLM to assess skill proficiency levels for a target occupation.
+    Generate a prompt for the LLM to assess skill proficiency levels or skill gap analysis.
 
     Args:
         occupation_data (Dict[str, Any]): Dictionary containing target occupation data with structure:
@@ -16,6 +18,11 @@ def gemini_llm_prompt(
                 "name": str,
                 "skills": [{"skill_element_id": str, "skill_name": str, "proficiency_level": float}, ...]
             }
+        from_occupation_data (Optional[Dict[str, Any]]): Dictionary containing source occupation data for comparison.
+            Same structure as occupation_data. Used for skill gap analysis prompts.
+        prompt_type (str): Type of prompt to generate. Options:
+            - "skill_proficiency": Generate skill proficiency assessment prompt
+            - "skill_gap_analysis": Generate skill gap analysis prompt (requires from_occupation_data)
 
     Returns:
         Dict[str, Any]: Standard response format with keys:
@@ -34,6 +41,34 @@ def gemini_llm_prompt(
             "message": "Invalid occupation_data format. Must contain onet_id, name, and skills keys."
         }
     
+    if prompt_type == "skill_gap_analysis":
+        if not from_occupation_data:
+            return {
+                "success": False,
+                "message": "from_occupation_data is required for skill gap analysis prompts."
+            }
+        if not isinstance(from_occupation_data, dict) or \
+           "onet_id" not in from_occupation_data or \
+           "name" not in from_occupation_data or \
+           "skills" not in from_occupation_data:
+            return {
+                "success": False,
+                "message": "Invalid from_occupation_data format. Must contain onet_id, name, and skills keys."
+            }
+    
+    if prompt_type == "skill_proficiency":
+        return _generate_skill_proficiency_prompt(occupation_data)
+    elif prompt_type == "skill_gap_analysis":
+        return _generate_skill_gap_analysis_prompt(from_occupation_data, occupation_data)
+    else:
+        return {
+            "success": False,
+            "message": f"Invalid prompt_type: {prompt_type}. Must be 'skill_proficiency' or 'skill_gap_analysis'."
+        }
+
+
+def _generate_skill_proficiency_prompt(occupation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate a skill proficiency assessment prompt for a single occupation."""
     # Build the prompt
     prompt = f"""
 You are an expert in career transitions and occupational skill assessment.
@@ -101,6 +136,91 @@ Ensure your response is properly formatted as valid JSON and includes all requir
     return {
         "success": True,
         "message": "Successfully generated prompt for skill proficiency assessment",
+        "result": {
+            "prompt": prompt.strip()
+        }
+    }
+
+
+def _generate_skill_gap_analysis_prompt(from_occupation_data: Dict[str, Any], to_occupation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate a skill gap analysis prompt comparing two occupations with their assessed proficiency levels."""
+    
+    prompt = f"""
+You are an expert in career transitions and skill gap analysis.
+
+I need you to analyze the skill gaps between two occupations and provide detailed descriptions of what skills need development.
+
+# Source Occupation (Current)
+- O*NET ID: {from_occupation_data['onet_id']}
+- Occupation Name: {from_occupation_data['name']}
+- Skills and Proficiency Levels:
+"""
+    
+    # Add source occupation skills with proficiency levels
+    if from_occupation_data['skills']:
+        for skill in from_occupation_data['skills']:
+            skill_name = skill.get('skill_name')
+            proficiency = skill.get('proficiency_level', 'Unknown')
+            if skill_name:
+                prompt += f"  - {skill_name}: {proficiency}/7\n"
+    else:
+        prompt += "  - (No specific skills listed for this occupation)\n"
+    
+    prompt += f"""
+
+# Target Occupation (Desired)
+- O*NET ID: {to_occupation_data['onet_id']}
+- Occupation Name: {to_occupation_data['name']}
+- Skills and Proficiency Levels:
+"""
+    
+    # Add target occupation skills with proficiency levels
+    if to_occupation_data['skills']:
+        for skill in to_occupation_data['skills']:
+            skill_name = skill.get('skill_name')
+            proficiency = skill.get('proficiency_level', 'Unknown')
+            if skill_name:
+                prompt += f"  - {skill_name}: {proficiency}/7\n"
+    else:
+        prompt += "  - (No specific skills listed for this occupation)\n"
+    
+    prompt += """
+
+# Your Task:
+1. Compare the skills and proficiency levels between the source and target occupations.
+2. Identify skills where there is a gap (target requires higher proficiency than source has, or skills missing from source).
+3. For each skill gap identified, provide:
+   - A clear description of what development is needed
+   - Specific recommendations for bridging the gap
+   - Context about why this skill is important for the target occupation
+4. Focus on actionable insights that would help someone transition from the source to target occupation.
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "string (Source occupation name)",
+    "to_occupation": "string (Target occupation name)",
+    "skill_gaps": [
+      {
+        "skill_name": "string (Name of the skill with a gap)",
+        "from_proficiency_level": number (Current proficiency level, 0 if skill is missing),
+        "to_proficiency_level": number (Required proficiency level for target occupation),
+        "gap_description": "string (Detailed description of what development is needed and why this skill matters for the target occupation)"
+      }
+      // One object for each skill gap identified
+    ]
+  }
+}
+```
+
+Ensure your response is properly formatted as valid JSON and includes all required fields.
+"""
+    
+    return {
+        "success": True,
+        "message": "Successfully generated prompt for skill gap analysis",
         "result": {
             "prompt": prompt.strip()
         }

@@ -35,8 +35,10 @@ app.add_middleware(
 
 # Import and include routers
 from src.api.routers import skill_gap
+from src.api.routers import db
 
 app.include_router(skill_gap.router, prefix="/api/v1", tags=["skill-gap"])
+app.include_router(db.router, prefix="/api/v1", tags=["diagnostics"])
 
 @app.get("/", tags=["health"])
 async def root():

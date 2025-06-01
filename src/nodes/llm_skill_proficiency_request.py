@@ -11,7 +11,7 @@ import logging
 from typing import Dict, Any, List
 
 from src.functions.gemini_llm_request import gemini_llm_request
-from src.functions.gemini_llm_prompt import gemini_llm_prompt
+from functions.generate_skill_gap_analysis_prompt import gemini_llm_prompt
 from src.functions.get_occupation_and_skills import get_occupation_and_skills
 from src.functions.mysql_load_llm_skill_proficiencies import mysql_load_llm_skill_proficiencies
 from src.config.schemas import get_sqlalchemy_engine # For real DB access

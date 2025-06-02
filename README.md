@@ -1,7 +1,6 @@
 # O*NET Data Pipeline & Skill Gap API
 
 ## Setup and Run Instructions
-
 From project root execute in shell: 
   1. `source env/env.env` Set env variables, see env.example
   2. `docker compose up`  Build and execute docker containers
@@ -14,14 +13,14 @@ api: serves the api endpoints
 
 Note: this project uses shell scripts, depending on your OS you may need to grant permissions to execute each shell script before your able to execute it. e.g. `chmod +x tests/test_suite/setup_test_db.sh` for Linux/macOS systems.
 
-## Execute automated tests:
-
+## Execute automated tests locally:
 From project root: 
-1. `tests/test_suite/setup_test_db.sh`
-2. `tests/test_suite/run_test_suite.sh`
+1. `source env/env.env` : this will set your env variables
+2. `docker compose up db`: this will spin up the db in a docker container
+3. `tests/test_suite/setup_test_db.sh`: this will initalise the test db if it doesnt exist yet
+4. `tests/test_suite/run_test_suite_using_sh.sh`: this will run the test suite.
 
 ## Project Overview
-
 API that uses the public O*NET dataset to identify skills gap between two occupations (from_occupation, to_occupation).
 
 For local deployment base_url = http://localhost:8000

@@ -19,7 +19,11 @@ echo "Starting integration test suite within Docker container..."
 # source .venv/bin/activate
 
 # Define the base directory for test scripts
-TEST_SCRIPT_DIR="tests" 
+TEST_SCRIPT_DIR="tests"
+
+# Initialize pass/fail counters
+total_pass_count=0
+total_fail_count=0
 
 PYTHON_TEST_FILES=(
     "test_integration_mysql_create_db.py"
@@ -45,7 +49,7 @@ PYTHON_TEST_FILES=(
 
 echo "Executing test scripts..."
 for py_test_file in "${PYTHON_TEST_FILES[@]}"; do
-    sh_test_file="${py_test_file%.py}.sh" 
+    sh_test_file="${py_test_file%.py}.sh"
     full_sh_path="$TEST_SCRIPT_DIR/$sh_test_file"
 
     if [ -f "$full_sh_path" ]; then
@@ -56,9 +60,23 @@ for py_test_file in "${PYTHON_TEST_FILES[@]}"; do
         # If these are not executable, they might need `bash $full_sh_path` or `chmod +x` in Dockerfile
         # For now, assuming they are executable or will be run with bash/sh explicitly if needed.
         if [ -x "$full_sh_path" ]; then
-            "$full_sh_path"
+            if "$full_sh_path"; then
+                total_pass_count=$((total_pass_count + 1))
+            else
+                total_fail_count=$((total_fail_count + 1))
+                echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                echo "WARNING: Test script $full_sh_path FAILED"
+                echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            fi
         else
-            bash "$full_sh_path"
+            if bash "$full_sh_path"; then
+                total_pass_count=$((total_pass_count + 1))
+            else
+                total_fail_count=$((total_fail_count + 1))
+                echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                echo "WARNING: Test script $full_sh_path FAILED (executed with bash)"
+                echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            fi
         fi
         echo "----------------------------------------------------------------------"
         echo "Finished: $full_sh_path"
@@ -74,7 +92,12 @@ for py_test_file in "${PYTHON_TEST_FILES[@]}"; do
     fi
 done
 
-echo "All specified integration test scripts have been attempted."
+echo "----------------------------------------------------------------------"
+echo "Test Suite Summary"
+echo "----------------------------------------------------------------------"
+echo "Total Tests Passed: $total_pass_count"
+echo "Total Tests Failed: $total_fail_count"
+echo "----------------------------------------------------------------------"
 
 # Deactivation of venv is not needed in Docker.
 # if [ -n "$VIRTUAL_ENV" ]; then

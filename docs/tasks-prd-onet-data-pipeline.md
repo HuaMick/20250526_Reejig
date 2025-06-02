@@ -95,18 +95,19 @@
   - [x] 2.1.1 **NEW (On-Demand):** Create integration test specifically for filtered `onet_api_extract_occupation` to verify it correctly fetches single or specific records based on filters (e.g., by `onetsoc_code`).
     - **IMPLEMENTATION NOTE:** Successfully tested with `["onetsoc_code.eq.15-1254.00"]` filter to fetch Web Developers occupation.
   - [x] 2.2 Create/Update integration test for bulk `onet_api_extract_occupation` (and its loading) (`tests/test_integration_api_extract_load_occupations.py` and `.sh`).
+  - [x] 2.3 **N/A** (Task superseded by On-Demand approach)
   - [x] 2.4 **NEW (On-Demand):** Design and implement similar `filter_params` and specific filter tests for `onet_api_extract_skills` and `onet_api_extract_scales` functions.
     - [x] 2.4.1 Update `onet_api_extract_skills` to accept `filter_params` and add integration test for filtered skill extraction.
       - **IMPLEMENTATION NOTE:** Updated function to accept filters and handle pagination similarly to the occupation extraction.
       - **IMPLEMENTATION NOTE:** Scales are static reference data that doesn't need occupation-specific filtering.
   - [x] 2.5 Create function `onet_api_extract_skills_data(occupation_details_df: pd.DataFrame)` in `src/functions/onet_api_extract_skills_data.py`. (This function parses XML details; may need adjustment if detailed occupation data is fetched differently in on-demand flow).
   - [x] 2.7 Create function `get_onet_scales_reference(url: str)` in `src/functions/get_onet_scales_reference.py`.
-  - [x] 2.11 Define SQLAlchemy schemas for the API data landing tables in `src/config/schemas.py`.
-  - [x] 2.13 Create node `extract_load_api.py` in `src/nodes/`. This node is for *bulk* API data extraction using the updated functions (without filters or with broad filters if ever needed for bulk).
-  - [x] 2.14 Create integration test for `extract_load_api.py` node.
-  - [x] 2.15 **NEW (On-Demand):** Document the on-demand pull strategy with caching in `memory_bank/notes.md`.
+  - [x] 2.8 Define SQLAlchemy schemas for the API data landing tables in `src/config/schemas.py`.
+  - [x] 2.9 Create node `extract_load_api.py` in `src/nodes/`. This node is for *bulk* API data extraction using the updated functions (without filters or with broad filters if ever needed for bulk).
+  - [x] 2.10 Create integration test for `extract_load_api.py` node.
+  - [x] 2.11 **NEW (On-Demand):** Document the on-demand pull strategy with caching in `memory_bank/notes.md`.
     - **IMPLEMENTATION NOTE:** Added detailed notes on the strategy shift to on-demand pulling with local caching.
-  - [x] 2.16 **NEW:** Create `onet_api_pull.py` function to fetch occupation and skills data for a specific occupation code.
+  - [x] 2.12 **NEW:** Create `onet_api_pull.py` function to fetch occupation and skills data for a specific occupation code.
     - **IMPLEMENTATION NOTE:** Function successfully implemented with proper error handling, data formatting, and compatibility with existing database schema.
 
 - [x] 3.0 **Phase 3: Database Normalization & Downstream Consumption Tables**
@@ -244,12 +245,12 @@
     - [x] 6.2.5 `test_integration_mysql_load.py`
     - [x] 6.2.6 `test_integration_transform.py`
     - [x] 6.2.7 `test_integration_mysql_connection.py`
-    - [x] 6.2.12 `test_integration_api_extract_load_skills.py` 
-    - [x] 6.2.14 `test_integration_api_extract_load_occupations.py`
-    - [x] 6.2.16 `test_integration_get_occupation_and_skills_api_fallback.py`
-    - [x] 6.2.16 `test_integration_get_occupation_skills.py`
+    - [x] 6.2.8 `test_integration_api_extract_load_skills.py` 
+    - [x] 6.2.9 `test_integration_api_extract_load_occupations.py`
+    - [x] 6.2.10 `test_integration_get_occupation_and_skills_api_fallback.py`
+    - [x] 6.2.11 `test_integration_get_occupation_skills.py`
   - [x] 6.3 Create automated test suite scripts:
-    - [ ] ~~6.3.1 Implement `tests/test_suite/run_test_suite.sh` to run all integration tests directly using pytest.~~
+    - [x] 6.3.1 ~~Implement `tests/test_suite/run_test_suite.sh` to run all integration tests directly using pytest.~~
     - **IMPLEMENTATION NOTE:** For some reason pytest wasn't able to run all the tests succeessfully. Decided this wasn't important enough to dwell on so opted to use the shell scripts instead.
     - [x] 6.3.2 Implement `tests/test_suite/run_test_suite_using_sh.sh` to run each test's individual `.sh` script sequentially.
     - [x] 6.3.3 Add a pause between tests in the sequential script to ensure resources settle.
@@ -259,9 +260,9 @@
 
 - [x] 7.0 **Phase 7: Containerization, Final Testing, and Documentation**
   - [x] 7.1 `Docker-compose.yml`
-    - [x] 7.1.0 `Dockerfile.etl`
-    - [x] 7.1.1 `Dockerfile.api`
-    - [x] 7.1.2 `Dockerfile.test_runner`
+    - [x] 7.1.1 `Dockerfile.etl`
+    - [x] 7.1.2 `Dockerfile.api`
+    - [x] 7.1.3 `Dockerfile.test_runner`
 
 - [x] 8.0 **Phase 8: LLM-Enhanced Skill Gap Analysis (OPTIONAL BUT IMPLEMENTED)**
   - [x] 8.1 Create a new function `get_skills_gap_by_lvl_llm.py`:
@@ -282,36 +283,36 @@
     - Add examples of both standard and LLM-enhanced API responses
     - Document performance and cost considerations
   - [x] 8.4 Add integration tests for the LLM-enhanced skill gap analysis
-    - [x] 8.4.2 `test_integration_gemini_llm_prompt.py` 
-    - [x] 8.4.3 `test_integration_gemini_llm_request.py` 
-    - [x] 8.4.4 `test_integration_get_skills_gap_by_lvl_llm.py`
+    - [x] 8.4.1 `test_integration_gemini_llm_prompt.py` 
+    - [x] 8.4.2 `test_integration_gemini_llm_request.py` 
+    - [x] 8.4.3 `test_integration_get_skills_gap_by_lvl_llm.py`
 
 - [ ] 9.0 **Phase 9: Cloud Deployment (OPTIONAL)**
   - [ ] 9.1 Create cloud deployment configuration for GCP Cloud Run
-    - [ ] Prepare production-ready Docker image with proper security hardening
-    - [ ] Set up environment variables for GCP Cloud Run deployment
-    - [ ] Configure proper networking and security settings
+    - [ ] 9.1.1 Prepare production-ready Docker image with proper security hardening
+    - [ ] 9.1.2 Set up environment variables for GCP Cloud Run deployment
+    - [ ] 9.1.3 Configure proper networking and security settings
   - [ ] 9.2 Set up CI/CD pipeline for automated deployment
-    - [ ] Configure GitHub Actions or Cloud Build workflow
-    - [ ] Implement testing as part of the deployment pipeline
-    - [ ] Set up monitoring and alerting
+    - [ ] 9.2.1 Configure GitHub Actions or Cloud Build workflow
+    - [ ] 9.2.2 Implement testing as part of the deployment pipeline
+    - [ ] 9.2.3 Set up monitoring and alerting
   - [ ] 9.3 Document cloud deployment process and maintenance procedures
-    - [ ] Create deployment runbook
-    - [ ] Document rollback procedures
-    - [ ] Add monitoring dashboard setup instructions
+    - [ ] 9.3.1 Create deployment runbook
+    - [ ] 9.3.2 Document rollback procedures
+    - [ ] 9.3.3 Add monitoring dashboard setup instructions
 
 - [ ] 10.0 **Phase 10: API Data Normalization Pipeline (OUT OF SCOPE)**
   - [ ] 10.1 Design and implement an ETL pipeline for API data
-    - Create transformation functions to convert API landing table data to normalized schema
-    - Implement deduplication and data quality checks
-    - Add incremental loading capability to avoid duplicating data
+    - [ ] 10.1.1 Create transformation functions to convert API landing table data to normalized schema
+    - [ ] 10.1.2 Implement deduplication and data quality checks
+    - [ ] 10.1.3 Add incremental loading capability to avoid duplicating data
   - [ ] 10.2 Create scheduling for periodic API data normalization
-    - Implement a schedule to run the normalization pipeline at regular intervals
-    - Add logging and monitoring for the scheduled process
+    - [ ] 10.2.1 Implement a schedule to run the normalization pipeline at regular intervals
+    - [ ] 10.2.2 Add logging and monitoring for the scheduled process
   - [ ] 10.3 Create integration tests for the normalization pipeline
-    - Test data transformation accuracy
-    - Test incremental loading functionality
-    - Test error handling and recovery
+    - [ ] 10.3.1 Test data transformation accuracy
+    - [ ] 10.3.2 Test incremental loading functionality
+    - [ ] 10.3.3 Test error handling and recovery
   - [ ] 10.4 Update documentation with details on the normalization process
     - **IMPLEMENTATION NOTE:** While the on-demand API fetching with caching currently stores data in landing tables, a full ETL pipeline to normalize this data into the core tables would be a valuable future enhancement. This was deprioritized as we've already demonstrated API data fetching capability, and the current implementation is sufficient for the skill gap analysis features. Additionally, this would benefit from further product design input before implementation.
         

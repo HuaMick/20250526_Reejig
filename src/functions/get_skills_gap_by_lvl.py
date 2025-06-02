@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
 from sqlalchemy.engine import Engine
 from src.config.schemas import get_sqlalchemy_engine
 from src.functions.get_occupation_and_skills import get_occupation_and_skills

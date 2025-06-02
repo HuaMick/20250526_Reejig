@@ -2,7 +2,7 @@
 LLM-Enhanced Skill Gap Analysis function that provides detailed gap descriptions.
 """
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
 from sqlalchemy.engine import Engine
 from src.config.schemas import get_sqlalchemy_engine
 from src.functions.get_occupation_and_skills import get_occupation_and_skills
@@ -10,7 +10,11 @@ from src.functions.generate_skill_proficiency_prompt import generate_skill_profi
 from src.functions.generate_skill_gap_analysis_prompt import generate_skill_gap_analysis_prompt
 from src.functions.gemini_llm_request import gemini_llm_request
 
-def get_skills_gap_by_lvl_llm(from_onet_soc_code: str, to_onet_soc_code: str, engine: Optional[Engine] = None):
+def get_skills_gap_by_lvl_llm(
+    from_onet_soc_code: str, 
+    to_onet_soc_code: str, 
+    engine: Optional[Engine] = None, 
+):
     """
     Identifies skills required by the target occupation that the source occupation either does not have 
     or where the proficiency level is lower than in the target occupation, with LLM-generated descriptions.
@@ -192,8 +196,8 @@ def get_skills_gap_by_lvl_llm(from_onet_soc_code: str, to_onet_soc_code: str, en
         
         # Step 5: Generate skill gap analysis prompt with LLM-assessed proficiencies
         gap_prompt_result = generate_skill_gap_analysis_prompt(
-            to_occupation_data=enhanced_to_data,
             from_occupation_data=enhanced_from_data,
+            to_occupation_data=enhanced_to_data,
         )
         
         if not gap_prompt_result["success"]:

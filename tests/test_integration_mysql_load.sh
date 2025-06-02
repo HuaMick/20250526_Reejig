@@ -7,11 +7,13 @@ set -e # Exit immediately if a command exits with a non-zero status.
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+# Apply environment variables
+source env/env.env
+
 # Activate the virtual environment
 source .venv/bin/activate
 
-# Run the test using run-tests.sh which handles test database configuration
-./run-tests.sh tests/test_integration_mysql_load.py -v -s --capture=no --tb=short
+python -m pytest tests/test_integration_mysql_load.py -v -s --capture=no --tb=short
 
 # Deactivate virtual environment
 deactivate

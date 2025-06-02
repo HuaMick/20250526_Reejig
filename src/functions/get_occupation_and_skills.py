@@ -3,6 +3,7 @@ Function to retrieve and structure occupation and skills data for LLM prompt gen
 """
 import os
 import logging
+import re  # Added for occupation code validation
 from typing import Dict, Any, Optional, List
 from sqlalchemy.engine import Engine
 
@@ -37,6 +38,14 @@ def get_occupation_and_skills(
             - result (dict): When successful, contains:
                 - occupation_data (dict): Structured data for the occupation.
     """
+    # Validate occupation code format
+    if not occupation_code or not re.match(r'^\d{2}-\d{4}\.\d{2}$', occupation_code):
+        return {
+            "success": False,
+            "message": f"Invalid occupation code format: {occupation_code}. Expected format: xx-xxxx.xx (e.g., 11-1011.00)",
+            "result": {}
+        }
+    
     # If no engine is provided, get the default one
     if engine is None:
         engine = get_sqlalchemy_engine()

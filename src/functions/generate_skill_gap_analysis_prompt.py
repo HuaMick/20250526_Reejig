@@ -89,20 +89,32 @@ Ensure your response is properly formatted as valid JSON and includes all requir
 
 
 if __name__ == "__main__":
-    print("Minimalistic happy path example for gemini_llm_prompt:")
+    print("Minimalistic happy path example for generate_skill_gap_analysis_prompt:")
     
     # 1. Define sample occupation data (with skills)
-    example_occupation_data = {
-        "onet_id": "15-1252.00",
-        "name": "Software Developer",
+    example_from_occupation = {
+        "onet_id": "11-1011.00",
+        "name": "Chief Executives",
         "skills": [
-            {"skill_name": "Programming", "proficiency_level": 5.0},
-            {"skill_name": "Problem Solving", "proficiency_level": 4.5}
+            {"skill_name": "Leadership", "proficiency_level": 6.0},
+            {"skill_name": "Decision Making", "proficiency_level": 6.5}
+        ]
+    }
+    
+    example_to_occupation = {
+        "onet_id": "11-2021.00",
+        "name": "Marketing Managers",
+        "skills": [
+            {"skill_name": "Marketing", "proficiency_level": 6.0},
+            {"skill_name": "Communication", "proficiency_level": 5.5}
         ]
     }
     
     # 2. Call the function to generate the prompt
-    prompt_result = gemini_llm_prompt(occupation_data=example_occupation_data)
+    prompt_result = generate_skill_gap_analysis_prompt(
+        from_occupation_data=example_from_occupation,
+        to_occupation_data=example_to_occupation
+    )
     
     # 3. Print the result summary
     print("\nFunction Call Result:")

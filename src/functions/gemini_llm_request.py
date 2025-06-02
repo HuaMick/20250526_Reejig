@@ -96,14 +96,7 @@ def gemini_llm_request(
                 # Save the raw response to a file for debugging
                 debug_dir = "src/functions/llm_debug_responses"
                 if not os.path.exists(debug_dir):
-                    # According to rules, I cannot create this directory.
-                    # It will be handled by informing the user.
-                    pass # Directory creation will be handled by user.
-                
-                # Ensure the directory exists before trying to write to it.
-                # This part assumes the user has created the directory.
-                # If not, writing the file will fail, but the function will continue.
-                # The primary goal is to attempt saving for debugging if the path is valid.
+                    raise FileNotFoundError(f"Debug directory {debug_dir} does not exist")
                 if os.path.exists(debug_dir):
                     try:
                         response_filename = os.path.join(debug_dir, f"llm_response_{batch_request_id}_{expected_response_type}.txt")

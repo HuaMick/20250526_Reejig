@@ -75,7 +75,7 @@ There are also `..._API_landing` landing tables for storing data when an api req
 
 ## 3. Design Decisions & Project Evolution
 
-This project was build using AI-assisted agentic programing techniques. Core to this is the `docs/prd-onet-data-pipeline.md`, `docs/tasks-prd-onet-data-pipeline.md` and `.cursor/rules` which were all used as context for the AI agent. An iterative approach to AI coding was taken, building function by function and extensively testing using integration tests each time. 
+This project was build using AI-assisted agentic programing techniques. Core to this is the `docs/prd-onet-data-pipeline.md`, `docs/tasks-prd-onet-data-pipeline.md` and `.cursor/rules` which were all used as context for the AI agent. An iterative approach to AI coding was taken, building function by function and extensively testing using integration tests each time.
 
 The project evolved through several key design decisions:
 *   **Initial Setup & ETL:** Opted for a standard Python virtual environment and `requirements.txt` over Nix. Data from O*NET text files was initially loaded into a Dockerized MySQL database using SQLAlchemy for schema management. This established the foundational ETL pipeline.

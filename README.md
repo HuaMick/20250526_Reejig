@@ -13,11 +13,19 @@ api: serves the api endpoints
 
 Note: this project uses shell scripts, depending on your OS you may need to grant permissions to execute each shell script before your able to execute it. e.g. `chmod +x tests/test_suite/setup_test_db.sh` for Linux/macOS systems.
 
+## Local Setup
+1. `sudo apt install pipx` : https://pipx.pypa.io/stable/installation/
+2. `pipx install virtualenv` : https://virtualenv.pypa.io/en/latest/installation.html
+3. `src/scripts/init_project.sh` : setup virtual env and install requirements
+4. `source env/env.env` : this will set your env variables
+5. `docker compose up db`: this will spin up the db in a docker container
+6. `src/scripts/init_db.sh` : this will ensure the db is built and setup with the correct tables
+
 ## Execute automated tests locally:
 From project root: 
 1. `source env/env.env` : this will set your env variables
 2. `docker compose up db`: this will spin up the db in a docker container
-3. `tests/test_suite/setup_test_db.sh`: this will initalise the test db if it doesnt exist yet
+3. `tests/test_suite/setup_test_db.sh`: this will initalise the test db with the correct tables
 4. `tests/test_suite/run_test_suite_using_sh.sh`: this will run the test suite.
 
 ## Project Overview

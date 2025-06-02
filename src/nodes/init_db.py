@@ -10,10 +10,10 @@ from src.functions.mysql_connection import get_mysql_connection
 from src.functions.mysql_init_tables import initialize_database_tables
 
 connection_params = {
-    "host": os.getenv("MYSQL_HOST"),
-    "port": os.getenv("MYSQL_PORT"),
-    "user": os.getenv("MYSQL_USER"),
-    "password": os.getenv("MYSQL_PASSWORD"),
+    "host": os.getenv('MYSQL_HOST', 'localhost'),
+    "port": os.getenv('MYSQL_PORT', '3306'),
+    "user": os.getenv('MYSQL_USER'),
+    "password": os.getenv('MYSQL_PASSWORD'),
 }
 
 def init_db_mysql(connection_params=connection_params) -> Dict[str, Any]:

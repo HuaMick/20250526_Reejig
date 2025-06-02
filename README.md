@@ -18,15 +18,17 @@ Note: this project uses shell scripts, depending on your OS you may need to gran
 2. `pipx install virtualenv` : https://virtualenv.pypa.io/en/latest/installation.html
 3. `src/scripts/init_project.sh` : setup virtual env and install requirements
 4. `source env/env.env` : this will set your env variables
-5. `docker compose up db`: this will spin up the db in a docker container
-6. `src/scripts/init_db.sh` : this will ensure the db is built and setup with the correct tables
+5. `source .venv/bin/activate` : activate your python venv
+6. `docker compose up db`: this will spin up the db in a docker container
+7. `src/scripts/init_db.sh` : this will ensure the db is built and setup with the correct tables
 
 ## Execute automated tests locally:
 From project root: 
 1. `source env/env.env` : this will set your env variables
-2. `docker compose up db`: this will spin up the db in a docker container
-3. `tests/test_suite/setup_test_db.sh`: this will initalise the test db with the correct tables
-4. `tests/test_suite/run_test_suite_using_sh.sh`: this will run the test suite.
+2. `source .venv/bin/activate` : activate your python venv
+3. `docker compose up db`: this will spin up the db in a docker container
+4. `tests/test_suite/setup_test_db.sh`: this will initalise the test db with the correct tables
+5. `tests/test_suite/run_test_suite_using_sh.sh`: this will run the test suite.
 
 ## Project Overview
 API that uses the public O*NET dataset to identify skills gap between two occupations (from_occupation, to_occupation).

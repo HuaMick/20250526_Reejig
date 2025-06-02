@@ -31,6 +31,27 @@ API Endpoints:
 <base_url>/api/v1/skill-gap-by-lvl: provide skills in to_occupation that are proficency level > from_occupation
 <base_url>/api/v1/skill-gap-llm: uses a large language model to determine proficiency levels, skills in to_occupation that are proficency level > from_occupation are then passed to the large language model again to provide a description/analysis of the skill gap.
 
+note, api key for the api is just hard coded via the env variable.
+example request, for more examples see notebook.ipynb:
+```python
+base_url = "http://localhost:8000"
+headers = {
+    "X-API-Key": API_KEY
+}
+
+from_occupation = "11-1011.00"  # Web Developers
+to_occupation = "11-3013.00"    # Computer Systems Analysts
+
+response = requests.get(
+    f"{base_url}/api/v1/skill-gap",
+    params={"from_occupation": from_occupation, "to_occupation": to_occupation},
+    headers=headers
+)
+print("\nBasic Skill Gap:")
+pprint.pprint(response.json())
+```
+
+
 ## Meeting the Requirements
 Requirements can be found here [Take Home Assignment Requirements](docs/requirements.md)
 

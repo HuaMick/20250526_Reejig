@@ -233,6 +233,7 @@
   
   - [x] 5.13 Create integration test for `/skill-gap` API endpoint.
     - **IMPLEMENTATION NOTE:** Created comprehensive integration tests in `tests/test_api_skill_gap.py` that verify all functionality of the endpoint, including basic skill gap, proficiency-level skill gap, same occupation comparison, and error handling for invalid occupation codes.
+  - [x] 5.14 Added API Key requirement in header
   - [x] 5.14 API README documentation
 
 - [x] 6.0 **Phase 6: Automated Testing Suite**

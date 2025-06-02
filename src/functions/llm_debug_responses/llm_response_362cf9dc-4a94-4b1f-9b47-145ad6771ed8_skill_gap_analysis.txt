@@ -1,0 +1,185 @@
+--- PROMPT SENT TO LLM (skill_gap_analysis for 11-2021.00) ---\nYou are an expert in career transitions and skill gap analysis.
+
+I need you to analyze the skill gaps between two occupations and provide detailed descriptions of what skills need development.
+
+# Source Occupation (Current)
+- O*NET ID: 11-1011.00
+- Occupation Name: Chief Executives
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 7/7
+  - Active Listening: 7/7
+  - Writing: 6/7
+  - Speaking: 7/7
+  - Mathematics: 4/7
+  - Science: 2/7
+  - Critical Thinking: 7/7
+  - Active Learning: 6/7
+  - Learning Strategies: 6/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 7/7
+  - Coordination: 6/7
+  - Persuasion: 7/7
+  - Negotiation: 7/7
+  - Instructing: 4/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 7/7
+  - Operations Analysis: 6/7
+  - Technology Design: 2/7
+  - Equipment Selection: 2/7
+  - Installation: 1/7
+  - Programming: 1/7
+  - Operations Monitoring: 4/7
+  - Operation and Control: 2/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 2/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 4/7
+  - Judgment and Decision Making: 7/7
+  - Systems Analysis: 6/7
+  - Systems Evaluation: 6/7
+  - Time Management: 7/7
+  - Management of Financial Resources: 7/7
+  - Management of Material Resources: 6/7
+  - Management of Personnel Resources: 7/7
+
+
+# Target Occupation (Desired)
+- O*NET ID: 11-2021.00
+- Occupation Name: Marketing Managers
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 6/7
+  - Active Listening: 6/7
+  - Writing: 6/7
+  - Speaking: 6/7
+  - Mathematics: 4/7
+  - Science: 2/7
+  - Critical Thinking: 6/7
+  - Active Learning: 6/7
+  - Learning Strategies: 5/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 6/7
+  - Coordination: 6/7
+  - Persuasion: 6/7
+  - Negotiation: 5/7
+  - Instructing: 4/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 6/7
+  - Operations Analysis: 4/7
+  - Technology Design: 2/7
+  - Equipment Selection: 1/7
+  - Installation: 1/7
+  - Programming: 1/7
+  - Operations Monitoring: 2/7
+  - Operation and Control: 1/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 2/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 4/7
+  - Judgment and Decision Making: 6/7
+  - Systems Analysis: 4/7
+  - Systems Evaluation: 4/7
+  - Time Management: 6/7
+  - Management of Financial Resources: 5/7
+  - Management of Material Resources: 2/7
+  - Management of Personnel Resources: 5/7
+
+
+# Your Task:
+1. Compare the skills and proficiency levels between the source and target occupations.
+2. Identify skills where there is a gap (target requires higher proficiency than source has, or skills missing from source).
+3. For each skill gap identified, provide:
+   - A clear description of what development is needed
+   - Specific recommendations for bridging the gap
+   - Context about why this skill is important for the target occupation
+4. Focus on actionable insights that would help someone transition from the source to target occupation.
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "string (Source occupation name)",
+    "to_occupation": "string (Target occupation name)",
+    "skill_gaps": [
+      {
+        "skill_name": "string (Name of the skill with a gap)",
+        "from_proficiency_level": number (Current proficiency level, 0 if skill is missing),
+        "to_proficiency_level": number (Required proficiency level for target occupation),
+        "gap_description": "string (Detailed description of what development is needed and why this skill matters for the target occupation)"
+      }
+      // One object for each skill gap identified
+    ]
+  }
+}
+```
+
+Ensure your response is properly formatted as valid JSON and includes all required fields.\n\n--- RAW LLM RESPONSE ---\n```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "Chief Executives",
+    "to_occupation": "Marketing Managers",
+    "skill_gaps": [
+      {
+        "skill_name": "Learning Strategies",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 5,
+        "gap_description": "While the proficiency level desired in Learning Strategies is lower for Marketing Managers, it's vital to understand that the *focus* of learning shifts. Chief Executives need broad learning strategies encompassing all aspects of the business. Marketing Managers need to hone their learning strategies to focus on marketing trends, consumer behavior, competitor analysis, and the ever-evolving digital marketing landscape. Development needed involves actively researching and experimenting with new marketing techniques and technologies, attending marketing-specific conferences and webinars, and subscribing to industry publications. This is crucial for staying ahead in a dynamic market and optimizing marketing campaigns for maximum impact."
+      },
+      {
+        "skill_name": "Persuasion",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While seemingly lower, the type of persuasion required changes. As a Chief Executive, persuasion is often directed at investors, board members, and internal stakeholders on strategic directions. As a Marketing Manager, persuasion is heavily focused on *customers*. This means developing persuasive marketing copy, crafting compelling advertising campaigns, and effectively communicating the value proposition of products or services. Development should involve taking courses on persuasive writing, studying successful marketing campaigns, and practicing presenting marketing ideas to diverse audiences. This is essential for driving sales, building brand loyalty, and achieving marketing objectives."
+      },
+      {
+        "skill_name": "Negotiation",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 5,
+        "gap_description": "Similar to persuasion, the *context* of negotiation differs. Chief Executives negotiate large-scale deals with vendors, partners, and even government entities. Marketing Managers primarily negotiate contracts with advertising agencies, media outlets, and other marketing service providers. Development needed involves understanding the nuances of these specific types of negotiations, focusing on securing favorable terms for marketing campaigns while maintaining positive relationships with vendors. Practice negotiation scenarios specific to marketing budgets, advertising rates, and service level agreements will be beneficial. This is crucial for optimizing marketing spend and maximizing the return on investment for marketing activities."
+      },
+      {
+        "skill_name": "Operations Analysis",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the desired level is lower, Operations Analysis shifts from analyzing overall business operations to focusing specifically on marketing campaign performance and efficiency. Development should focus on learning to use marketing analytics tools (e.g., Google Analytics, social media analytics platforms) to track key performance indicators (KPIs), identify areas for improvement, and optimize marketing strategies. This includes understanding A/B testing, cohort analysis, and attribution modeling. This is crucial for data-driven decision-making and ensuring that marketing efforts are aligned with business goals."
+      },
+      {
+        "skill_name": "Management of Material Resources",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 2,
+        "gap_description": "The level of proficiency needed is significantly lower. Chief Executives oversee the management of all material resources for the entire organization. Marketing Managers typically focus on managing marketing-related materials, such as promotional items, advertising materials, and event supplies. Development needed involves understanding basic inventory management principles and budgeting for marketing materials, but the scope is much narrower than for a Chief Executive. Familiarity with marketing resource management (MRM) software can be helpful. This is crucial for ensuring that marketing campaigns have the necessary resources to succeed without overspending."
+      },
+      {
+        "skill_name": "Systems Analysis",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "Similar to Operations Analysis, the focus of Systems Analysis shifts to marketing-specific systems. While a Chief Executive analyzes the overall organizational systems, a Marketing Manager needs to analyze the effectiveness of marketing automation systems, CRM systems, and other technology platforms used for marketing. Development should involve learning to identify bottlenecks in marketing workflows, evaluate the integration of different marketing technologies, and recommend improvements to optimize marketing performance. Understanding data flows and system dependencies within the marketing technology stack is crucial. This is important for ensuring that marketing efforts are efficient and effective."
+      },
+      {
+        "skill_name": "Systems Evaluation",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "This skill also becomes more marketing-focused. Instead of evaluating overall organizational systems, a Marketing Manager needs to evaluate the performance of marketing technologies and strategies. This involves analyzing data from marketing campaigns, identifying areas for improvement, and recommending changes to optimize results. Development should focus on learning to use marketing analytics tools to measure the effectiveness of different marketing channels, identify trends in customer behavior, and assess the ROI of marketing investments. This is critical for making data-driven decisions and ensuring that marketing efforts are aligned with business objectives."
+      },
+      {
+        "skill_name": "Time Management",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the score is slightly lower, the focus shifts from managing executive-level schedules to managing multiple marketing projects and campaigns simultaneously. Development should involve learning to prioritize tasks, delegate effectively, and use project management tools to track progress and meet deadlines. Staying organized and managing time effectively is crucial for executing successful marketing campaigns and achieving marketing goals. While a CEO might manage larger time horizons, a marketing manager often deals with shorter-term campaigns and must be adept at managing multiple concurrent deadlines."
+      },
+      {
+        "skill_name": "Management of Financial Resources",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 5,
+        "gap_description": "As a Chief Executive, the management of financial resources encompasses the entire organization's budget. As a Marketing Manager, this focuses on managing the marketing budget. Development needed involves learning to develop and manage marketing budgets, track marketing expenses, and analyze the ROI of marketing investments. This includes understanding different budgeting methods, such as zero-based budgeting and activity-based budgeting. It also involves learning to negotiate with vendors and suppliers to secure favorable pricing. This is critical for ensuring that marketing activities are cost-effective and contribute to the overall financial success of the organization."
+      },
+      {
+        "skill_name": "Management of Personnel Resources",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 5,
+        "gap_description": "As a Chief Executive, this skill involves managing all personnel within the organization. As a Marketing Manager, it focuses on managing a marketing team. Development needed involves learning to recruit, train, and motivate marketing professionals. This includes understanding different leadership styles, providing constructive feedback, and fostering a positive team environment. Also, understanding how to manage performance and address conflicts within a team are important. This is crucial for building a high-performing marketing team that can effectively execute marketing strategies and achieve marketing objectives."
+      }
+    ]
+  }
+}
+```

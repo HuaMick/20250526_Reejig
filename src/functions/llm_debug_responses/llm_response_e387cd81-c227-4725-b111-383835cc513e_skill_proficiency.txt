@@ -1,0 +1,294 @@
+--- PROMPT SENT TO LLM (skill_proficiency for 11-1011.00) ---\nYou are an expert in career transitions and occupational skill assessment.
+
+I need you to analyze skills for a job and determine proficiency levels based on the information provided.
+
+# Occupation Information
+- O*NET ID: 11-1011.00
+- Occupation Name: Chief Executives
+- Skills Required:
+  - Reading Comprehension
+  - Active Listening
+  - Writing
+  - Speaking
+  - Mathematics
+  - Science
+  - Critical Thinking
+  - Active Learning
+  - Learning Strategies
+  - Monitoring
+  - Social Perceptiveness
+  - Coordination
+  - Persuasion
+  - Negotiation
+  - Instructing
+  - Service Orientation
+  - Complex Problem Solving
+  - Operations Analysis
+  - Technology Design
+  - Equipment Selection
+  - Installation
+  - Programming
+  - Operations Monitoring
+  - Operation and Control
+  - Equipment Maintenance
+  - Troubleshooting
+  - Repairing
+  - Quality Control Analysis
+  - Judgment and Decision Making
+  - Systems Analysis
+  - Systems Evaluation
+  - Time Management
+  - Management of Financial Resources
+  - Management of Material Resources
+  - Management of Personnel Resources
+
+
+# Your Task:
+1. Analyze the skills of the Occupation provided.
+2. For each skill listed in the Occupation, determine a proficiency level.
+   - Use a scale of 1-7 where 1 is Novice and 7 is Expert
+   - Consider what level of proficiency would be typical/expected for someone in this occupation
+3. Provide a detailed justification/explanation for each assigned proficiency level.
+   - Your explanation should be in the context of the Occupation's typical duties and responsibilities.
+
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_proficiency_assessment": {
+    "llm_onet_soc_code": "string (O*NET code of the Occupation)",
+    "llm_occupation_name": "string (Name of the Occupation)",
+    "assessed_skills": [
+      {
+        "llm_skill_name": "string (Name of the skill)",
+        "llm_assigned_proficiency_description": "string (e.g., 'Intermediate', 'Advanced', 'Expert')",
+        "llm_assigned_proficiency_level": number (e.g., 3.5 on the 1-7 scale),
+        "llm_explanation": "string (Your detailed reasoning for the assigned proficiency)"
+      }
+      // One object for each skill in the Occupation
+    ]
+  }
+}
+```
+
+Ensure your response is properly formatted as valid JSON and includes all required fields.\n\n--- RAW LLM RESPONSE ---\n```json
+{
+  "skill_proficiency_assessment": {
+    "llm_onet_soc_code": "11-1011.00",
+    "llm_occupation_name": "Chief Executives",
+    "assessed_skills": [
+      {
+        "llm_skill_name": "Reading Comprehension",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives must be able to understand complex reports, legal documents, industry publications, and strategic plans. Their ability to quickly and accurately interpret written information is critical for making informed decisions and guiding the organization."
+      },
+      {
+        "llm_skill_name": "Active Listening",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives need to actively listen to employees, customers, stakeholders, and board members to understand their concerns, ideas, and perspectives. This skill is crucial for effective communication, conflict resolution, and building strong relationships."
+      },
+      {
+        "llm_skill_name": "Writing",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives frequently write reports, memos, emails, strategic plans, and public communications. They need to be able to communicate clearly, concisely, and persuasively in writing to a variety of audiences."
+      },
+      {
+        "llm_skill_name": "Speaking",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives are the face of the organization and must be excellent public speakers. They need to be able to present information effectively, motivate employees, and represent the organization to external stakeholders."
+      },
+      {
+        "llm_skill_name": "Mathematics",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Chief Executives need a solid understanding of mathematics to interpret financial statements, analyze budgets, and make data-driven decisions. While they don't need to perform complex calculations themselves, they must be able to understand and interpret mathematical data."
+      },
+      {
+        "llm_skill_name": "Science",
+        "llm_assigned_proficiency_description": "Basic",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "While not a core requirement, a basic understanding of science can be helpful, especially in industries with a strong scientific or technological component. However, it's not a critical skill for all Chief Executives."
+      },
+      {
+        "llm_skill_name": "Critical Thinking",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives must be able to analyze complex situations, identify problems, and develop effective solutions. Critical thinking is essential for strategic planning, decision-making, and risk management."
+      },
+      {
+        "llm_skill_name": "Active Learning",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives must continuously learn about new technologies, industry trends, and management practices. They need to be able to quickly acquire and apply new knowledge to improve organizational performance."
+      },
+      {
+        "llm_skill_name": "Learning Strategies",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "To keep up with industry changes and improve their own performance, Chief Executives need to employ effective learning strategies, such as seeking out relevant resources, attending conferences, and networking with other leaders."
+      },
+      {
+        "llm_skill_name": "Monitoring",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives must monitor organizational performance, industry trends, and competitor activities. This skill is essential for identifying opportunities, mitigating risks, and making strategic adjustments."
+      },
+      {
+        "llm_skill_name": "Social Perceptiveness",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives need to be highly perceptive of social cues and dynamics within the organization and in the external environment. This skill is crucial for building relationships, managing conflict, and understanding the needs of stakeholders."
+      },
+      {
+        "llm_skill_name": "Coordination",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives are responsible for coordinating the activities of different departments and teams within the organization. They need to be able to effectively manage resources and ensure that everyone is working towards common goals."
+      },
+      {
+        "llm_skill_name": "Persuasion",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives must be able to persuade others to support their vision and initiatives. This skill is essential for motivating employees, influencing stakeholders, and negotiating deals."
+      },
+      {
+        "llm_skill_name": "Negotiation",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives frequently negotiate contracts, partnerships, and other agreements. They need to be skilled negotiators to secure favorable outcomes for the organization."
+      },
+      {
+        "llm_skill_name": "Instructing",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "While Chief Executives don't typically provide detailed instruction, they need to be able to communicate expectations, provide feedback, and mentor employees. This requires a basic understanding of instructional techniques."
+      },
+      {
+        "llm_skill_name": "Service Orientation",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives need to be focused on providing excellent service to customers, employees, and other stakeholders. This requires a strong understanding of their needs and a commitment to meeting those needs."
+      },
+      {
+        "llm_skill_name": "Complex Problem Solving",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives are constantly faced with complex problems that require creative and innovative solutions. This skill is essential for overcoming challenges and achieving organizational goals."
+      },
+      {
+        "llm_skill_name": "Operations Analysis",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives need to be able to analyze organizational operations to identify areas for improvement. This requires a strong understanding of business processes and a data-driven approach."
+      },
+      {
+        "llm_skill_name": "Technology Design",
+        "llm_assigned_proficiency_description": "Basic",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "While not typically involved in detailed technology design, Chief Executives need a basic understanding of how technology can be used to improve organizational performance. They should be able to articulate technology needs and evaluate potential solutions. This is highly dependent on the industry, and may be higher in tech-focused sectors."
+      },
+      {
+        "llm_skill_name": "Equipment Selection",
+        "llm_assigned_proficiency_description": "Basic",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "Chief Executives are rarely directly involved in equipment selection, but they need to understand the impact of equipment choices on organizational performance and budget. This is generally delegated to other departments."
+      },
+      {
+        "llm_skill_name": "Installation",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Chief Executives are not involved in equipment installation."
+      },
+      {
+        "llm_skill_name": "Programming",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Chief Executives are not expected to have programming skills."
+      },
+      {
+        "llm_skill_name": "Operations Monitoring",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Chief Executives need to monitor key performance indicators (KPIs) and other operational metrics to ensure that the organization is on track to meet its goals. They rely on reports and analysis from other departments."
+      },
+      {
+        "llm_skill_name": "Operation and Control",
+        "llm_assigned_proficiency_description": "Basic",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "Chief Executives are not directly involved in the operation and control of equipment or machinery. This is generally delegated to other departments."
+      },
+      {
+        "llm_skill_name": "Equipment Maintenance",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Chief Executives are not involved in equipment maintenance."
+      },
+      {
+        "llm_skill_name": "Troubleshooting",
+        "llm_assigned_proficiency_description": "Basic",
+        "llm_assigned_proficiency_level": 2,
+        "llm_explanation": "Chief Executives need to be able to understand the root causes of problems and develop solutions, but they are not typically involved in hands-on troubleshooting. They rely on reports and analysis from other departments."
+      },
+      {
+        "llm_skill_name": "Repairing",
+        "llm_assigned_proficiency_description": "Novice",
+        "llm_assigned_proficiency_level": 1,
+        "llm_explanation": "Chief Executives are not involved in equipment repair."
+      },
+      {
+        "llm_skill_name": "Quality Control Analysis",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Chief Executives need to understand quality control principles and monitor quality metrics to ensure that the organization is meeting its standards. They rely on reports and analysis from other departments."
+      },
+      {
+        "llm_skill_name": "Judgment and Decision Making",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives are responsible for making critical decisions that impact the entire organization. This requires sound judgment, careful analysis, and a willingness to take calculated risks."
+      },
+      {
+        "llm_skill_name": "Systems Analysis",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives need to understand how different systems within the organization interact and how changes in one system can impact others. This skill is essential for strategic planning and organizational design."
+      },
+      {
+        "llm_skill_name": "Systems Evaluation",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives need to be able to evaluate the effectiveness of different systems and processes within the organization. This requires a data-driven approach and a focus on continuous improvement."
+      },
+      {
+        "llm_skill_name": "Time Management",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives have extremely demanding schedules and must be highly effective at managing their time. This requires prioritization, delegation, and the ability to focus on the most important tasks."
+      },
+      {
+        "llm_skill_name": "Management of Financial Resources",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives are ultimately responsible for the financial health of the organization. They need to be able to develop and manage budgets, make investment decisions, and ensure that the organization is using its resources effectively."
+      },
+      {
+        "llm_skill_name": "Management of Material Resources",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Chief Executives need to ensure that the organization has the material resources it needs to operate effectively. This requires planning, procurement, and inventory management. The level of involvement will vary greatly by industry."
+      },
+      {
+        "llm_skill_name": "Management of Personnel Resources",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Chief Executives are responsible for attracting, developing, and retaining talented employees. This requires a strong understanding of human resource management principles and a commitment to creating a positive work environment."
+      }
+    ]
+  }
+}
+```

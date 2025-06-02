@@ -8,35 +8,49 @@ alwaysApply: true
 ```
 .
 ├── src/
-│   ├── functions/    # Cloud functions and business logic
-│   ├── nodes/        # Node components
+│   ├── api/          # API related files (e.g., routers)
+│   │   └── routers/
 │   ├── config/       # Configuration files
+│   ├── functions/    # Cloud functions and business logic
+│   │   └── llm_debug_responses/ # Actual sub-directory for functions
+│   ├── nodes/        # Node components
+│   │   └── archived/   # Archived nodes
 │   └── scripts/      # Shell scripts to execute nodes or setup infrastructure
 │   
 ├── tests/
+│   ├── archived/     # Archived tests
 │   ├── fixtures/     # Test fixtures and shared test data
+│   ├── reports/      # Test reports
+│   └── test_suite/   # Main test suite
 │
 ├── database/         # Database related files
-│   └── onet_api/     # ONET API database files
 │
 ├── docs/             # Documentation files
 │
 ├── memory_bank/      # Project documentation and reference materials
-│   ├── lessons.md    # Lessons learned
-│   └── notes.md      # Project notes
+│   ├── lessons.md    # (Illustrative) Lessons learned
+│   └── notes.md      # (Illustrative) Project notes
 │
 ├── secrets/          # Credentials and secret files
 │
 ├── env/              # Environment variables
 │
-├── .venv/            # Virtual environment
+├── .venv/            # Virtual environment (typically not committed)
 │
 ├── requirements.txt  # Project dependencies
 │
 ├── pyproject.toml    # Project configuration
 │
 ├── docker-compose.yml # Docker configuration
-
+│
+├── Dockerfile.api     # Dockerfile for the API
+├── Dockerfile.etl     # Dockerfile for ETL processes
+├── Dockerfile.test_runner # Dockerfile for running tests
+│
+├── notebook.ipynb     # Jupyter notebook for experimentation
+├── pytest.ini         # Pytest configuration file
+├── README.md          # Project README
+│
 └── .gitignore        # Git ignore file
 ```
 

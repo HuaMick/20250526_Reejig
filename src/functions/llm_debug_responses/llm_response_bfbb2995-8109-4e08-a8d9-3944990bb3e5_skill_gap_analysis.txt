@@ -1,0 +1,263 @@
+--- PROMPT SENT TO LLM (skill_gap_analysis for 11-2021.00) ---\nYou are an expert in career transitions and skill gap analysis.
+
+I need you to analyze the skill gaps between two occupations and provide detailed descriptions of what skills need development.
+
+# Source Occupation (Current)
+- O*NET ID: 11-1011.00
+- Occupation Name: Chief Executives
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 7/7
+  - Active Listening: 7/7
+  - Writing: 6/7
+  - Speaking: 7/7
+  - Mathematics: 6/7
+  - Science: 4/7
+  - Critical Thinking: 7/7
+  - Active Learning: 7/7
+  - Learning Strategies: 6/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 7/7
+  - Coordination: 6/7
+  - Persuasion: 7/7
+  - Negotiation: 7/7
+  - Instructing: 6/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 7/7
+  - Operations Analysis: 6/7
+  - Technology Design: 4/7
+  - Equipment Selection: 3/7
+  - Installation: 1/7
+  - Programming: 1/7
+  - Operations Monitoring: 4/7
+  - Operation and Control: 3/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 3/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 4/7
+  - Judgment and Decision Making: 7/7
+  - Systems Analysis: 6/7
+  - Systems Evaluation: 6/7
+  - Time Management: 7/7
+  - Management of Financial Resources: 7/7
+  - Management of Material Resources: 6/7
+  - Management of Personnel Resources: 7/7
+
+
+# Target Occupation (Desired)
+- O*NET ID: 11-2021.00
+- Occupation Name: Marketing Managers
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 6/7
+  - Active Listening: 6/7
+  - Writing: 7/7
+  - Speaking: 7/7
+  - Mathematics: 4/7
+  - Science: 2/7
+  - Critical Thinking: 7/7
+  - Active Learning: 6/7
+  - Learning Strategies: 6/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 6/7
+  - Coordination: 6/7
+  - Persuasion: 7/7
+  - Negotiation: 6/7
+  - Instructing: 4/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 6/7
+  - Operations Analysis: 4/7
+  - Technology Design: 2/7
+  - Equipment Selection: 1/7
+  - Installation: 1/7
+  - Programming: 1/7
+  - Operations Monitoring: 1/7
+  - Operation and Control: 1/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 1/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 4/7
+  - Judgment and Decision Making: 7/7
+  - Systems Analysis: 4/7
+  - Systems Evaluation: 4/7
+  - Time Management: 6/7
+  - Management of Financial Resources: 6/7
+  - Management of Material Resources: 4/7
+  - Management of Personnel Resources: 6/7
+
+
+# Your Task:
+1. Compare the skills and proficiency levels between the source and target occupations.
+2. Identify skills where there is a gap (target requires higher proficiency than source has, or skills missing from source).
+3. For each skill gap identified, provide:
+   - A clear description of what development is needed
+   - Specific recommendations for bridging the gap
+   - Context about why this skill is important for the target occupation
+4. Focus on actionable insights that would help someone transition from the source to target occupation.
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "string (Source occupation name)",
+    "to_occupation": "string (Target occupation name)",
+    "skill_gaps": [
+      {
+        "skill_name": "string (Name of the skill with a gap)",
+        "from_proficiency_level": number (Current proficiency level, 0 if skill is missing),
+        "to_proficiency_level": number (Required proficiency level for target occupation),
+        "gap_description": "string (Detailed description of what development is needed and why this skill matters for the target occupation)"
+      }
+      // One object for each skill gap identified
+    ]
+  }
+}
+```
+
+Ensure your response is properly formatted as valid JSON and includes all required fields.\n\n--- RAW LLM RESPONSE ---\n```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "Chief Executives",
+    "to_occupation": "Marketing Managers",
+    "skill_gaps": [
+      {
+        "skill_name": "Writing",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 7,
+        "gap_description": "Marketing Managers require a higher proficiency in writing than Chief Executives in this dataset. This involves mastering various writing styles to create compelling marketing materials, including website copy, email campaigns, social media posts, press releases, and reports. Development is needed to refine grammar, sentence structure, and persuasive writing techniques. This skill is crucial for effectively communicating marketing messages to target audiences and building brand awareness."
+      },
+      {
+        "skill_name": "Mathematics",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the raw proficiency level appears lower for Marketing Managers, the *type* of mathematical skills differs. Chief Executives need broad financial acumen, whereas Marketing Managers need skills focused on marketing ROI calculations, budgeting for campaigns, analyzing data from A/B tests, and understanding marketing analytics. This suggests a shift in focus from high-level financial management to quantitative marketing analysis."
+      },
+      {
+        "skill_name": "Active Learning",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower, the *focus* of active learning differs. Chief Executives need to learn about a wide range of topics related to the entire business, while Marketing Managers need to stay up-to-date on the latest marketing trends, technologies, and strategies. Therefore, development is needed in focusing active learning efforts specifically on the marketing landscape, including digital marketing, social media marketing, content marketing, and marketing automation. This skill is vital for adapting to the rapidly evolving marketing environment and maintaining a competitive edge."
+      },
+      {
+        "skill_name": "Science",
+        "from_proficiency_level": 4,
+        "to_proficiency_level": 2,
+        "gap_description": "The need for scientific knowledge is lower for Marketing Managers than Chief Executives in this dataset. This likely reflects the difference in responsibilities, with Chief Executives potentially needing to understand scientific principles related to their industry (e.g., manufacturing, pharmaceuticals). No development is needed here, as the Marketing Manager role requires less scientific expertise."
+      },
+      {
+        "skill_name": "Negotiation",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level appears lower for Marketing Managers, the *type* of negotiation differs. Chief Executives engage in high-stakes negotiations with investors, partners, and other executives. Marketing Managers negotiate with vendors, agencies, and media outlets. Development is needed in adapting negotiation skills to the specific context of marketing, focusing on securing favorable terms for marketing campaigns and partnerships."
+      },
+      {
+        "skill_name": "Instructing",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "The need for instructing is lower for Marketing Managers than Chief Executives. Chief Executives are often responsible for mentoring and training other executives. Marketing Managers may need to train junior marketing staff, but the scope of instruction is typically narrower. No development is needed here, as the Marketing Manager role requires less instructional expertise."
+      },
+      {
+        "skill_name": "Complex Problem Solving",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower, the *nature* of complex problem-solving differs. Chief Executives tackle strategic, organization-wide problems, while Marketing Managers address issues related to marketing performance, campaign effectiveness, and market trends. Development is needed in honing problem-solving skills specifically within the marketing domain, focusing on data analysis, identifying root causes of marketing challenges, and developing creative solutions to improve marketing outcomes."
+      },
+      {
+        "skill_name": "Operations Analysis",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "The need for operations analysis is lower for Marketing Managers compared to Chief Executives. Chief Executives analyze the overall operational efficiency of the organization, while Marketing Managers focus on the efficiency of marketing operations. No development is needed here, as the Marketing Manager role requires less broad operational analysis expertise."
+      },
+      {
+        "skill_name": "Technology Design",
+        "from_proficiency_level": 4,
+        "to_proficiency_level": 2,
+        "gap_description": "The need for technology design is lower for Marketing Managers than Chief Executives. Chief Executives may be involved in strategic technology decisions for the entire organization, while Marketing Managers primarily utilize existing marketing technologies. No development is needed here, as the Marketing Manager role requires less technology design expertise."
+      },
+      {
+        "skill_name": "Equipment Selection",
+        "from_proficiency_level": 3,
+        "to_proficiency_level": 1,
+        "gap_description": "The need for equipment selection is lower for Marketing Managers than Chief Executives. This typically involves less involvement in physical equipment selection and more focus on software and digital tools. No development is needed here."
+      },
+      {
+        "skill_name": "Installation",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 1,
+        "gap_description": "Installation skills are not critical for either role at a high proficiency. No development is needed here."
+      },
+      {
+        "skill_name": "Programming",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 1,
+        "gap_description": "Programming skills are not critical for either role at a high proficiency. No development is needed here."
+      },
+      {
+        "skill_name": "Operations Monitoring",
+        "from_proficiency_level": 4,
+        "to_proficiency_level": 1,
+        "gap_description": "The need for operations monitoring is significantly lower for Marketing Managers. No development is needed here."
+      },
+      {
+        "skill_name": "Operation and Control",
+        "from_proficiency_level": 3,
+        "to_proficiency_level": 1,
+        "gap_description": "The need for Operation and Control is significantly lower for Marketing Managers. No development is needed here."
+      },
+      {
+        "skill_name": "Equipment Maintenance",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 1,
+        "gap_description": "Equipment maintenance is not a core skill for Marketing Managers. No development is needed here."
+      },
+      {
+        "skill_name": "Troubleshooting",
+        "from_proficiency_level": 3,
+        "to_proficiency_level": 1,
+        "gap_description": "Troubleshooting is less critical for Marketing Managers than for Chief Executives. No development is needed here."
+      },
+      {
+        "skill_name": "Repairing",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 1,
+        "gap_description": "Repairing is not a core skill for Marketing Managers. No development is needed here."
+      },
+       {
+        "skill_name": "Systems Analysis",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the proficiency level is lower, the *application* of systems analysis differs. Chief Executives need a broad understanding of organizational systems, while Marketing Managers need to analyze marketing systems (e.g., CRM, marketing automation platforms). Development is needed to focus systems analysis skills on the specific systems used in marketing, learning how to identify inefficiencies and optimize marketing processes."
+      },
+      {
+        "skill_name": "Systems Evaluation",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "Similar to Systems Analysis, while the proficiency level is lower, the *application* differs. Chief Executives evaluate the effectiveness of entire organizational systems, while Marketing Managers evaluate the effectiveness of marketing systems and campaigns. Development is needed to focus evaluation skills on marketing metrics, ROI analysis, and campaign performance tracking, learning how to use data to improve marketing outcomes."
+      },
+      {
+        "skill_name": "Time Management",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower, the *focus* of time management differs. Chief Executives need to manage their time across a wide range of responsibilities, while Marketing Managers need to manage their time effectively within the context of marketing projects and campaigns. No development is needed here."
+      },
+      {
+        "skill_name": "Management of Financial Resources",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower, the *scope* of financial management differs. Chief Executives manage the overall financial resources of the organization, while Marketing Managers manage the marketing budget. No development is needed here."
+      },
+      {
+        "skill_name": "Management of Material Resources",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "The need for managing material resources is lower for Marketing Managers than Chief Executives. Chief Executives may be responsible for managing physical assets and inventory, while Marketing Managers primarily manage digital assets and marketing materials. No development is needed here."
+      },
+      {
+        "skill_name": "Management of Personnel Resources",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower, the *scope* of personnel management differs. Chief Executives manage all personnel within the organization, while Marketing Managers manage the marketing team. No development is needed here."
+      }
+    ]
+  }
+}
+```

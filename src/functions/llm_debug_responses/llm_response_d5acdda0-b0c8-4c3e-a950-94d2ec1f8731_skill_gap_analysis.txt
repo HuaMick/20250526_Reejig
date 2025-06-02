@@ -1,0 +1,257 @@
+--- PROMPT SENT TO LLM (skill_gap_analysis for 11-2021.00) ---\nYou are an expert in career transitions and skill gap analysis.
+
+I need you to analyze the skill gaps between two occupations and provide detailed descriptions of what skills need development.
+
+# Source Occupation (Current)
+- O*NET ID: 11-1011.00
+- Occupation Name: Chief Executives
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 7/7
+  - Active Listening: 7/7
+  - Writing: 6/7
+  - Speaking: 7/7
+  - Mathematics: 6/7
+  - Science: 4/7
+  - Critical Thinking: 7/7
+  - Active Learning: 7/7
+  - Learning Strategies: 6/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 7/7
+  - Coordination: 6/7
+  - Persuasion: 7/7
+  - Negotiation: 7/7
+  - Instructing: 6/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 7/7
+  - Operations Analysis: 6/7
+  - Technology Design: 4/7
+  - Equipment Selection: 3/7
+  - Installation: 1/7
+  - Programming: 1/7
+  - Operations Monitoring: 4/7
+  - Operation and Control: 3/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 3/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 6/7
+  - Judgment and Decision Making: 7/7
+  - Systems Analysis: 6/7
+  - Systems Evaluation: 6/7
+  - Time Management: 7/7
+  - Management of Financial Resources: 7/7
+  - Management of Material Resources: 6/7
+  - Management of Personnel Resources: 7/7
+
+
+# Target Occupation (Desired)
+- O*NET ID: 11-2021.00
+- Occupation Name: Marketing Managers
+- Skills and Proficiency Levels:
+  - Reading Comprehension: 6/7
+  - Active Listening: 6/7
+  - Writing: 7/7
+  - Speaking: 7/7
+  - Mathematics: 4/7
+  - Science: 2/7
+  - Critical Thinking: 7/7
+  - Active Learning: 6/7
+  - Learning Strategies: 6/7
+  - Monitoring: 6/7
+  - Social Perceptiveness: 6/7
+  - Coordination: 6/7
+  - Persuasion: 7/7
+  - Negotiation: 6/7
+  - Instructing: 5/7
+  - Service Orientation: 6/7
+  - Complex Problem Solving: 6/7
+  - Operations Analysis: 4/7
+  - Technology Design: 2/7
+  - Equipment Selection: 1/7
+  - Installation: 1/7
+  - Programming: 2/7
+  - Operations Monitoring: 2/7
+  - Operation and Control: 1/7
+  - Equipment Maintenance: 1/7
+  - Troubleshooting: 2/7
+  - Repairing: 1/7
+  - Quality Control Analysis: 4/7
+  - Judgment and Decision Making: 7/7
+  - Systems Analysis: 4/7
+  - Systems Evaluation: 4/7
+  - Time Management: 6/7
+  - Management of Financial Resources: 6/7
+  - Management of Material Resources: 4/7
+  - Management of Personnel Resources: 6/7
+
+
+# Your Task:
+1. Compare the skills and proficiency levels between the source and target occupations.
+2. Identify skills where there is a gap (target requires higher proficiency than source has, or skills missing from source).
+3. For each skill gap identified, provide:
+   - A clear description of what development is needed
+   - Specific recommendations for bridging the gap
+   - Context about why this skill is important for the target occupation
+4. Focus on actionable insights that would help someone transition from the source to target occupation.
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "string (Source occupation name)",
+    "to_occupation": "string (Target occupation name)",
+    "skill_gaps": [
+      {
+        "skill_name": "string (Name of the skill with a gap)",
+        "from_proficiency_level": number (Current proficiency level, 0 if skill is missing),
+        "to_proficiency_level": number (Required proficiency level for target occupation),
+        "gap_description": "string (Detailed description of what development is needed and why this skill matters for the target occupation)"
+      }
+      // One object for each skill gap identified
+    ]
+  }
+}
+```
+
+Ensure your response is properly formatted as valid JSON and includes all required fields.\n\n--- RAW LLM RESPONSE ---\n```json
+{
+  "skill_gap_analysis": {
+    "from_occupation": "Chief Executives",
+    "to_occupation": "Marketing Managers",
+    "skill_gaps": [
+      {
+        "skill_name": "Writing",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 7,
+        "gap_description": "Marketing Managers require highly developed writing skills to create compelling marketing materials, including ad copy, website content, blog posts, social media updates, email campaigns, and marketing reports. Development is needed to enhance the ability to craft persuasive and engaging content that resonates with target audiences and drives marketing results. This includes mastering different writing styles, understanding SEO principles for online content, and ensuring all written materials align with brand guidelines and marketing objectives. Strong writing is crucial for effective communication and brand building in marketing."
+      },
+      {
+        "skill_name": "Mathematics",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it's important to develop skills in marketing analytics and data interpretation. This involves understanding key marketing metrics (e.g., conversion rates, ROI, customer acquisition cost), using data analysis tools to track campaign performance, and drawing insights from data to optimize marketing strategies. Proficiency in basic statistics and data visualization is also beneficial. This skill is important for making data-driven decisions and demonstrating the effectiveness of marketing efforts."
+      },
+      {
+        "skill_name": "Active Learning",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to maintain a level of active learning and stay up to date on the latest marketing trends and technologies. The marketing landscape is constantly evolving, so Marketing Managers need to be proactive in learning new skills and strategies to remain competitive. This skill is important for adapting to new challenges and opportunities in the marketing field."
+      },
+      {
+        "skill_name": "Science",
+        "from_proficiency_level": 4,
+        "to_proficiency_level": 2,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it may be helpful to understand basic principles of consumer psychology and behavioral economics. This could inform marketing strategies and improve campaign effectiveness."
+      },
+      {
+        "skill_name": "Negotiation",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to maintain a level of negotiation skills and be able to negotiate with vendors, partners, and internal stakeholders. This skill is important for securing favorable deals and building strong relationships in the marketing field."
+      },
+      {
+        "skill_name": "Complex Problem Solving",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to maintain a level of complex problem-solving skills and be able to address marketing challenges and develop creative solutions. This skill is important for overcoming obstacles and achieving marketing goals."
+      },
+      {
+        "skill_name": "Operations Analysis",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it's important to understand how marketing operations impact overall business performance. This skill involves analyzing marketing processes, identifying areas for improvement, and implementing solutions to streamline workflows and increase efficiency. This skill is important for optimizing marketing operations and improving marketing effectiveness."
+      },
+      {
+        "skill_name": "Technology Design",
+        "from_proficiency_level": 4,
+        "to_proficiency_level": 2,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it may be helpful to understand basic principles of website design and user experience. This could inform marketing strategies and improve campaign effectiveness."
+      },
+      {
+        "skill_name": "Equipment Selection",
+        "from_proficiency_level": 3,
+        "to_proficiency_level": 1,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to understand the different types of marketing equipment and technologies available. This skill is important for making informed decisions about which tools to use for marketing campaigns."
+      },
+      {
+        "skill_name": "Programming",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 2,
+        "gap_description": "Marketing Managers benefit from basic programming knowledge, particularly in areas like HTML, CSS, and Javascript. This allows them to understand and interact with website development teams, customize email templates, and implement tracking codes. This skill is important for optimizing marketing campaigns and improving website performance."
+      },
+      {
+        "skill_name": "Operations Monitoring",
+        "from_proficiency_level": 4,
+        "to_proficiency_level": 2,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it may be helpful to understand how marketing operations are monitored and measured. This could inform marketing strategies and improve campaign effectiveness."
+      },
+      {
+        "skill_name": "Operation and Control",
+        "from_proficiency_level": 3,
+        "to_proficiency_level": 1,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to understand the different types of marketing operations and how they are controlled. This skill is important for ensuring that marketing campaigns are executed effectively."
+      },
+      {
+        "skill_name": "Equipment Maintenance",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 1,
+        "gap_description": "This skill is not particularly relevant for Marketing Managers."
+      },
+      {
+        "skill_name": "Troubleshooting",
+        "from_proficiency_level": 3,
+        "to_proficiency_level": 2,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to be able to troubleshoot marketing problems and find solutions. This skill is important for ensuring that marketing campaigns are successful."
+      },
+      {
+        "skill_name": "Repairing",
+        "from_proficiency_level": 1,
+        "to_proficiency_level": 1,
+        "gap_description": "This skill is not particularly relevant for Marketing Managers."
+      },
+      {
+        "skill_name": "Quality Control Analysis",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it's important to understand how marketing campaigns are evaluated and improved. This skill involves analyzing marketing data, identifying areas for improvement, and implementing solutions to increase marketing effectiveness. This skill is important for optimizing marketing campaigns and improving marketing ROI."
+      },
+      {
+        "skill_name": "Systems Analysis",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it's important to understand how marketing systems work and how they can be improved. This skill involves analyzing marketing processes, identifying areas for improvement, and implementing solutions to streamline workflows and increase efficiency. This skill is important for optimizing marketing operations and improving marketing effectiveness."
+      },
+      {
+        "skill_name": "Systems Evaluation",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it's important to understand how marketing systems are evaluated and improved. This skill involves analyzing marketing data, identifying areas for improvement, and implementing solutions to increase marketing effectiveness. This skill is important for optimizing marketing campaigns and improving marketing ROI."
+      },
+      {
+        "skill_name": "Time Management",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to maintain a level of time management skills and be able to prioritize tasks and meet deadlines. This skill is important for managing multiple marketing projects and ensuring that marketing campaigns are launched on time."
+      },
+      {
+        "skill_name": "Management of Financial Resources",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to maintain a level of financial management skills and be able to manage marketing budgets and track marketing expenses. This skill is important for ensuring that marketing campaigns are cost-effective."
+      },
+      {
+        "skill_name": "Management of Material Resources",
+        "from_proficiency_level": 6,
+        "to_proficiency_level": 4,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to understand the different types of marketing materials and how they are managed. This skill is important for ensuring that marketing campaigns have the resources they need to be successful."
+      },
+      {
+        "skill_name": "Management of Personnel Resources",
+        "from_proficiency_level": 7,
+        "to_proficiency_level": 6,
+        "gap_description": "While the proficiency level is lower for Marketing Managers, it is still important to maintain a level of personnel management skills and be able to manage marketing teams and delegate tasks effectively. This skill is important for ensuring that marketing campaigns are executed efficiently."
+      }
+    ]
+  }
+}
+```

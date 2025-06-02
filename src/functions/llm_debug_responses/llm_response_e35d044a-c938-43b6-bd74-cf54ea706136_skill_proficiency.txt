@@ -1,0 +1,80 @@
+--- PROMPT SENT TO LLM (skill_proficiency for 11-1011.00) ---\n
+I need you to analyze skills for a job and determine proficiency levels based on the information provided.
+
+# Occupation Information
+- O*NET ID: 11-2021.00
+- Occupation Name: Marketing Managers
+- Skills Required:
+  - Reading Comprehension
+  - Active Listening
+  - Writing
+  - Speaking
+  - Mathematics
+
+# Your Task:
+1. Analyze the skills of the Occupation provided.
+2. For each skill listed in the Occupation, determine a proficiency level.
+   - Use a scale of 1-7 where 1 is Novice and 7 is Expert
+   - Consider what level of proficiency would be typical/expected for someone in this occupation
+3. Provide a detailed justification/explanation for each assigned proficiency level.
+   - Your explanation should be in the context of the Occupation's typical duties and responsibilities.
+
+
+# Output Format Requirements:
+Your entire response must be a single, valid JSON object with this exact schema:
+```json
+{
+  "skill_proficiency_assessment": {
+    "llm_onet_soc_code": "string (O*NET code of the Occupation)",
+    "llm_occupation_name": "string (Name of the Occupation)",
+    "assessed_skills": [
+      {
+        "llm_skill_name": "string (Name of the skill)",
+        "llm_assigned_proficiency_description": "string (e.g., 'Intermediate', 'Advanced', 'Expert')",
+        "llm_assigned_proficiency_level": number (e.g., 3.5 on the 1-7 scale),
+        "llm_explanation": "string (Your detailed reasoning for the assigned proficiency)"
+      }
+      // One object for each skill in the Occupation
+    ]
+  }
+}
+\n\n--- RAW LLM RESPONSE ---\n```json
+{
+  "skill_proficiency_assessment": {
+    "llm_onet_soc_code": "11-2021.00",
+    "llm_occupation_name": "Marketing Managers",
+    "assessed_skills": [
+      {
+        "llm_skill_name": "Reading Comprehension",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing Managers need to understand complex market research reports, industry publications, competitor analyses, and internal performance data. They must be able to quickly extract key insights and implications from these diverse sources to inform strategic decisions. A high level of reading comprehension is crucial for interpreting data, identifying trends, and understanding the nuances of consumer behavior."
+      },
+      {
+        "llm_skill_name": "Active Listening",
+        "llm_assigned_proficiency_description": "Advanced",
+        "llm_assigned_proficiency_level": 6,
+        "llm_explanation": "Marketing Managers regularly interact with various stakeholders, including customers, team members, senior management, and external vendors. They need to actively listen to understand their needs, concerns, and feedback. This skill is essential for conducting market research, managing teams effectively, negotiating contracts, and building strong relationships with clients and partners. Active listening allows them to gather valuable information, identify potential problems, and foster collaboration."
+      },
+      {
+        "llm_skill_name": "Writing",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Marketing Managers are responsible for creating a wide range of written materials, including marketing plans, advertising copy, website content, email campaigns, reports, and presentations. Their writing must be clear, concise, persuasive, and tailored to the specific audience. They need to be able to craft compelling narratives, communicate complex ideas effectively, and maintain a consistent brand voice. Excellent writing skills are critical for influencing stakeholders, driving sales, and building brand awareness."
+      },
+      {
+        "llm_skill_name": "Speaking",
+        "llm_assigned_proficiency_description": "Expert",
+        "llm_assigned_proficiency_level": 7,
+        "llm_explanation": "Marketing Managers frequently present ideas, strategies, and results to various audiences, including senior management, team members, clients, and industry conferences. They must be able to communicate clearly, confidently, and persuasively. Strong speaking skills are essential for pitching new campaigns, leading team meetings, negotiating deals, and representing the company at public events. They need to be able to adapt their communication style to different audiences and deliver impactful presentations."
+      },
+      {
+        "llm_skill_name": "Mathematics",
+        "llm_assigned_proficiency_description": "Intermediate",
+        "llm_assigned_proficiency_level": 4,
+        "llm_explanation": "Marketing Managers need to understand basic mathematical concepts to analyze marketing data, track key performance indicators (KPIs), manage budgets, and calculate return on investment (ROI). They should be comfortable working with spreadsheets, interpreting statistical data, and making data-driven decisions. While they may not need advanced mathematical skills, a solid understanding of basic calculations and statistical concepts is essential for effective marketing management."
+      }
+    ]
+  }
+}
+```
